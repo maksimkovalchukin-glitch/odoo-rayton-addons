@@ -1,4 +1,5 @@
 import logging
+from markupsafe import Markup
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError
 
@@ -117,7 +118,7 @@ class RaytonProjectInitiateWizard(models.TransientModel):
         # Post project info as the first message in the Discuss channel
         # so that team members always have a link back to the project.
         channel.message_post(
-            body=(
+            body=Markup(
                 f'🗂 <b>Проект:</b> <a href="/web#model=project.project'
                 f'&id={new_project.id}&view_type=form">{project_name}</a><br/>'
                 f'📋 Тип: <b>{template_label}</b><br/>'
@@ -136,12 +137,12 @@ class RaytonProjectInitiateWizard(models.TransientModel):
 
         # Post message on lead chatter
         self.lead_id.message_post(
-            body=_(
-                '🚀 <b>Проект ініційовано</b><br/>'
-                'Тип: <b>%s</b><br/>'
-                'Проект: <a href="/odoo/project/%d">%s</a><br/>'
-                'Канал Discuss: <b>#%s</b>'
-            ) % (template_label, new_project.id, project_name, channel.name),
+            body=Markup(
+                f'🚀 <b>Проект ініційовано</b><br/>'
+                f'Тип: <b>{template_label}</b><br/>'
+                f'Проект: <a href="/odoo/project/{new_project.id}">{project_name}</a><br/>'
+                f'Канал Discuss: <b>#{channel.name}</b>'
+            ),
             message_type='comment',
             subtype_xmlid='mail.mt_comment',
         )
