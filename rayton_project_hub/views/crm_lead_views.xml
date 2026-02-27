@@ -8,7 +8,7 @@
         <field name="inherit_id" ref="crm.crm_lead_view_form"/>
         <field name="arch" type="xml">
 
-            <xpath expr="//field[@name='stage_id'][@widget='statusbar']" position="before">
+            <xpath expr="//field[@name='stage_id']" position="before">
                 <!-- Hidden fields needed for invisible modifiers -->
                 <field name="project_initiated" invisible="1"/>
                 <field name="project_template_type" invisible="1"/>
