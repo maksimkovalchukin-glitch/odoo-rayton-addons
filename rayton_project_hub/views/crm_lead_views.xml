@@ -8,35 +8,22 @@
         <field name="inherit_id" ref="crm.crm_lead_all_leads"/>
         <field name="arch" type="xml">
 
-            <!-- Add button in the header button area -->
-            <xpath expr="//div[hasclass('o_statusbar_buttons')]" position="inside">
-                <!-- Show "Ініціювати проект" when not yet initiated -->
+            <!-- Buttons before the stage statusbar -->
+            <xpath expr="//field[@name='stage_id']" position="before">
                 <button
                     name="action_initiate_project"
                     type="object"
                     string="🚀 Ініціювати проект"
                     class="btn-primary o_rayton_initiate_btn"
-                    attrs="{'invisible': [('project_initiated', '=', True)]}"
+                    invisible="project_initiated"
                 />
-                <!-- Show "Відкрити проект" when already initiated -->
                 <button
                     name="action_open_project"
                     type="object"
                     string="📁 Відкрити проект"
                     class="btn-secondary"
-                    attrs="{'invisible': [('project_initiated', '=', False)]}"
+                    invisible="not project_initiated"
                 />
-            </xpath>
-
-            <!-- Add project info badge near status bar -->
-            <xpath expr="//div[hasclass('o_statusbar_status')]" position="before">
-                <span
-                    attrs="{'invisible': [('project_initiated', '=', False)]}"
-                    class="badge rounded-pill text-bg-success ms-2 align-self-center"
-                    style="font-size:11px;padding:4px 10px;"
-                >
-                    ✅ Проект: <field name="project_template_type" readonly="1" nolabel="1"/>
-                </span>
             </xpath>
 
         </field>
