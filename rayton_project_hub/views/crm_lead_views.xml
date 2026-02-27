@@ -5,10 +5,9 @@
     <record id="crm_lead_view_form_inherit_rayton" model="ir.ui.view">
         <field name="name">crm.lead.view.form.inherit.rayton.project.hub</field>
         <field name="model">crm.lead</field>
-        <field name="inherit_id" ref="crm.crm_lead_all_leads"/>
+        <field name="inherit_id" ref="crm.crm_lead_view_form"/>
         <field name="arch" type="xml">
 
-            <!-- Buttons before the stage statusbar -->
             <xpath expr="//field[@name='stage_id']" position="before">
                 <button
                     name="action_initiate_project"
