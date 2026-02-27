@@ -13,7 +13,7 @@
     """,
     'category': 'Project',
     'author': 'Rayton',
-    'depends': ['crm', 'project', 'mail', 'discuss'],
+    'depends': ['crm', 'project', 'mail'],
     'data': [
         'security/ir.model.access.csv',
         'views/crm_lead_views.xml',
