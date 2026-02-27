@@ -33,7 +33,7 @@
 
                         <!-- Preview of project name -->
                         <div
-                            attrs="{'invisible': [('template_type', '=', False)]}"
+                            invisible="not template_type"
                             class="alert alert-info mt-2"
                             style="border-left:4px solid #7c5cbf;background:#f4f0ff;"
                         >
