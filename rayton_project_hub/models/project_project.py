@@ -38,10 +38,33 @@ class ProjectProject(models.Model):
         readonly=True,
     )
 
+    def action_get_channel_info(self):
+        """Return channel info for this project, ensuring current user is a member."""
+        self.ensure_one()
+        if not self.discuss_channel_id:
+            return {'channel_id': False, 'channel_name': ''}
+        channel = self.discuss_channel_id
+        partner = self.env.user.partner_id
+        # Auto-join the user so they can read and send messages
+        is_member = channel.channel_member_ids.filtered(
+            lambda m: m.partner_id.id == partner.id
+        )
+        if not is_member:
+            channel.add_members(partner_ids=[partner.id])
+        return {
+            'channel_id': channel.id,
+            'channel_name': channel.name,
+        }
+
     def action_create_discuss_channel(self):
         """Create and link a Discuss channel for this project if not already linked."""
         self.ensure_one()
         if self.discuss_channel_id:
+            # Ensure current user is a member
+            channel = self.discuss_channel_id
+            partner = self.env.user.partner_id
+            if not channel.channel_member_ids.filtered(lambda m: m.partner_id.id == partner.id):
+                channel.add_members(partner_ids=[partner.id])
             return {
                 'channel_id': self.discuss_channel_id.id,
                 'channel_name': self.discuss_channel_id.name,

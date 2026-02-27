@@ -85,14 +85,16 @@ class RaytonPanelManager {
         if (!projectId) return;
 
         try {
-            const [proj] = await this.orm.read(
-                "project.project",
-                [projectId],
-                ["discuss_channel_id", "discuss_channel_name"]
+            // action_get_channel_info also auto-joins the user as a channel member
+            // so they can read and send messages (fixes existing linked channel issue)
+            const result = await this.orm.call(
+                "project.project", "action_get_channel_info",
+                [projectId], {}
             );
-            if (!proj) return;
-            this._channelId = proj.discuss_channel_id ? proj.discuss_channel_id[0] : null;
-            this._channelName = proj.discuss_channel_name || "";
+            if (result) {
+                this._channelId = result.channel_id || null;
+                this._channelName = result.channel_name || "";
+            }
         } catch (e) {
             console.warn("[RaytonHub] Failed to load project channel info:", e);
         }

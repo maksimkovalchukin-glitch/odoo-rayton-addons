@@ -130,7 +130,7 @@ class RaytonProjectInitiateWizard(models.TransientModel):
                 'Канал Discuss: <b>#%s</b>'
             ) % (template_label, new_project.id, project_name, channel.name),
             message_type='comment',
-            subtype_xmlid='mail.mt_note',
+            subtype_xmlid='mail.mt_comment',
         )
 
         # ── 6. Send webhook ────────────────────────────────────────────────────
