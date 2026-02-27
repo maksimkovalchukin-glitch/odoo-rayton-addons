@@ -136,12 +136,16 @@ class RaytonProjectInitiateWizard(models.TransientModel):
         # ── 6. Send webhook ────────────────────────────────────────────────────
         new_project._send_webhook(channel, self.env.user)
 
-        # ── 7. Return action to open the new project ───────────────────────────
+        # ── 7. Return action to open the new project task list in list view ───
         return {
             'type': 'ir.actions.act_window',
             'name': project_name,
-            'res_model': 'project.project',
-            'res_id': new_project.id,
-            'view_mode': 'form',
+            'res_model': 'project.task',
+            'view_mode': 'list,kanban,form',
+            'domain': [('project_id', '=', new_project.id)],
+            'context': {
+                'default_project_id': new_project.id,
+                'active_id': new_project.id,
+            },
             'target': 'current',
         }

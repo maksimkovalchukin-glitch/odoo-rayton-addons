@@ -43,14 +43,19 @@ class CrmLead(models.Model):
         }
 
     def action_open_project(self):
-        """Open the initiated project."""
+        """Open the initiated project task list in list view."""
         self.ensure_one()
         if not self.project_id:
             return False
         return {
             'type': 'ir.actions.act_window',
-            'res_model': 'project.project',
-            'res_id': self.project_id.id,
-            'view_mode': 'form',
+            'name': self.project_id.name,
+            'res_model': 'project.task',
+            'view_mode': 'list,kanban,form',
+            'domain': [('project_id', '=', self.project_id.id)],
+            'context': {
+                'default_project_id': self.project_id.id,
+                'active_id': self.project_id.id,
+            },
             'target': 'current',
         }

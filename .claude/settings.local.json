@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git add -A)",
+      "Bash(git commit -m \"feat: grouped messages, auto-open panel, list view default, webhook-test URL, create channel btn\")",
+      "Bash(git push)"
+    ]
+  }
+}

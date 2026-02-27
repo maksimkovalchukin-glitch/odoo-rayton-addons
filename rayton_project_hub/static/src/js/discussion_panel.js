@@ -16,12 +16,20 @@ function getInitials(name) {
         .toUpperCase();
 }
 
-function formatDate(iso) {
+function formatTime(iso) {
     if (!iso) return "";
     try {
         return new Date(iso).toLocaleString("uk-UA", {
-            day: "2-digit", month: "2-digit",
             hour: "2-digit", minute: "2-digit",
+        });
+    } catch { return ""; }
+}
+
+function formatDateLabel(iso) {
+    if (!iso) return "";
+    try {
+        return new Date(iso).toLocaleDateString("uk-UA", {
+            day: "2-digit", month: "long", year: "numeric",
         });
     } catch { return ""; }
 }
@@ -32,7 +40,7 @@ function stripHtml(html) {
     return d.textContent || d.innerText || "";
 }
 
-// ─── Panel Manager (plain JS, no OWL - avoids template registration issues) ──
+// ─── Panel Manager ───────────────────────────────────────────────────────────
 
 class RaytonPanelManager {
     constructor(orm, action) {
@@ -44,8 +52,8 @@ class RaytonPanelManager {
         this._channelName = "";
         this._projectId = null;
 
-        this._toggle = null;   // toggle button element
-        this._panel = null;    // panel element
+        this._toggle = null;
+        this._panel = null;
         this._messagesEl = null;
         this._inputEl = null;
         this._sendBtn = null;
@@ -90,26 +98,62 @@ class RaytonPanelManager {
         document.body.appendChild(toggle);
         this._toggle = toggle;
 
-        // Panel
+        // Panel container
         const panel = document.createElement("div");
         panel.className = "o_rayton_discussion_panel";
-        panel.innerHTML = this._buildPanelHTML();
         document.body.appendChild(panel);
         this._panel = panel;
+
+        this._renderPanelContent();
+    }
+
+    _renderPanelContent() {
+        const panel = this._panel;
+        if (!panel) return;
+
+        const ch = this._channelId;
+        const chName = this._channelName;
+
+        const bodyContent = ch
+            ? `<div class="o_rayton_messages"></div>
+               <div class="o_rayton_composer">
+                   <textarea class="o_rayton_composer_input"
+                       placeholder="Написати повідомлення... (Enter — надіслати)"
+                       rows="1"></textarea>
+                   <button class="o_rayton_send_btn" title="Надіслати">➤</button>
+               </div>`
+            : `<div class="o_rayton_empty">
+                   <i class="fa fa-comments-o" style="font-size:44px;opacity:0.3;"></i>
+                   <p>До цього проекту не прив'язано канал.</p>
+                   <button class="o_rayton_create_channel_btn">+ Створити канал</button>
+                   <a href="#" class="o_rayton_settings_link">або прив'язати існуючий</a>
+               </div>`;
+
+        panel.innerHTML = `
+            <div class="o_rayton_panel_resize"></div>
+            <div class="o_rayton_panel_header">
+                <div class="o_rayton_panel_header_info">
+                    <div class="o_rayton_panel_header_title">💬 Обговорення проекту</div>
+                    ${chName ? `<div class="o_rayton_panel_header_sub"># ${chName}</div>` : ""}
+                </div>
+                <button class="o_rayton_panel_close" title="Закрити">✕</button>
+            </div>
+            <div class="o_rayton_panel_body">${bodyContent}</div>
+        `;
 
         // Wire close button
         panel.querySelector(".o_rayton_panel_close")
             ?.addEventListener("click", () => this.togglePanel());
 
-        // Wire resize
-        const resizeHandle = panel.querySelector(".o_rayton_panel_resize");
-        resizeHandle?.addEventListener("mousedown", (e) => {
-            this._resizing = true;
-            this._resizeStartX = e.clientX;
-            this._resizeStartW = this.panelWidth;
-            resizeHandle.classList.add("resizing");
-            e.preventDefault();
-        });
+        // Wire resize handle
+        panel.querySelector(".o_rayton_panel_resize")
+            ?.addEventListener("mousedown", (e) => {
+                this._resizing = true;
+                this._resizeStartX = e.clientX;
+                this._resizeStartW = this.panelWidth;
+                panel.querySelector(".o_rayton_panel_resize").classList.add("resizing");
+                e.preventDefault();
+            });
 
         // Cache refs
         this._messagesEl = panel.querySelector(".o_rayton_messages");
@@ -133,7 +177,11 @@ class RaytonPanelManager {
             this._sendBtn.addEventListener("click", () => this.sendMessage());
         }
 
-        // Wire settings link
+        // Wire "create channel" button
+        panel.querySelector(".o_rayton_create_channel_btn")
+            ?.addEventListener("click", () => this._createChannel());
+
+        // Wire "link existing" link
         panel.querySelector(".o_rayton_settings_link")
             ?.addEventListener("click", (e) => {
                 e.preventDefault();
@@ -141,52 +189,46 @@ class RaytonPanelManager {
             });
     }
 
-    _buildPanelHTML() {
-        const ch = this._channelId;
-        const chName = this._channelName;
+    async _createChannel() {
+        if (!this._projectId) return;
+        const btn = this._panel.querySelector(".o_rayton_create_channel_btn");
+        if (btn) { btn.disabled = true; btn.textContent = "Створення..."; }
 
-        const bodyContent = ch
-            ? `
-            <div class="o_rayton_messages"></div>
-            <div class="o_rayton_composer">
-                <textarea class="o_rayton_composer_input"
-                    placeholder="Написати повідомлення... (Enter — надіслати)"
-                    rows="1"></textarea>
-                <button class="o_rayton_send_btn" title="Надіслати">➤</button>
-            </div>`
-            : `<div class="o_rayton_empty">
-                <i class="fa fa-comments-o" style="font-size:44px;opacity:0.3;"></i>
-                <p>До цього проекту не прив'язано канал.<br/>
-                   <a href="#" class="o_rayton_settings_link">Налаштувати проект</a></p>
-               </div>`;
-
-        return `
-            <div class="o_rayton_panel_resize"></div>
-            <div class="o_rayton_panel_header">
-                <div class="o_rayton_panel_header_info">
-                    <div class="o_rayton_panel_header_title">💬 Обговорення проекту</div>
-                    ${chName ? `<div class="o_rayton_panel_header_sub"># ${chName}</div>` : ""}
-                </div>
-                <button class="o_rayton_panel_close" title="Закрити">✕</button>
-            </div>
-            <div class="o_rayton_panel_body">${bodyContent}</div>
-        `;
+        try {
+            const result = await this.orm.call(
+                "project.project", "action_create_discuss_channel",
+                [this._projectId], {}
+            );
+            if (result && result.channel_id) {
+                this._channelId = result.channel_id;
+                this._channelName = result.channel_name || "";
+                this._renderPanelContent();
+                if (this._open) await this._loadMessages();
+            }
+        } catch (e) {
+            console.warn("[RaytonHub] Failed to create channel:", e);
+            if (btn) { btn.disabled = false; btn.textContent = "+ Створити канал"; }
+        }
     }
 
     togglePanel() {
         this._open = !this._open;
 
         if (this._open) {
-            this._panel?.classList.add("open");
+            this._panel.style.width = this.panelWidth + "px";
+            this._panel.classList.add("open");
             if (this._toggle) {
                 this._toggle.innerHTML = `<span class="o_toggle_icon">❮</span>`;
+                this._toggle.style.right = this.panelWidth + "px";
             }
             this._shiftContent(true);
             if (this._channelId) this._loadMessages();
         } else {
-            this._panel?.classList.remove("open");
+            this._panel.classList.remove("open");
+            this._panel.style.width = "0";
             if (this._toggle) {
                 this._toggle.innerHTML = `<span class="o_toggle_icon">💬</span><span>Чат</span>`;
+                this._toggle.style.right = "0px";
             }
             this._shiftContent(false);
         }
@@ -230,37 +272,55 @@ class RaytonPanelManager {
                 return;
             }
 
-            let lastDate = "";
-            messages.forEach(msg => {
-                const d = msg.date ? new Date(msg.date) : null;
-                const dateLabel = d
-                    ? d.toLocaleDateString("uk-UA", { day: "2-digit", month: "long", year: "numeric" })
-                    : "";
+            let lastDateLabel = "";
+            let lastAuthorId = null;
 
-                if (dateLabel && dateLabel !== lastDate) {
-                    lastDate = dateLabel;
+            messages.forEach(msg => {
+                // ── Date divider ──────────────────────────────────────────────
+                const dateLabel = formatDateLabel(msg.date);
+                if (dateLabel && dateLabel !== lastDateLabel) {
+                    lastDateLabel = dateLabel;
+                    lastAuthorId = null; // reset grouping on new date
                     const div = document.createElement("div");
                     div.className = "o_rayton_date_divider";
                     div.textContent = dateLabel;
                     this._messagesEl.appendChild(div);
                 }
 
+                // ── Message grouping ──────────────────────────────────────────
+                const authorId = msg.author_id ? msg.author_id[0] : null;
+                const isContinuation = authorId && authorId === lastAuthorId;
+                lastAuthorId = authorId;
+
                 const author = msg.author_id ? msg.author_id[1] : "Невідомий";
                 const initials = getInitials(author);
-                const time = formatDate(msg.date);
+                const time = formatTime(msg.date);
                 const body = stripHtml(msg.body);
 
                 const el = document.createElement("div");
-                el.className = "o_rayton_message";
-                el.innerHTML = `
-                    <div class="o_rayton_avatar">${initials}</div>
-                    <div class="o_rayton_msg_content">
-                        <div class="o_rayton_msg_meta">
-                            <span class="o_rayton_msg_author">${author}</span>
-                            <span class="o_rayton_msg_time">${time}</span>
-                        </div>
-                        <div class="o_rayton_msg_body">${body}</div>
-                    </div>`;
+
+                if (isContinuation) {
+                    // Same author → no avatar, no name, compact
+                    el.className = "o_rayton_message o_rayton_continuation";
+                    el.innerHTML = `
+                        <div class="o_rayton_avatar_gap"></div>
+                        <div class="o_rayton_msg_content">
+                            <div class="o_rayton_msg_body">${body}</div>
+                        </div>`;
+                } else {
+                    // New author → show avatar + name + time
+                    el.className = "o_rayton_message";
+                    el.innerHTML = `
+                        <div class="o_rayton_avatar">${initials}</div>
+                        <div class="o_rayton_msg_content">
+                            <div class="o_rayton_msg_meta">
+                                <span class="o_rayton_msg_author">${author}</span>
+                                <span class="o_rayton_msg_time">${time}</span>
+                            </div>
+                            <div class="o_rayton_msg_body">${body}</div>
+                        </div>`;
+                }
+
                 this._messagesEl.appendChild(el);
             });
 
@@ -325,6 +385,9 @@ class RaytonPanelManager {
         if (this._panel) {
             this._panel.style.width = newW + "px";
         }
+        if (this._toggle && this._open) {
+            this._toggle.style.right = newW + "px";
+        }
         this._shiftContent(this._open);
     }
 
@@ -360,6 +423,10 @@ patch(ListController.prototype, {
                 if (projectId) {
                     this._raytonPanel = new RaytonPanelManager(this.orm, this.action);
                     await this._raytonPanel.init(projectId);
+                    // Auto-open panel if channel is linked
+                    if (this._raytonPanel._channelId) {
+                        this._raytonPanel.togglePanel();
+                    }
                 }
             }
         });
@@ -373,9 +440,7 @@ patch(ListController.prototype, {
     },
 
     _isProjectTaskView() {
-        return (
-            this.model?.config?.resModel === "project.task"
-        );
+        return this.model?.config?.resModel === "project.task";
     },
 
     _getProjectId() {

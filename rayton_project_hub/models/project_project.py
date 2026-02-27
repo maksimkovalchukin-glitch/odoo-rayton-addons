@@ -4,7 +4,7 @@ from odoo import models, fields, api
 
 _logger = logging.getLogger(__name__)
 
-WEBHOOK_URL = "https://n8n.rayton.net/webhook/ca5cf6c3-a92e-470a-8af1-38b14b0ffff7"
+WEBHOOK_URL = "https://n8n.rayton.net/webhook-test/ca5cf6c3-a92e-470a-8af1-38b14b0ffff7"
 
 
 class ProjectProject(models.Model):
@@ -13,8 +13,7 @@ class ProjectProject(models.Model):
     discuss_channel_id = fields.Many2one(
         'discuss.channel',
         string='Канал обговорення',
-        help='Прив\'язаний канал Discuss для цього проекту. '
-             'Відображається як бокова панель у списку задач.',
+        help='Прив\'язаний канал Discuss для цього проекту.',
         domain=[('channel_type', '=', 'channel')],
         ondelete='set null',
     )
@@ -38,6 +37,26 @@ class ProjectProject(models.Model):
         string='Тип проекту',
         readonly=True,
     )
+
+    def action_create_discuss_channel(self):
+        """Create and link a Discuss channel for this project if not already linked."""
+        self.ensure_one()
+        if self.discuss_channel_id:
+            return {
+                'channel_id': self.discuss_channel_id.id,
+                'channel_name': self.discuss_channel_id.name,
+            }
+        channel = self.env['discuss.channel'].create({
+            'name': self.name,
+            'channel_type': 'channel',
+            'description': f'Канал проекту: {self.name}',
+        })
+        channel.add_members(partner_ids=[self.env.user.partner_id.id])
+        self.discuss_channel_id = channel.id
+        return {
+            'channel_id': channel.id,
+            'channel_name': channel.name,
+        }
 
     def _send_webhook(self, channel, initiator_user):
         """Send project initiation data to n8n webhook."""
