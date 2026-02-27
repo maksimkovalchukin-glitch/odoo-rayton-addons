@@ -72,6 +72,7 @@ class RaytonPanelManager {
         this._resizing = false;
         this._resizeStartX = 0;
         this._resizeStartW = 390;
+        this._pollInterval = null;
 
         this._onMouseMove = this._onMouseMove.bind(this);
         this._onMouseUp = this._onMouseUp.bind(this);
@@ -233,7 +234,11 @@ class RaytonPanelManager {
                 this._toggle.style.right = this.panelWidth + "px";
             }
             this._shiftContent(true);
-            if (this._channelId) this._loadMessages();
+            if (this._channelId) {
+                this._loadMessages();
+                // Auto-refresh every 8 seconds when panel is open
+                this._pollInterval = setInterval(() => this._loadMessages(), 8000);
+            }
         } else {
             this._panel.classList.remove("open");
             this._panel.style.width = "0";
@@ -242,6 +247,10 @@ class RaytonPanelManager {
                 this._toggle.style.right = "0px";
             }
             this._shiftContent(false);
+            if (this._pollInterval) {
+                clearInterval(this._pollInterval);
+                this._pollInterval = null;
+            }
         }
     }
 
@@ -411,6 +420,10 @@ class RaytonPanelManager {
     }
 
     destroy() {
+        if (this._pollInterval) {
+            clearInterval(this._pollInterval);
+            this._pollInterval = null;
+        }
         window.removeEventListener("mousemove", this._onMouseMove);
         window.removeEventListener("mouseup", this._onMouseUp);
         this._shiftContent(false);
