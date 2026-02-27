@@ -114,6 +114,19 @@ class RaytonProjectInitiateWizard(models.TransientModel):
         # ── 4. Link channel to project ────────────────────────────────────────
         new_project.discuss_channel_id = channel.id
 
+        # Post project info as the first message in the Discuss channel
+        # so that team members always have a link back to the project.
+        channel.message_post(
+            body=(
+                f'🗂 <b>Проект:</b> <a href="/web#model=project.project'
+                f'&id={new_project.id}&view_type=form">{project_name}</a><br/>'
+                f'📋 Тип: <b>{template_label}</b><br/>'
+                f'💼 Нагода: <b>{self.lead_id.name}</b>'
+            ),
+            message_type='comment',
+            subtype_xmlid='mail.mt_comment',
+        )
+
         # ── 5. Link project & mark lead as initiated ──────────────────────────
         self.lead_id.write({
             'project_id': new_project.id,

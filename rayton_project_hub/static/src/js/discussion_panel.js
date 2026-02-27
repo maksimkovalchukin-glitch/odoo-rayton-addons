@@ -163,14 +163,18 @@ class RaytonPanelManager {
         panel.querySelector(".o_rayton_panel_close")
             ?.addEventListener("click", () => this.togglePanel());
 
-        // Wire header title click → open full Discuss channel
+        // Wire header title click → navigate to Discuss channel (via action service)
         if (this._channelId) {
             panel.querySelector(".o_rayton_panel_header_title")
                 ?.addEventListener("click", () => {
-                    window.open(
-                        `/odoo/discuss?default_active_id=discuss.channel_${this._channelId}`,
-                        "_blank"
-                    );
+                    this.action.doAction({
+                        type: "ir.actions.client",
+                        tag: "mail.action_discuss",
+                    }, {
+                        additionalContext: {
+                            active_id: `discuss.channel_${this._channelId}`,
+                        },
+                    });
                 });
         }
 
@@ -461,27 +465,46 @@ class RaytonPanelManager {
     }
 }
 
-// ─── Patch KanbanController — redirect to list for project tasks ─────────────
+// ─── Patch KanbanController — show chat panel in kanban task view ────────────
+// Note: NO redirect to list — user can switch views freely.
+// The action's view_mode='list,kanban,form' already ensures list is default
+// when the project is opened from CRM or the wizard.
 
 patch(KanbanController.prototype, {
     setup() {
         super.setup(...arguments);
-        this._raytonAction = useService("action");
+        this.orm = useService("orm");
+        this.action = useService("action");
+        this._raytonPanel = null;
 
-        onMounted(() => {
-            if (this._raytonIsProjectTaskView()) {
-                // Switch to list view so the chat panel is available
-                setTimeout(() => {
-                    try { this._raytonAction.switchView("list"); } catch (_) {}
-                }, 0);
+        onMounted(async () => {
+            if (this._isProjectTaskView()) {
+                const projectId = this._getProjectId();
+                if (projectId) {
+                    this._raytonPanel = new RaytonPanelManager(this.orm, this.action);
+                    await this._raytonPanel.init(projectId);
+                    if (this._raytonPanel._channelId) {
+                        this._raytonPanel.togglePanel();
+                    }
+                }
+            }
+        });
+
+        onWillUnmount(() => {
+            if (this._raytonPanel) {
+                this._raytonPanel.destroy();
+                this._raytonPanel = null;
             }
         });
     },
 
-    _raytonIsProjectTaskView() {
+    _isProjectTaskView() {
+        return this.model?.config?.resModel === "project.task";
+    },
+
+    _getProjectId() {
         const ctx = this.model?.config?.context || {};
-        const projectId = ctx.default_project_id || ctx.active_id || null;
-        return this.model?.config?.resModel === "project.task" && !!projectId;
+        return ctx.default_project_id || ctx.active_id || null;
     },
 });
 
