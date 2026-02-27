@@ -9,6 +9,9 @@
         <field name="arch" type="xml">
 
             <xpath expr="//field[@name='stage_id']" position="before">
+                <!-- Hidden fields needed for invisible modifiers -->
+                <field name="project_initiated" invisible="1"/>
+                <field name="project_template_type" invisible="1"/>
                 <button
                     name="action_initiate_project"
                     type="object"
