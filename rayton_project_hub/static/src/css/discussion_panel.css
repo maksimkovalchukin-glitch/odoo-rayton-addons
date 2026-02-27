@@ -9,33 +9,31 @@
     top: 50%;
     transform: translateY(-50%);
     z-index: 1050;
-    background: linear-gradient(160deg, #6b46c1, #4a2e8a);
+    background: #875a7b;
     color: white;
     border: none;
-    border-radius: 10px 0 0 10px;
-    padding: 16px 9px;
+    border-radius: 8px 0 0 8px;
+    padding: 14px 8px;
     cursor: pointer;
-    box-shadow: -4px 0 18px rgba(74, 46, 138, 0.45);
+    box-shadow: -2px 0 12px rgba(0,0,0,0.15);
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 7px;
-    transition: right 0.32s cubic-bezier(0.4, 0, 0.2, 1), padding 0.2s, box-shadow 0.2s;
+    gap: 6px;
+    transition: right 0.32s cubic-bezier(0.4, 0, 0.2, 1), background 0.2s;
     writing-mode: vertical-rl;
     font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.6px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
     text-transform: uppercase;
 }
 
 .o_rayton_panel_toggle:hover {
-    padding-right: 14px;
-    box-shadow: -6px 0 24px rgba(74, 46, 138, 0.6);
-    background: linear-gradient(160deg, #7c5cbf, #5a3d99);
+    background: #6f4864;
 }
 
 .o_rayton_panel_toggle .o_toggle_icon {
-    font-size: 17px;
+    font-size: 15px;
     writing-mode: horizontal-tb;
 }
 
@@ -46,9 +44,9 @@
     top: 0;
     width: 0;
     height: 100vh;
-    background: #faf9ff;
-    border-left: 2px solid #e4daf7;
-    box-shadow: -8px 0 40px rgba(74, 46, 138, 0.13);
+    background: #fff;
+    border-left: 1px solid #dee2e6;
+    box-shadow: -4px 0 20px rgba(0,0,0,0.08);
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -69,18 +67,18 @@
 
 .o_rayton_panel_resize:hover,
 .o_rayton_panel_resize.resizing {
-    background: rgba(107, 70, 193, 0.25);
+    background: rgba(135, 90, 123, 0.2);
 }
 
 /* Panel header */
 .o_rayton_panel_header {
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 0 14px;
-    height: 54px;
-    min-height: 54px;
-    background: linear-gradient(135deg, #5a3d99, #7c5cbf);
+    gap: 8px;
+    padding: 0 12px;
+    height: 44px;
+    min-height: 44px;
+    background: #875a7b;
     color: #fff;
     flex-shrink: 0;
 }
@@ -92,7 +90,7 @@
 }
 
 .o_rayton_panel_header_title {
-    font-weight: 700;
+    font-weight: 600;
     font-size: 13px;
     white-space: nowrap;
     overflow: hidden;
@@ -101,29 +99,29 @@
 
 .o_rayton_panel_header_sub {
     font-size: 11px;
-    opacity: 0.75;
+    opacity: 0.8;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
 .o_rayton_panel_close {
-    background: rgba(255,255,255,0.15);
+    background: rgba(255,255,255,0.2);
     border: none;
     color: #fff;
-    width: 28px;
-    height: 28px;
-    border-radius: 6px;
+    width: 26px;
+    height: 26px;
+    border-radius: 4px;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    font-size: 14px;
+    font-size: 13px;
     transition: background 0.15s;
 }
 
-.o_rayton_panel_close:hover { background: rgba(255,255,255,0.3); }
+.o_rayton_panel_close:hover { background: rgba(255,255,255,0.35); }
 
 /* Body */
 .o_rayton_panel_body {
@@ -131,7 +129,7 @@
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    position: relative;
+    background: #f8f9fa;
 }
 
 /* Messages area */
@@ -141,19 +139,18 @@
     padding: 12px 10px 8px;
     display: flex;
     flex-direction: column;
-    gap: 0;
     scroll-behavior: smooth;
 }
 
 .o_rayton_messages::-webkit-scrollbar { width: 4px; }
 .o_rayton_messages::-webkit-scrollbar-track { background: transparent; }
-.o_rayton_messages::-webkit-scrollbar-thumb { background: #c4b5e8; border-radius: 4px; }
+.o_rayton_messages::-webkit-scrollbar-thumb { background: #c8b8d4; border-radius: 4px; }
 
 /* Date divider */
 .o_rayton_date_divider {
     text-align: center;
     font-size: 11px;
-    color: #a89cc8;
+    color: #888;
     font-weight: 600;
     margin: 10px 0 8px;
     display: flex;
@@ -166,7 +163,7 @@
     content: '';
     flex: 1;
     height: 1px;
-    background: #e4daf7;
+    background: #e0e0e0;
 }
 
 /* Message — first of a group */
@@ -187,18 +184,18 @@
     width: 32px;
     height: 32px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #7c5cbf, #a07be0);
+    background: #875a7b;
     color: #fff;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 11px;
-    font-weight: 800;
+    font-weight: 700;
     flex-shrink: 0;
     margin-top: 1px;
 }
 
-/* Gap placeholder for continuation messages (same width as avatar) */
+/* Gap placeholder same width as avatar for continuation messages */
 .o_rayton_avatar_gap {
     width: 32px;
     flex-shrink: 0;
@@ -210,35 +207,34 @@
     display: flex;
     align-items: baseline;
     gap: 6px;
-    margin-bottom: 3px;
+    margin-bottom: 2px;
 }
 
 .o_rayton_msg_author {
     font-size: 12px;
     font-weight: 700;
-    color: #3d2b7a;
+    color: #212529;
 }
 
 .o_rayton_msg_time {
     font-size: 10px;
-    color: #b0a0d0;
+    color: #aaa;
 }
 
 .o_rayton_msg_body {
     background: #fff;
-    border: 1px solid #ede8f9;
-    border-radius: 2px 10px 10px 10px;
-    padding: 7px 11px;
+    border: 1px solid #e9ecef;
+    border-radius: 0 8px 8px 8px;
+    padding: 6px 10px;
     font-size: 13px;
-    color: #2d2244;
+    color: #212529;
     line-height: 1.5;
     word-break: break-word;
-    box-shadow: 0 1px 4px rgba(107,70,193,0.06);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
 }
 
-/* Continuation body — slightly different border-radius */
 .o_rayton_continuation .o_rayton_msg_body {
-    border-radius: 4px 10px 10px 10px;
+    border-radius: 4px 8px 8px 8px;
 }
 
 /* Empty state */
@@ -248,38 +244,38 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    color: #a89cc8;
+    color: #aaa;
     padding: 24px;
     text-align: center;
     gap: 10px;
 }
 
 .o_rayton_empty i { font-size: 44px; opacity: 0.35; }
-.o_rayton_empty p { font-size: 13px; line-height: 1.6; margin: 0; }
-.o_rayton_empty a { color: #7c5cbf; font-weight: 600; text-decoration: none; font-size: 12px; }
+.o_rayton_empty p { font-size: 13px; line-height: 1.6; margin: 0; color: #666; }
+.o_rayton_empty a { color: #875a7b; font-weight: 600; text-decoration: none; font-size: 12px; }
 
 /* "Create channel" button */
 .o_rayton_create_channel_btn {
-    background: linear-gradient(135deg, #7c5cbf, #5a3d99);
+    background: #875a7b;
     color: #fff;
     border: none;
-    border-radius: 8px;
-    padding: 9px 20px;
+    border-radius: 6px;
+    padding: 8px 18px;
     font-size: 13px;
     font-weight: 600;
     cursor: pointer;
-    transition: opacity 0.2s;
+    transition: background 0.2s;
 }
 
-.o_rayton_create_channel_btn:hover { opacity: 0.88; }
+.o_rayton_create_channel_btn:hover { background: #6f4864; }
 .o_rayton_create_channel_btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
 /* Composer */
 .o_rayton_composer {
-    border-top: 1px solid #e4daf7;
-    padding: 10px 12px;
+    border-top: 1px solid #dee2e6;
+    padding: 8px 10px;
     display: flex;
-    gap: 8px;
+    gap: 6px;
     align-items: flex-end;
     background: #fff;
     flex-shrink: 0;
@@ -287,41 +283,41 @@
 
 .o_rayton_composer_input {
     flex: 1;
-    border: 1.5px solid #d1c4e9;
-    border-radius: 10px;
-    padding: 8px 12px;
+    border: 1px solid #ced4da;
+    border-radius: 8px;
+    padding: 7px 11px;
     font-size: 13px;
     resize: none;
-    min-height: 38px;
+    min-height: 36px;
     max-height: 120px;
     outline: none;
     font-family: inherit;
-    color: #2d2244;
+    color: #212529;
     transition: border-color 0.2s;
-    background: #faf9ff;
+    background: #fff;
     line-height: 1.5;
 }
 
-.o_rayton_composer_input:focus { border-color: #7c5cbf; background: #fff; }
+.o_rayton_composer_input:focus { border-color: #875a7b; }
 
 .o_rayton_send_btn {
-    background: linear-gradient(135deg, #7c5cbf, #5a3d99);
+    background: #875a7b;
     color: #fff;
     border: none;
-    border-radius: 10px;
-    width: 38px;
-    height: 38px;
+    border-radius: 8px;
+    width: 36px;
+    height: 36px;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    font-size: 14px;
-    transition: opacity 0.2s, transform 0.1s;
+    font-size: 13px;
+    transition: background 0.2s;
 }
 
-.o_rayton_send_btn:hover { opacity: 0.88; transform: scale(1.05); }
-.o_rayton_send_btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+.o_rayton_send_btn:hover { background: #6f4864; }
+.o_rayton_send_btn:disabled { opacity: 0.45; cursor: not-allowed; }
 
 /* Loading */
 .o_rayton_loading {
@@ -331,25 +327,25 @@
     justify-content: center;
     flex-direction: column;
     gap: 12px;
-    color: #7c5cbf;
+    color: #875a7b;
     font-size: 13px;
 }
 
 .o_rayton_spinner {
-    width: 28px;
-    height: 28px;
-    border: 3px solid #d1c4e9;
-    border-top-color: #7c5cbf;
+    width: 26px;
+    height: 26px;
+    border: 3px solid #e0d0db;
+    border-top-color: #875a7b;
     border-radius: 50%;
     animation: rayton_spin 0.75s linear infinite;
 }
 
 @keyframes rayton_spin { to { transform: rotate(360deg); } }
 
-/* Initiate button style in CRM */
+/* Initiate button in CRM */
 .o_rayton_initiate_btn {
-    background: linear-gradient(135deg, #7c5cbf, #5a3d99) !important;
-    border-color: #5a3d99 !important;
+    background: #875a7b !important;
+    border-color: #714b65 !important;
     font-weight: 600;
 }
 

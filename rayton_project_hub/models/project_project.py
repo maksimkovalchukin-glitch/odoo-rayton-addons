@@ -4,7 +4,7 @@ from odoo import models, fields, api
 
 _logger = logging.getLogger(__name__)
 
-WEBHOOK_URL = "https://n8n.rayton.net/webhook-test/ca5cf6c3-a92e-470a-8af1-38b14b0ffff7"
+WEBHOOK_URL = "https://n8n.rayton.net/webhook/ca5cf6c3-a92e-470a-8af1-38b14b0ffff7"
 
 
 class ProjectProject(models.Model):

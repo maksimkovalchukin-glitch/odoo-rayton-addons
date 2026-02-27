@@ -2,6 +2,7 @@
 
 import { patch } from "@web/core/utils/patch";
 import { ListController } from "@web/views/list/list_controller";
+import { KanbanController } from "@web/views/kanban/kanban_controller";
 import { useService } from "@web/core/utils/hooks";
 import { onMounted, onWillUnmount } from "@odoo/owl";
 
@@ -407,6 +408,30 @@ class RaytonPanelManager {
         this._panel?.remove();
     }
 }
+
+// ─── Patch KanbanController — redirect to list for project tasks ─────────────
+
+patch(KanbanController.prototype, {
+    setup() {
+        super.setup(...arguments);
+        this._raytonAction = useService("action");
+
+        onMounted(() => {
+            if (this._raytonIsProjectTaskView()) {
+                // Switch to list view so the chat panel is available
+                setTimeout(() => {
+                    try { this._raytonAction.switchView("list"); } catch (_) {}
+                }, 0);
+            }
+        });
+    },
+
+    _raytonIsProjectTaskView() {
+        const ctx = this.model?.config?.context || {};
+        const projectId = ctx.default_project_id || ctx.active_id || null;
+        return this.model?.config?.resModel === "project.task" && !!projectId;
+    },
+});
 
 // ─── Patch ListController ────────────────────────────────────────────────────
 
