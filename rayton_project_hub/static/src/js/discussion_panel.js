@@ -238,8 +238,8 @@ class RaytonPanelManager {
             this._shiftContent(true);
             if (this._channelId) {
                 this._loadMessages();
-                // Auto-refresh every 8 seconds when panel is open
-                this._pollInterval = setInterval(() => this._loadMessages(), 8000);
+                // Auto-refresh every 8 seconds (silent — no spinner flash)
+                this._pollInterval = setInterval(() => this._loadMessages(true), 8000);
             }
         } else {
             this._panel.classList.remove("open");
@@ -263,15 +263,21 @@ class RaytonPanelManager {
         el.style.marginRight = open ? this.panelWidth + "px" : "0px";
     }
 
-    async _loadMessages() {
+    async _loadMessages(silent = false) {
         if (!this._channelId || !this._messagesEl) return;
-        this._messagesEl.innerHTML = `
-            <div class="o_rayton_loading">
-                <div class="o_rayton_spinner"></div>
-                <span>Завантаження...</span>
-            </div>`;
+
+        // Show spinner only on first (non-silent) load
+        if (!silent) {
+            this._messagesEl.innerHTML = `
+                <div class="o_rayton_loading">
+                    <div class="o_rayton_spinner"></div>
+                    <span>Завантаження...</span>
+                </div>`;
+        }
 
         try {
+            // order: "date desc" + limit to get the LATEST 60 messages,
+            // then reverse so they display oldest-first in the panel
             const messages = await this.orm.searchRead(
                 "mail.message",
                 [
@@ -280,8 +286,9 @@ class RaytonPanelManager {
                     ["message_type", "in", ["comment", "email"]],
                 ],
                 ["author_id", "body", "date"],
-                { limit: 60, order: "date asc" }
+                { limit: 60, order: "date desc" }
             );
+            messages.reverse();
 
             this._messagesEl.innerHTML = "";
 
