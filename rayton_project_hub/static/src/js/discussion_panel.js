@@ -41,6 +41,16 @@ function stripHtml(html) {
     return d.textContent || d.innerText || "";
 }
 
+function buildAvatarHtml(partnerId, initials) {
+    if (!partnerId) {
+        return `<div class="o_rayton_avatar">${initials}</div>`;
+    }
+    return `<div class="o_rayton_avatar o_rayton_avatar_has_img" data-initials="${initials}">` +
+        `<img src="/web/image/res.partner/${partnerId}/avatar_128" alt="${initials}" class="o_rayton_avatar_img" ` +
+        `onerror="this.remove();this.parentNode.textContent=this.parentNode.dataset.initials;this.parentNode.classList.remove('o_rayton_avatar_has_img')"/>` +
+        `</div>`;
+}
+
 // ─── Panel Manager ───────────────────────────────────────────────────────────
 
 class RaytonPanelManager {
@@ -309,10 +319,10 @@ class RaytonPanelManager {
                             <div class="o_rayton_msg_body">${body}</div>
                         </div>`;
                 } else {
-                    // New author → show avatar + name + time
+                    // New author → show avatar photo + name + time
                     el.className = "o_rayton_message";
                     el.innerHTML = `
-                        <div class="o_rayton_avatar">${initials}</div>
+                        ${buildAvatarHtml(authorId, initials)}
                         <div class="o_rayton_msg_content">
                             <div class="o_rayton_msg_meta">
                                 <span class="o_rayton_msg_author">${author}</span>
