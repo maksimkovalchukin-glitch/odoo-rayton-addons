@@ -140,7 +140,7 @@ class RaytonProjectInitiateWizard(models.TransientModel):
             body=Markup(
                 f'🚀 <b>Проект ініційовано</b><br/>'
                 f'Тип: <b>{template_label}</b><br/>'
-                f'Проект: <a href="/odoo/project/{new_project.id}">{project_name}</a><br/>'
+                f'Проект: <a href="/web#model=project.project&id={new_project.id}&view_type=form">{project_name}</a><br/>'
                 f'Канал Discuss: <b>#{channel.name}</b>'
             ),
             message_type='comment',
