@@ -364,6 +364,29 @@
     font-weight: 600;
 }
 
-@media (max-width: 900px) {
-    .o_rayton_discussion_panel { width: 100vw !important; }
+@media (max-width: 768px) {
+    /* Full-screen overlay on mobile, above all Odoo controls */
+    .o_rayton_discussion_panel {
+        width: 100vw !important;
+        z-index: 1060;
+    }
+
+    /* Larger touch target for close button */
+    .o_rayton_panel_close {
+        width: 40px;
+        height: 40px;
+        font-size: 18px;
+        background: rgba(255,255,255,0.25);
+    }
+
+    /* Bigger send button on mobile */
+    .o_rayton_send_btn {
+        width: 44px;
+        height: 44px;
+    }
+
+    /* Taller composer input for touch */
+    .o_rayton_composer_input {
+        min-height: 44px;
+    }
 }

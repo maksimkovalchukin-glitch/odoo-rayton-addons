@@ -244,15 +244,25 @@ class RaytonPanelManager {
         }
     }
 
+    _isMobile() {
+        return window.innerWidth <= 768;
+    }
+
     togglePanel() {
         this._open = !this._open;
+        const mobile = this._isMobile();
 
         if (this._open) {
-            this._panel.style.width = this.panelWidth + "px";
+            this._panel.style.width = mobile ? "100vw" : this.panelWidth + "px";
             this._panel.classList.add("open");
             if (this._toggle) {
                 this._toggle.innerHTML = `<span class="o_toggle_icon">❮</span>`;
-                this._toggle.style.right = this.panelWidth + "px";
+                if (mobile) {
+                    // Hide toggle on mobile — use the ✕ button inside the panel
+                    this._toggle.style.display = "none";
+                } else {
+                    this._toggle.style.right = this.panelWidth + "px";
+                }
             }
             this._shiftContent(true);
             if (this._channelId) {
@@ -266,6 +276,7 @@ class RaytonPanelManager {
             if (this._toggle) {
                 this._toggle.innerHTML = `<span class="o_toggle_icon">💬</span><span>Чат</span>`;
                 this._toggle.style.right = "0px";
+                this._toggle.style.display = ""; // restore toggle visibility
             }
             this._shiftContent(false);
             if (this._pollInterval) {
@@ -276,6 +287,7 @@ class RaytonPanelManager {
     }
 
     _shiftContent(open) {
+        if (this._isMobile()) return; // panel is overlay on mobile — no content shift
         const el = document.querySelector(".o_action_manager > .o_action");
         if (!el) return;
         el.style.transition = "margin-right 0.32s cubic-bezier(0.4, 0, 0.2, 1)";
@@ -483,7 +495,8 @@ patch(KanbanController.prototype, {
                 if (projectId) {
                     this._raytonPanel = new RaytonPanelManager(this.orm, this.action);
                     await this._raytonPanel.init(projectId);
-                    if (this._raytonPanel._channelId) {
+                    // Auto-open only on desktop — on mobile the user opens manually
+                    if (this._raytonPanel._channelId && window.innerWidth > 768) {
                         this._raytonPanel.togglePanel();
                     }
                 }
@@ -523,8 +536,8 @@ patch(ListController.prototype, {
                 if (projectId) {
                     this._raytonPanel = new RaytonPanelManager(this.orm, this.action);
                     await this._raytonPanel.init(projectId);
-                    // Auto-open panel if channel is linked
-                    if (this._raytonPanel._channelId) {
+                    // Auto-open only on desktop — on mobile the user opens manually
+                    if (this._raytonPanel._channelId && window.innerWidth > 768) {
                         this._raytonPanel.togglePanel();
                     }
                 }
