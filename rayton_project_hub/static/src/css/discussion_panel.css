@@ -379,9 +379,9 @@
 }
 
 @media (max-width: 768px) {
-    /* Full-screen overlay on mobile */
+    /* Full-screen overlay on mobile — width is set by JS (100vw open, 0 closed)
+       DO NOT put width here with !important — it would override the JS close logic */
     .o_rayton_discussion_panel {
-        width: 100vw !important;
         z-index: 1060;
     }
 
