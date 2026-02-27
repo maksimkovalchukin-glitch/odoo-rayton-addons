@@ -73,6 +73,7 @@ class RaytonPanelManager {
         this._resizeStartX = 0;
         this._resizeStartW = 390;
         this._pollInterval = null;
+        this._lastRenderedMsgId = null;
 
         this._onMouseMove = this._onMouseMove.bind(this);
         this._onMouseUp = this._onMouseUp.bind(this);
@@ -147,7 +148,10 @@ class RaytonPanelManager {
             <div class="o_rayton_panel_resize"></div>
             <div class="o_rayton_panel_header">
                 <div class="o_rayton_panel_header_info">
-                    <div class="o_rayton_panel_header_title">💬 Обговорення проекту</div>
+                    <div class="o_rayton_panel_header_title"
+                         title="${ch ? 'Відкрити в Discuss ↗' : ''}">
+                        💬 Обговорення проекту${ch ? ' ↗' : ''}
+                    </div>
                     ${chName ? `<div class="o_rayton_panel_header_sub"># ${chName}</div>` : ""}
                 </div>
                 <button class="o_rayton_panel_close" title="Закрити">✕</button>
@@ -158,6 +162,17 @@ class RaytonPanelManager {
         // Wire close button
         panel.querySelector(".o_rayton_panel_close")
             ?.addEventListener("click", () => this.togglePanel());
+
+        // Wire header title click → open full Discuss channel
+        if (this._channelId) {
+            panel.querySelector(".o_rayton_panel_header_title")
+                ?.addEventListener("click", () => {
+                    window.open(
+                        `/odoo/discuss?default_active_id=discuss.channel_${this._channelId}`,
+                        "_blank"
+                    );
+                });
+        }
 
         // Wire resize handle
         panel.querySelector(".o_rayton_panel_resize")
@@ -285,10 +300,15 @@ class RaytonPanelManager {
                     ["model", "=", "discuss.channel"],
                     ["message_type", "in", ["comment", "email"]],
                 ],
-                ["author_id", "body", "date"],
+                ["id", "author_id", "body", "date"],
                 { limit: 60, order: "date desc" }
             );
             messages.reverse();
+
+            // Silent refresh: skip full DOM rebuild if nothing changed
+            const lastId = messages.length ? messages[messages.length - 1].id : null;
+            if (silent && lastId === this._lastRenderedMsgId) return;
+            this._lastRenderedMsgId = lastId;
 
             this._messagesEl.innerHTML = "";
 

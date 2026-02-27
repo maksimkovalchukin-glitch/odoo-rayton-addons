@@ -9,7 +9,7 @@
     top: 50%;
     transform: translateY(-50%);
     z-index: 1050;
-    background: #2AABEE;
+    background: #5a3d99;
     color: white;
     border: none;
     border-radius: 8px 0 0 8px;
@@ -29,7 +29,7 @@
 }
 
 .o_rayton_panel_toggle:hover {
-    background: #1a96d8;
+    background: #4a3282;
 }
 
 .o_rayton_panel_toggle .o_toggle_icon {
@@ -67,7 +67,7 @@
 
 .o_rayton_panel_resize:hover,
 .o_rayton_panel_resize.resizing {
-    background: rgba(42, 171, 238, 0.2);
+    background: rgba(90, 61, 153, 0.2);
 }
 
 /* Panel header */
@@ -78,7 +78,7 @@
     padding: 0 12px;
     height: 44px;
     min-height: 44px;
-    background: #2AABEE;
+    background: #5a3d99;
     color: #fff;
     flex-shrink: 0;
 }
@@ -95,6 +95,12 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    cursor: pointer;
+}
+
+.o_rayton_panel_header_title:hover {
+    opacity: 0.85;
+    text-decoration: underline;
 }
 
 .o_rayton_panel_header_sub {
@@ -144,7 +150,7 @@
 
 .o_rayton_messages::-webkit-scrollbar { width: 4px; }
 .o_rayton_messages::-webkit-scrollbar-track { background: transparent; }
-.o_rayton_messages::-webkit-scrollbar-thumb { background: #a8d8f5; border-radius: 4px; }
+.o_rayton_messages::-webkit-scrollbar-thumb { background: #c8b8e8; border-radius: 4px; }
 
 /* Date divider */
 .o_rayton_date_divider {
@@ -184,7 +190,7 @@
     width: 32px;
     height: 32px;
     border-radius: 50%;
-    background: #2AABEE;
+    background: #5a3d99;
     color: #fff;
     display: flex;
     align-items: center;
@@ -261,11 +267,11 @@
 
 .o_rayton_empty i { font-size: 44px; opacity: 0.35; }
 .o_rayton_empty p { font-size: 13px; line-height: 1.6; margin: 0; color: #666; }
-.o_rayton_empty a { color: #2AABEE; font-weight: 600; text-decoration: none; font-size: 12px; }
+.o_rayton_empty a { color: #5a3d99; font-weight: 600; text-decoration: none; font-size: 12px; }
 
 /* "Create channel" button */
 .o_rayton_create_channel_btn {
-    background: #2AABEE;
+    background: #5a3d99;
     color: #fff;
     border: none;
     border-radius: 6px;
@@ -276,7 +282,7 @@
     transition: background 0.2s;
 }
 
-.o_rayton_create_channel_btn:hover { background: #1a96d8; }
+.o_rayton_create_channel_btn:hover { background: #4a3282; }
 .o_rayton_create_channel_btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
 /* Composer */
@@ -307,10 +313,10 @@
     line-height: 1.5;
 }
 
-.o_rayton_composer_input:focus { border-color: #2AABEE; }
+.o_rayton_composer_input:focus { border-color: #5a3d99; }
 
 .o_rayton_send_btn {
-    background: #2AABEE;
+    background: #5a3d99;
     color: #fff;
     border: none;
     border-radius: 8px;
@@ -325,7 +331,7 @@
     transition: background 0.2s;
 }
 
-.o_rayton_send_btn:hover { background: #1a96d8; }
+.o_rayton_send_btn:hover { background: #4a3282; }
 .o_rayton_send_btn:disabled { opacity: 0.45; cursor: not-allowed; }
 
 /* Loading */
@@ -336,15 +342,15 @@
     justify-content: center;
     flex-direction: column;
     gap: 12px;
-    color: #2AABEE;
+    color: #5a3d99;
     font-size: 13px;
 }
 
 .o_rayton_spinner {
     width: 26px;
     height: 26px;
-    border: 3px solid #cceeff;
-    border-top-color: #2AABEE;
+    border: 3px solid #e0d4f5;
+    border-top-color: #5a3d99;
     border-radius: 50%;
     animation: rayton_spin 0.75s linear infinite;
 }
@@ -353,8 +359,8 @@
 
 /* Initiate button in CRM */
 .o_rayton_initiate_btn {
-    background: #2AABEE !important;
-    border-color: #1a96d8 !important;
+    background: #5a3d99 !important;
+    border-color: #4a3282 !important;
     font-weight: 600;
 }
 
