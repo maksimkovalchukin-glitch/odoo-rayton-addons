@@ -74,6 +74,7 @@ class RaytonPanelManager {
         this._resizeStartW = 390;
         this._pollInterval = null;
         this._lastRenderedMsgId = null;
+        this._backdrop = null;
 
         this._onMouseMove = this._onMouseMove.bind(this);
         this._onMouseUp = this._onMouseUp.bind(this);
@@ -104,6 +105,18 @@ class RaytonPanelManager {
     }
 
     _mountDOM() {
+        // Backdrop — tapping it closes the panel on mobile
+        const backdrop = document.createElement("div");
+        backdrop.className = "o_rayton_backdrop";
+        // Use touchstart so the response is instant on mobile
+        backdrop.addEventListener("touchstart", (e) => {
+            e.preventDefault();
+            this.togglePanel();
+        }, { passive: false });
+        backdrop.addEventListener("click", () => this.togglePanel());
+        document.body.appendChild(backdrop);
+        this._backdrop = backdrop;
+
         // Toggle button
         const toggle = document.createElement("button");
         toggle.className = "o_rayton_panel_toggle";
@@ -257,12 +270,15 @@ class RaytonPanelManager {
             this._panel.classList.add("open");
             if (this._toggle) {
                 this._toggle.innerHTML = `<span class="o_toggle_icon">❮</span>`;
-                if (mobile) {
-                    // Hide toggle on mobile — use the ✕ button inside the panel
-                    this._toggle.style.display = "none";
-                } else {
+                // On mobile: toggle stays at right:0 — CSS gives it z-index:1070
+                // so it sits above the panel (1060) and is always tappable
+                if (!mobile) {
                     this._toggle.style.right = this.panelWidth + "px";
                 }
+            }
+            // Show backdrop on mobile so tapping outside the toggle also closes
+            if (mobile && this._backdrop) {
+                this._backdrop.classList.add("active");
             }
             this._shiftContent(true);
             if (this._channelId) {
@@ -276,7 +292,9 @@ class RaytonPanelManager {
             if (this._toggle) {
                 this._toggle.innerHTML = `<span class="o_toggle_icon">💬</span><span>Чат</span>`;
                 this._toggle.style.right = "0px";
-                this._toggle.style.display = ""; // restore toggle visibility
+            }
+            if (this._backdrop) {
+                this._backdrop.classList.remove("active");
             }
             this._shiftContent(false);
             if (this._pollInterval) {
@@ -472,6 +490,7 @@ class RaytonPanelManager {
         window.removeEventListener("mousemove", this._onMouseMove);
         window.removeEventListener("mouseup", this._onMouseUp);
         this._shiftContent(false);
+        this._backdrop?.remove();
         this._toggle?.remove();
         this._panel?.remove();
     }

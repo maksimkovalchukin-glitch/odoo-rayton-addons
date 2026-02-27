@@ -364,28 +364,45 @@
     font-weight: 600;
 }
 
+/* Backdrop — shown on mobile when panel is open */
+.o_rayton_backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.35);
+    z-index: 1055; /* below panel (1060) and toggle (1070) */
+    -webkit-tap-highlight-color: transparent;
+}
+
+.o_rayton_backdrop.active {
+    display: block;
+}
+
 @media (max-width: 768px) {
-    /* Full-screen overlay on mobile, above all Odoo controls */
+    /* Full-screen overlay on mobile */
     .o_rayton_discussion_panel {
         width: 100vw !important;
         z-index: 1060;
     }
 
-    /* Larger touch target for close button */
+    /* Toggle sits ABOVE the panel on mobile so it is always tappable */
+    .o_rayton_panel_toggle {
+        z-index: 1070;
+    }
+
+    /* Larger touch targets */
     .o_rayton_panel_close {
-        width: 40px;
-        height: 40px;
-        font-size: 18px;
+        width: 44px;
+        height: 44px;
+        font-size: 20px;
         background: rgba(255,255,255,0.25);
     }
 
-    /* Bigger send button on mobile */
     .o_rayton_send_btn {
         width: 44px;
         height: 44px;
     }
 
-    /* Taller composer input for touch */
     .o_rayton_composer_input {
         min-height: 44px;
     }
