@@ -87,6 +87,7 @@ class RaytonProjectInitiateWizard(models.TransientModel):
             new_project = template.copy(default={
                 'name': project_name,
                 'active': True,
+                'user_id': self.env.user.id,
                 'crm_lead_id': self.lead_id.id,
                 'project_template_type': self.template_type,
             })
@@ -98,6 +99,7 @@ class RaytonProjectInitiateWizard(models.TransientModel):
             )
             new_project = self.env['project.project'].create({
                 'name': project_name,
+                'user_id': self.env.user.id,
                 'crm_lead_id': self.lead_id.id,
                 'project_template_type': self.template_type,
             })
