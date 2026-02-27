@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="rayton_project_initiate_wizard_view_form" model="ir.ui.view">
+        <field name="name">rayton.project.initiate.wizard.form</field>
+        <field name="model">rayton.project.initiate.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Ініціювати проект">
+                <sheet>
+                    <div class="o_setting_box" style="margin-bottom:0;">
+                        <div class="text-center mb-3">
+                            <h4 style="color:#5a3d99;font-weight:700;">
+                                🚀 Ініціювати проект
+                            </h4>
+                            <p class="text-muted" style="font-size:13px;">
+                                Оберіть тип проекту для нагоди:
+                                <strong><field name="lead_name" readonly="1" nolabel="1" style="display:inline;"/></strong>
+                            </p>
+                        </div>
+
+                        <field name="lead_id" invisible="1"/>
+
+                        <!-- Template type selection as radio buttons -->
+                        <group>
+                            <field
+                                name="template_type"
+                                widget="radio"
+                                string="Тип проекту"
+                                required="1"
+                                options="{'horizontal': false}"
+                            />
+                        </group>
+
+                        <!-- Preview of project name -->
+                        <div
+                            attrs="{'invisible': [('template_type', '=', False)]}"
+                            class="alert alert-info mt-2"
+                            style="border-left:4px solid #7c5cbf;background:#f4f0ff;"
+                        >
+                            <strong>Буде створено:</strong><br/>
+                            📁 Проект: <field name="project_name" readonly="1" nolabel="1" style="display:inline;font-weight:600;"/><br/>
+                            💬 Канал Discuss: # <field name="project_name" readonly="1" nolabel="1" style="display:inline;font-weight:600;"/><br/>
+                            📡 Вебхук → n8n → Telegram група
+                        </div>
+                    </div>
+                </sheet>
+                <footer>
+                    <button
+                        name="action_confirm"
+                        type="object"
+                        string="✅ Створити проект"
+                        class="btn-primary"
+                    />
+                    <button
+                        string="Скасувати"
+                        class="btn-secondary"
+                        special="cancel"
+                    />
+                </footer>
+            </form>
+        </field>
+    </record>
+
+</odoo>

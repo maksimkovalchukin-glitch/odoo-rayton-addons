@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ── Project Form: поле Discuss Channel ── -->
+    <record id="project_project_view_form_inherit_rayton" model="ir.ui.view">
+        <field name="name">project.project.view.form.inherit.rayton.hub</field>
+        <field name="model">project.project</field>
+        <field name="inherit_id" ref="project.edit_project"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='partner_id']" position="after">
+                <field
+                    name="discuss_channel_id"
+                    string="Канал обговорення (Discuss)"
+                    placeholder="Прив'язати канал..."
+                    options="{'no_quick_create': True}"
+                />
+                <field name="crm_lead_id" string="CRM Нагода" readonly="1"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- ── Task list view: marker class for JS to detect project context ── -->
+    <record id="project_task_view_list_inherit_rayton" model="ir.ui.view">
+        <field name="name">project.task.view.list.inherit.rayton.hub</field>
+        <field name="model">project.task</field>
+        <field name="inherit_id" ref="project.view_task_tree2"/>
+        <field name="arch" type="xml">
+            <xpath expr="//list" position="attributes">
+                <attribute name="class">o_rayton_task_list</attribute>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

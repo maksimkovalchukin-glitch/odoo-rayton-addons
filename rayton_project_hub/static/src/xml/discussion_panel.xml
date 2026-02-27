@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <!-- Toggle button attached to right edge -->
+    <t t-name="rayton_project_hub.PanelToggle">
+        <button class="o_rayton_panel_toggle" t-on-click="toggle"
+                t-att-title="state.open ? 'Закрити обговорення' : 'Відкрити обговорення'">
+            <span class="o_toggle_icon">
+                <t t-if="state.open">❮</t>
+                <t t-else="">💬</t>
+            </span>
+            <t t-if="!state.open"><span>Чат</span></t>
+        </button>
+    </t>
+
+    <!-- Full side panel -->
+    <t t-name="rayton_project_hub.DiscussionPanel">
+        <div t-attf-class="o_rayton_discussion_panel {{ state.open ? 'open' : '' }}">
+            <div class="o_rayton_panel_resize" t-ref="resize"/>
+
+            <!-- Header -->
+            <div class="o_rayton_panel_header">
+                <div class="o_rayton_panel_header_info">
+                    <div class="o_rayton_panel_header_title">💬 Обговорення проекту</div>
+                    <t t-if="props.channelName">
+                        <div class="o_rayton_panel_header_sub"># <t t-esc="props.channelName"/></div>
+                    </t>
+                </div>
+                <button class="o_rayton_panel_close" t-on-click="toggle" title="Закрити">✕</button>
+            </div>
+
+            <!-- Body -->
+            <div class="o_rayton_panel_body">
+                <t t-if="state.loading">
+                    <div class="o_rayton_loading">
+                        <div class="o_rayton_spinner"/>
+                        <span>Завантаження...</span>
+                    </div>
+                </t>
+                <t t-elif="!props.channelId">
+                    <div class="o_rayton_empty">
+                        <i class="fa fa-comments-o"/>
+                        <p>
+                            До цього проекту не прив'язано канал.<br/>
+                            <a t-on-click="openSettings">Налаштувати проект</a>
+                        </p>
+                    </div>
+                </t>
+                <t t-else="">
+                    <div class="o_rayton_messages" t-ref="messages"/>
+                    <div class="o_rayton_composer">
+                        <textarea
+                            class="o_rayton_composer_input"
+                            placeholder="Написати повідомлення... (Enter — надіслати)"
+                            t-ref="composerInput"
+                            rows="1"
+                        />
+                        <button class="o_rayton_send_btn" t-on-click="sendMessage" title="Надіслати">
+                            ➤
+                        </button>
+                    </div>
+                </t>
+            </div>
+        </div>
+    </t>
+
+</templates>

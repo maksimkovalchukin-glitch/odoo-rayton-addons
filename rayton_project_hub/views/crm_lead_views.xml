@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ── CRM Lead Form: Кнопка "Ініціювати проект" ── -->
+    <record id="crm_lead_view_form_inherit_rayton" model="ir.ui.view">
+        <field name="name">crm.lead.view.form.inherit.rayton.project.hub</field>
+        <field name="model">crm.lead</field>
+        <field name="inherit_id" ref="crm.crm_lead_all_leads"/>
+        <field name="arch" type="xml">
+
+            <!-- Add button in the header button area -->
+            <xpath expr="//div[hasclass('o_statusbar_buttons')]" position="inside">
+                <!-- Show "Ініціювати проект" when not yet initiated -->
+                <button
+                    name="action_initiate_project"
+                    type="object"
+                    string="🚀 Ініціювати проект"
+                    class="btn-primary o_rayton_initiate_btn"
+                    attrs="{'invisible': [('project_initiated', '=', True)]}"
+                />
+                <!-- Show "Відкрити проект" when already initiated -->
+                <button
+                    name="action_open_project"
+                    type="object"
+                    string="📁 Відкрити проект"
+                    class="btn-secondary"
+                    attrs="{'invisible': [('project_initiated', '=', False)]}"
+                />
+            </xpath>
+
+            <!-- Add project info badge near status bar -->
+            <xpath expr="//div[hasclass('o_statusbar_status')]" position="before">
+                <span
+                    attrs="{'invisible': [('project_initiated', '=', False)]}"
+                    class="badge rounded-pill text-bg-success ms-2 align-self-center"
+                    style="font-size:11px;padding:4px 10px;"
+                >
+                    ✅ Проект: <field name="project_template_type" readonly="1" nolabel="1"/>
+                </span>
+            </xpath>
+
+        </field>
+    </record>
+
+</odoo>
