@@ -2,6 +2,7 @@ import re
 import math
 import logging
 import requests
+from markupsafe import Markup
 from odoo import models, fields, api
 from odoo.exceptions import UserError
 
@@ -388,6 +389,26 @@ class SaleOrder(models.Model):
         if self.user_id and not self.kp_manager_id:
             self.kp_manager_id = self.user_id
 
+    # ── Helpers ───────────────────────────────────────────────────────────────
+
+    def _kp_get_opportunity(self):
+        """Return linked CRM lead/opportunity, or None.
+        Safe: checks field existence so module works without sale_crm."""
+        self.ensure_one()
+        if 'opportunity_id' in self._fields:
+            return self.opportunity_id or None
+        return None
+
+    def _kp_post_to_lead(self, lead, body):
+        """Post a message to the CRM lead referencing this sale order."""
+        lead.message_post(
+            body=Markup('{} (<a href="/odoo/sales/{}">{}</a>)').format(
+                Markup(body), self.id, self.name
+            ),
+            message_type='comment',
+            subtype_xmlid='mail.mt_comment',
+        )
+
     # ── Generate action ───────────────────────────────────────────────────────
 
     def action_generate_kp(self):
@@ -415,16 +436,24 @@ class SaleOrder(models.Model):
             _logger.error("[rayton_sale_kp] Webhook error: %s", e)
             raise UserError(f'Помилка надсилання на n8n: {e}')
 
+        kp_label = dict(self._fields['kp_type'].selection)[self.kp_type]
         self.kp_state = 'pending'
         self.message_post(
             body=(
-                f'📤 КП запущено в генерацію '
-                f'({dict(self._fields["kp_type"].selection)[self.kp_type]}). '
+                f'📤 КП запущено в генерацію ({kp_label}). '
                 f'PDF буде додано автоматично.'
             ),
             message_type='comment',
             subtype_xmlid='mail.mt_comment',
         )
+
+        # Mirror to linked CRM opportunity
+        lead = self._kp_get_opportunity()
+        if lead:
+            self._kp_post_to_lead(
+                lead,
+                f'📤 КП запущено в генерацію ({kp_label}). PDF буде додано автоматично.',
+            )
 
     # ── SES builders ──────────────────────────────────────────────────────────
 

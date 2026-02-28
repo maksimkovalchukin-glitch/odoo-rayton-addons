@@ -52,16 +52,31 @@ class KpCallbackController(http.Controller):
 
             # Update state and post chatter message with download link
             order.kp_state = 'done'
+            pdf_link = Markup(
+                f'✅ <b>Комерційна пропозиція готова!</b><br/>'
+                f'📄 <a href="/web/content/{attachment.id}?download=true">'
+                f'{filename}</a>'
+            )
             order.sudo().message_post(
-                body=Markup(
-                    f'✅ <b>Комерційна пропозиція готова!</b><br/>'
-                    f'📄 <a href="/web/content/{attachment.id}?download=true">'
-                    f'{filename}</a>'
-                ),
+                body=pdf_link,
                 attachment_ids=[attachment.id],
                 message_type='comment',
                 subtype_xmlid='mail.mt_comment',
             )
+
+            # Mirror to linked CRM opportunity if present
+            if 'opportunity_id' in order._fields and order.opportunity_id:
+                lead = order.opportunity_id
+                lead.message_post(
+                    body=Markup(
+                        f'✅ <b>Комерційна пропозиція готова!</b> '
+                        f'(<a href="/odoo/sales/{order.id}">{order.name}</a>)<br/>'
+                        f'📄 <a href="/web/content/{attachment.id}?download=true">'
+                        f'{filename}</a>'
+                    ),
+                    message_type='comment',
+                    subtype_xmlid='mail.mt_comment',
+                )
 
             _logger.info(
                 "[rayton_sale_kp] PDF '%s' attached to sale.order id=%s",
