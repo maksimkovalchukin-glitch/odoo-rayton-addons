@@ -325,9 +325,16 @@ class SaleOrder(models.Model):
             module_kw = _get_module_watts_kw(rec.kp_module_type or '')
             if rec.kp_panel_qty and module_kw:
                 dc = rec.kp_panel_qty * module_kw
-                rec.kp_manual_dc_info = f'⚡ DC потужність: {dc:.2f} кВт'
+                ac_min = dc / MAX_RATIO   # при DC/AC = 1.5
+                ac_max = dc / MIN_RATIO   # при DC/AC = 1.1
+                ac_opt = dc / DC_AC_RATIO # оптимальне
+                rec.kp_manual_dc_info = (
+                    f'⚡  DC: {dc:.2f} кВт  |  '
+                    f'Потрібне AC: {ac_min:.0f} – {ac_max:.0f} кВт  '
+                    f'(оптим. ~{ac_opt:.0f} кВт)'
+                )
             else:
-                rec.kp_manual_dc_info = ''
+                rec.kp_manual_dc_info = 'Оберіть тип панелей та кількість'
 
     @api.depends(
         'kp_inv1_model', 'kp_inv1_qty',

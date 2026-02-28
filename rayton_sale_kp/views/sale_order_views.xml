@@ -83,10 +83,17 @@
                     <group string="🔆 Кількість панелей"
                            invisible="kp_type != 'ses' or kp_ses_mode != 'manual'">
                         <field name="kp_panel_qty" string="Кількість панелей"/>
+                    </group>
+
+                    <!-- ── Manual: DC потужність підказка (full width) ────── -->
+                    <group col="1"
+                           invisible="kp_type != 'ses' or kp_ses_mode != 'manual'">
                         <field name="kp_manual_dc_info"
                                nolabel="1" readonly="1"
-                               style="color:#0d6efd; font-weight:600; font-size:13px;
-                                      padding:4px 8px;"/>
+                               style="display:block; width:100%;
+                                      color:#0d6efd; font-weight:600; font-size:14px;
+                                      background:#f0f8ff; padding:10px 14px;
+                                      border-radius:6px; border:1px solid #b3d1f0;"/>
                     </group>
 
                     <!-- ── Manual: інвертори ──────────────────────────────── -->
@@ -106,12 +113,14 @@
                         </group>
                     </group>
 
-                    <!-- ── DC/AC підсумок ─────────────────────────────────── -->
-                    <group invisible="kp_type != 'ses' or kp_ses_mode != 'manual'">
+                    <!-- ── DC/AC підсумок (full width) ───────────────────── -->
+                    <group col="1"
+                           invisible="kp_type != 'ses' or kp_ses_mode != 'manual'">
                         <field name="kp_manual_ratio_info"
                                nolabel="1" readonly="1"
-                               style="font-weight:600; font-size:13px;
-                                      background:#f0f4ff; padding:8px 12px;
+                               style="display:block; width:100%;
+                                      font-weight:600; font-size:14px;
+                                      background:#f0f4ff; padding:10px 14px;
                                       border-radius:6px; border:1px solid #c8d4f0;"/>
                     </group>
 
