@@ -253,38 +253,39 @@ class RaytonProjectInitiateWizard(models.TransientModel):
         tg_chat = self.env['rayton.telegram.chat'].search([
             ('state', '=', 'free'),
         ], limit=1)
-        if tg_chat:
-            tg_chat.write({
-                'state': 'busy',
-                'project_id': new_project.id,
-                'discuss_channel_id': channel.id,
-            })
-            _logger.info(
-                "[RaytonProjectHub] TG chat assigned: %s (%s)",
-                tg_chat.name, tg_chat.tg_chat_id,
-            )
+        if not tg_chat:
+            raise UserError(_(
+                'Неможливо ініціювати проект: у пулі не залишилося вільних Telegram-груп.\n\n'
+                'Будь ласка, зверніться до адміністратора — потрібно додати нові групи у розділі\n'
+                'Проект → Конфігурація → Telegram групи.'
+            ))
 
-            # Add initiator to TG group as admin (if tg_user_id is set)
-            tg_user_id = getattr(self.env.user, 'tg_user_id', '') or ''
-            if tg_user_id:
-                token = self.env['ir.config_parameter'].sudo().get_param(
-                    'rayton_project_hub.tg_bot_token', ''
-                )
-                if token:
-                    tg_chat.add_admin_to_chat(tg_user_id, token)
-                else:
-                    _logger.warning(
-                        "[RaytonProjectHub] TG bot token not set — cannot add initiator to TG group."
-                    )
+        tg_chat.write({
+            'state': 'busy',
+            'project_id': new_project.id,
+            'discuss_channel_id': channel.id,
+        })
+        _logger.info(
+            "[RaytonProjectHub] TG chat assigned: %s (%s)",
+            tg_chat.name, tg_chat.tg_chat_id,
+        )
+
+        # Add initiator to TG group as admin (if tg_user_id is set)
+        tg_user_id = getattr(self.env.user, 'tg_user_id', '') or ''
+        if tg_user_id:
+            token = self.env['ir.config_parameter'].sudo().get_param(
+                'rayton_project_hub.tg_bot_token', ''
+            )
+            if token:
+                tg_chat.add_admin_to_chat(tg_user_id, token)
             else:
-                _logger.info(
-                    "[RaytonProjectHub] Initiator '%s' has no tg_user_id — skipping TG group add.",
-                    self.env.user.name,
+                _logger.warning(
+                    "[RaytonProjectHub] TG bot token not set — cannot add initiator to TG group."
                 )
         else:
-            _logger.warning(
-                "[RaytonProjectHub] No free Telegram chats available for project '%s'.",
-                project_name,
+            _logger.info(
+                "[RaytonProjectHub] Initiator '%s' has no tg_user_id — skipping TG group add.",
+                self.env.user.name,
             )
 
         # ── 5. Build rich initiation body ─────────────────────────────────────
