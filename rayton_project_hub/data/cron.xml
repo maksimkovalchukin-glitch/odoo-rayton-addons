@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="ir_cron_promote_tg_managers" model="ir.cron">
+        <field name="name">Rayton: Підвищення менеджерів до адміна TG групи</field>
+        <field name="model_id" ref="model_rayton_telegram_chat"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_promote_pending_managers()</field>
+        <field name="interval_number">5</field>
+        <field name="interval_type">minutes</field>
+        <field name="numbercall">-1</field>
+        <field name="active">True</field>
+        <field name="doall">False</field>
+    </record>
+
+</odoo>

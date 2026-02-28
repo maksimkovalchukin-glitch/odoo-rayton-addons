@@ -2,7 +2,7 @@ import logging
 import time
 
 import requests
-from odoo import models, fields, _
+from odoo import api, models, fields, _
 from odoo.exceptions import UserError
 
 _logger = logging.getLogger(__name__)
@@ -179,6 +179,28 @@ class RaytonTelegramChat(models.Model):
                 _logger.info("[RaytonTG] DM sent to user %s", tg_user_id)
         except Exception as e:
             _logger.warning("[RaytonTG] sendMessage (DM) error: %s", str(e))
+
+    @api.model
+    def _cron_promote_pending_managers(self):
+        """
+        Cron job (every 5 min): try to promote each busy chat's project manager
+        to TG admin. Succeeds silently once the manager has joined via invite link.
+        """
+        token = self.env['ir.config_parameter'].sudo().get_param(
+            'rayton_project_hub.tg_bot_token', ''
+        )
+        if not token:
+            return
+
+        busy_chats = self.search([('state', '=', 'busy'), ('project_id', '!=', False)])
+        for chat in busy_chats:
+            manager = chat.project_id.user_id
+            if not manager:
+                continue
+            tg_user_id = getattr(manager, 'tg_user_id', '') or ''
+            if not tg_user_id:
+                continue
+            chat.promote_to_admin(tg_user_id, token)
 
     def rename_chat(self, new_title, token):
         """Rename the Telegram group to match the project name."""

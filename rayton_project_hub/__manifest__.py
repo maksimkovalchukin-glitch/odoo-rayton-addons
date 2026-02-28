@@ -16,6 +16,7 @@
     'depends': ['crm', 'project', 'mail'],
     'data': [
         'security/ir.model.access.csv',
+        'data/cron.xml',
         'views/telegram_chat_views.xml',
         'views/res_users_views.xml',
         'views/crm_lead_views.xml',
