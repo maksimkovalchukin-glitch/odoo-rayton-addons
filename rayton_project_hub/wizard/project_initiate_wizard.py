@@ -249,6 +249,26 @@ class RaytonProjectInitiateWizard(models.TransientModel):
         # ── 4. Link channel to project ────────────────────────────────────────
         new_project.discuss_channel_id = channel.id
 
+        # ── 4b. Auto-assign a free Telegram chat ──────────────────────────────
+        tg_chat = self.env['rayton.telegram.chat'].search([
+            ('state', '=', 'free'),
+        ], limit=1)
+        if tg_chat:
+            tg_chat.write({
+                'state': 'busy',
+                'project_id': new_project.id,
+                'discuss_channel_id': channel.id,
+            })
+            _logger.info(
+                "[RaytonProjectHub] TG chat assigned: %s (%s)",
+                tg_chat.name, tg_chat.tg_chat_id,
+            )
+        else:
+            _logger.warning(
+                "[RaytonProjectHub] No free Telegram chats available for project '%s'.",
+                project_name,
+            )
+
         # ── 5. Build rich initiation body ─────────────────────────────────────
         rich_body = self._build_rich_body(project_name, template_label, new_project, channel)
 
@@ -274,7 +294,7 @@ class RaytonProjectInitiateWizard(models.TransientModel):
         )
 
         # ── 7. Send webhook ────────────────────────────────────────────────────
-        new_project._send_webhook(channel, self.env.user)
+        new_project._send_webhook(channel, self.env.user, tg_chat=tg_chat)
 
         # ── 8. Return action to open the new project task list ─────────────────
         return {

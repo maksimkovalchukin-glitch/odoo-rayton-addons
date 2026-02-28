@@ -81,8 +81,14 @@ class ProjectProject(models.Model):
             'channel_name': channel.name,
         }
 
-    def _send_webhook(self, channel, initiator_user):
+    def _send_webhook(self, channel, initiator_user, tg_chat=None):
         """Send project initiation data to n8n webhook."""
+        # Resolve TG chat if not passed directly
+        if tg_chat is None:
+            tg_chat = self.env['rayton.telegram.chat'].search([
+                ('discuss_channel_id', '=', channel.id),
+            ], limit=1)
+
         payload = {
             'event': 'project_initiated',
             'project': {
@@ -95,6 +101,7 @@ class ProjectProject(models.Model):
                 'name': channel.name,
                 'uuid': channel.uuid,
             },
+            'tg_chat_id': tg_chat.tg_chat_id if tg_chat else None,
             'initiator': {
                 'id': initiator_user.id,
                 'name': initiator_user.name,

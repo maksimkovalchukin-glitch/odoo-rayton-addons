@@ -1,2 +1,4 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 access_rayton_project_initiate_wizard,rayton.project.initiate.wizard,model_rayton_project_initiate_wizard,base.group_user,1,1,1,1
+access_rayton_telegram_chat_user,rayton.telegram.chat.user,model_rayton_telegram_chat,base.group_user,1,0,0,0
+access_rayton_telegram_chat_manager,rayton.telegram.chat.manager,model_rayton_telegram_chat,base.group_system,1,1,1,1

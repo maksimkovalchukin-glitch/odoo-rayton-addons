@@ -16,6 +16,8 @@
     'depends': ['crm', 'project', 'mail'],
     'data': [
         'security/ir.model.access.csv',
+        'views/telegram_chat_views.xml',
+        'views/res_config_settings_views.xml',
         'views/crm_lead_views.xml',
         'views/project_views.xml',
         'wizard/project_initiate_wizard_views.xml',
