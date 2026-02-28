@@ -1,7 +1,11 @@
-from odoo import models
+from odoo import models, fields
 
 
 class ResUsers(models.Model):
     _inherit = 'res.users'
-    # tg_user_id — temporarily absent (step 1 of 2-step DB migration)
-    # Will be re-added after a successful module upgrade.
+
+    tg_user_id = fields.Char(
+        string='Telegram User ID',
+        help='Числовий ID користувача в Telegram (не username). '
+             'Отримати можна через бота @userinfobot — надішліть йому /start.',
+    )
