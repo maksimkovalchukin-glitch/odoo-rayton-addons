@@ -17,7 +17,7 @@
     'data': [
         'security/ir.model.access.csv',
         'views/telegram_chat_views.xml',
-        'views/res_users_views.xml',
+        # 'views/res_users_views.xml',  # TEMP: removed until tg_user_id column is created in DB
         'views/crm_lead_views.xml',
         'views/project_views.xml',
         'wizard/project_initiate_wizard_views.xml',
