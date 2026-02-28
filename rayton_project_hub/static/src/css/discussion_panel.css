@@ -43,7 +43,8 @@
     right: 0;
     top: 0;
     width: 0;
-    height: 100vh;
+    height: 100vh;    /* fallback */
+    height: 100dvh;   /* iOS 16+/Chrome 108+: accounts for browser chrome (Safari bottom bar) */
     background: #fff;
     border-left: 1px solid #dee2e6;
     box-shadow: -4px 0 20px rgba(0,0,0,0.08);
@@ -405,5 +406,10 @@
 
     .o_rayton_composer_input {
         min-height: 44px;
+    }
+
+    /* Push composer above iOS home indicator / Safari bottom bar */
+    .o_rayton_composer {
+        padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px));
     }
 }

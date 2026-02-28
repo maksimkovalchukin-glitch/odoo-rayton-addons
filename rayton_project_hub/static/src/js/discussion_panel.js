@@ -80,6 +80,20 @@ class RaytonPanelManager {
         this._onMouseUp = this._onMouseUp.bind(this);
         window.addEventListener("mousemove", this._onMouseMove);
         window.addEventListener("mouseup", this._onMouseUp);
+
+        // iOS Safari: resize panel to visual viewport height so the composer
+        // stays above the browser bottom bar and the on-screen keyboard
+        this._onViewportChange = null;
+        if (window.visualViewport) {
+            this._onViewportChange = () => {
+                if (!this._panel) return;
+                const vv = window.visualViewport;
+                this._panel.style.height = Math.round(vv.height) + "px";
+                this._panel.style.top = Math.round(vv.offsetTop) + "px";
+            };
+            window.visualViewport.addEventListener("resize", this._onViewportChange);
+            window.visualViewport.addEventListener("scroll", this._onViewportChange);
+        }
     }
 
     async init(projectId) {
@@ -503,6 +517,10 @@ class RaytonPanelManager {
         }
         window.removeEventListener("mousemove", this._onMouseMove);
         window.removeEventListener("mouseup", this._onMouseUp);
+        if (window.visualViewport && this._onViewportChange) {
+            window.visualViewport.removeEventListener("resize", this._onViewportChange);
+            window.visualViewport.removeEventListener("scroll", this._onViewportChange);
+        }
         this._shiftContent(false);
         this._backdrop?.remove();
         this._toggle?.remove();
