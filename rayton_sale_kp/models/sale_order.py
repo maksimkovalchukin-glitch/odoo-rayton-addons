@@ -269,6 +269,11 @@ class SaleOrder(models.Model):
     kp_inv3_qty   = fields.Integer(string='Кількість 3', default=0)
     kp_panel_qty  = fields.Integer(string='Кількість панелей', default=0)
 
+    kp_manual_dc_info = fields.Char(
+        string='Потужність DC',
+        compute='_compute_kp_manual_dc_info',
+        store=False,
+    )
     kp_manual_ratio_info = fields.Char(
         string='DC/AC розрахунок',
         compute='_compute_kp_manual_ratio',
@@ -311,6 +316,19 @@ class SaleOrder(models.Model):
 
     # ── Computed ──────────────────────────────────────────────────────────────
 
+    @api.depends('kp_panel_qty', 'kp_module_type', 'kp_ses_mode')
+    def _compute_kp_manual_dc_info(self):
+        for rec in self:
+            if rec.kp_ses_mode != 'manual':
+                rec.kp_manual_dc_info = ''
+                continue
+            module_kw = _get_module_watts_kw(rec.kp_module_type or '')
+            if rec.kp_panel_qty and module_kw:
+                dc = rec.kp_panel_qty * module_kw
+                rec.kp_manual_dc_info = f'⚡ DC потужність: {dc:.2f} кВт'
+            else:
+                rec.kp_manual_dc_info = ''
+
     @api.depends(
         'kp_inv1_model', 'kp_inv1_qty',
         'kp_inv2_model', 'kp_inv2_qty',
@@ -342,12 +360,16 @@ class SaleOrder(models.Model):
                     f'{status}  DC: {real_dc:.2f} кВт  |  AC: {real_ac:.0f} кВт  |  '
                     f'DC/AC = {ratio:.2f}  (норма {MIN_RATIO}–{MAX_RATIO})'
                 )
+            elif real_dc > 0:
+                rec.kp_manual_ratio_info = (
+                    f'⚡ DC: {real_dc:.2f} кВт  |  Оберіть інвертори для перевірки DC/AC'
+                )
             elif real_ac > 0:
                 rec.kp_manual_ratio_info = (
-                    f'AC: {real_ac:.0f} кВт  |  Оберіть панелі та вкажіть кількість'
+                    f'AC: {real_ac:.0f} кВт  |  Вкажіть кількість панелей'
                 )
             else:
-                rec.kp_manual_ratio_info = 'Оберіть інвертори та вкажіть кількість панелей'
+                rec.kp_manual_ratio_info = 'Оберіть панелі, кількість та інвертори'
 
     @api.onchange('partner_id')
     def _onchange_partner_kp_name(self):
