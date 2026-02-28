@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="sale_order_form_inherit_rayton_kp" model="ir.ui.view">
+        <field name="name">sale.order.form.inherit.rayton.kp</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="arch" type="xml">
+
+            <xpath expr="//field[@name='partner_id']" position="before">
+                <!-- Hidden kp_state field (needed for invisible conditions) -->
+                <field name="kp_state" invisible="1"/>
+
+                <!-- Button: generate KP (shown when not pending) -->
+                <button
+                    name="action_open_kp_wizard"
+                    type="object"
+                    string="🧾 Сформувати КП"
+                    class="btn-primary o_rayton_kp_btn"
+                    invisible="kp_state == 'pending'"
+                />
+
+                <!-- Status badge: visible when pending or done -->
+                <widget name="web_ribbon"
+                        title="КП формується..."
+                        bg_color="bg-warning"
+                        invisible="kp_state != 'pending'"/>
+
+                <widget name="web_ribbon"
+                        title="✅ КП готова"
+                        bg_color="bg-success"
+                        invisible="kp_state != 'done'"/>
+            </xpath>
+
+        </field>
+    </record>
+
+</odoo>

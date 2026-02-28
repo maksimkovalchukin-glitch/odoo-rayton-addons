@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="kp_generate_wizard_form" model="ir.ui.view">
+        <field name="name">kp.generate.wizard.form</field>
+        <field name="model">kp.generate.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Генератор комерційної пропозиції">
+                <sheet>
+
+                    <!-- ══ Тип КП ══════════════════════════════════════════ -->
+                    <group string="Тип комерційної пропозиції">
+                        <field name="kp_type" widget="radio" options="{'horizontal': true}"/>
+                    </group>
+
+                    <!-- ══ Загальні поля ═══════════════════════════════════ -->
+                    <group string="Загальна інформація" col="2">
+                        <field name="sale_order_id" readonly="1"/>
+                        <field name="project_name" placeholder="ТОВ САНТЕКО ГРУП"/>
+                        <field name="manager"/>
+                        <field name="region"/>
+                        <field name="currency_kp"/>
+                    </group>
+
+                    <!-- ══ СЕС: режим розрахунку ════════════════════════ -->
+                    <group string="Режим розрахунку СЕС"
+                           invisible="kp_type != 'ses'">
+                        <field name="ses_mode" widget="radio"/>
+                    </group>
+
+                    <!-- ══ СЕС: обладнання (спільне для всіх режимів) ══ -->
+                    <group string="Параметри СЕС" col="2"
+                           invisible="kp_type != 'ses'">
+                        <field name="module_type"/>
+                        <field name="mount_type"/>
+                        <field name="material_type"/>
+                        <field name="ses_type"/>
+                        <field name="power_regulation"/>
+                        <field name="monitoring_device"/>
+                        <field name="price_vat_type"/>
+                        <field name="price_per_kw"
+                               placeholder="Напр. 850 (USD/кВт без монтажу)"/>
+                    </group>
+
+                    <!-- ══ СЕС: Consumption ══════════════════════════════ -->
+                    <group string="📊 Споживання клієнта"
+                           invisible="kp_type != 'ses' or ses_mode != 'consumption'">
+                        <field name="monthly_consumption"
+                               string="Місячне споживання (МВт·год/міс)"
+                               placeholder="Мінімум 10 МВт·год"/>
+                    </group>
+
+                    <!-- ══ СЕС: Power ════════════════════════════════════ -->
+                    <group string="⚡ Планова потужність"
+                           invisible="kp_type != 'ses' or ses_mode != 'power'">
+                        <field name="planned_dc_power"
+                               string="Планова потужність DC (кВт)"
+                               placeholder="Напр. 500"/>
+                    </group>
+
+                    <!-- ══ СЕС: Roof ═════════════════════════════════════ -->
+                    <group string="🏠 Площа даху" col="2"
+                           invisible="kp_type != 'ses' or ses_mode != 'roof'">
+                        <field name="roof_area"
+                               string="Площа даху (М²)"
+                               placeholder="Напр. 2000"/>
+                        <field name="roof_mount_type" string="Тип даху"/>
+                    </group>
+
+                    <!-- ══ СЕС: Manual ═══════════════════════════════════ -->
+                    <group string="✍️ Інвертори (вручну)"
+                           invisible="kp_type != 'ses' or ses_mode != 'manual'">
+                        <group col="2" string="Інвертор 1">
+                            <field name="inverter_1_model" string="Модель"/>
+                            <field name="inverter_1_qty"   string="Кількість"/>
+                        </group>
+                        <group col="2" string="Інвертор 2">
+                            <field name="inverter_2_model" string="Модель"/>
+                            <field name="inverter_2_qty"   string="Кількість"/>
+                        </group>
+                        <group col="2" string="Інвертор 3">
+                            <field name="inverter_3_model" string="Модель"/>
+                            <field name="inverter_3_qty"   string="Кількість"/>
+                        </group>
+                        <field name="panel_qty_manual" string="Кількість панелей"/>
+                    </group>
+
+                    <!-- ══ Результат розрахунку ══════════════════════════ -->
+                    <group string="Результат розрахунку"
+                           invisible="not calc_info or kp_type != 'ses'">
+                        <field name="calc_info" readonly="1" nolabel="1"
+                               style="font-family: monospace; background: #f8f9fa;
+                                      padding: 8px; border-radius: 4px;"/>
+                    </group>
+
+                    <!-- ══ УЗЕ ══════════════════════════════════════════ -->
+                    <group string="🔋 Параметри УЗЕ" col="2"
+                           invisible="kp_type != 'uze'">
+                        <field name="uze_model"/>
+                        <field name="uze_qty"
+                               string="Кількість (1–50)"/>
+                        <field name="uze_vat"   string="Вартість УЗЕ"/>
+                        <field name="equipment_vat" string="Обладнання та матеріали"/>
+                        <field name="usage_type"/>
+                        <field name="delivery_term"/>
+                        <field name="payment_terms_kp" string="Умови оплати"/>
+                        <field name="delivery_terms"/>
+                    </group>
+
+                </sheet>
+
+                <footer>
+                    <button name="action_generate"
+                            type="object"
+                            string="🚀 Сформувати КП"
+                            class="btn-primary"/>
+                    <button string="Скасувати"
+                            class="btn-secondary"
+                            special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+</odoo>
