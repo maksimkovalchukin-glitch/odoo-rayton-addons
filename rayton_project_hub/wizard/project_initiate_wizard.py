@@ -270,14 +270,30 @@ class RaytonProjectInitiateWizard(models.TransientModel):
             tg_chat.name, tg_chat.tg_chat_id,
         )
 
-        # Rename TG group + generate personal invite link for initiator
+        # Rename TG group, try to promote initiator to admin, send DM with invite link
         token = self.env['ir.config_parameter'].sudo().get_param(
             'rayton_project_hub.tg_bot_token', ''
         )
         invite_link = None
+        tg_user_id = getattr(self.env.user, 'tg_user_id', '') or ''
+
         if token:
             tg_chat.rename_chat(project_name, token)
+
+            # Try to promote immediately — works if initiator is already in the group
+            if tg_user_id:
+                tg_chat.promote_to_admin(tg_user_id, token)
+
+            # Create personal invite link (one-time, 7 days)
             invite_link = tg_chat.create_invite_link(token)
+
+            # Send invite link as Telegram DM to initiator (requires /start to bot first)
+            if tg_user_id and invite_link:
+                tg_chat.send_dm(tg_user_id, (
+                    f'🚀 <b>Проект ініційовано:</b> {project_name}\n\n'
+                    f'Ваше персональне запрошення до TG групи:\n{invite_link}\n\n'
+                    f'Після вступу натисніть кнопку нижче щоб стати адміністратором.'
+                ), token)
         else:
             _logger.warning("[RaytonProjectHub] TG bot token not set — cannot configure TG group.")
 

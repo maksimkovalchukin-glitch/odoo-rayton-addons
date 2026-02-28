@@ -74,3 +74,51 @@ class RaytonTgController(http.Controller):
         )
 
         return {'status': 'ok'}
+
+    @http.route(
+        '/rayton/tg/promote',
+        type='json',
+        auth='public',
+        methods=['POST'],
+        csrf=False,
+    )
+    def tg_promote(self, **kwargs):
+        """
+        Called by n8n when a new member joins a TG group.
+        Promotes them to admin if they are the project initiator.
+
+        Expected payload:
+          {
+            "api_key":    "<bot_token>",
+            "tg_chat_id": "-1003883870898",
+            "tg_user_id": "123456789"
+          }
+        """
+        provided_key = kwargs.get('api_key', '')
+        stored_token = request.env['ir.config_parameter'].sudo().get_param(
+            'rayton_project_hub.tg_bot_token', ''
+        )
+        if not stored_token or provided_key != stored_token:
+            _logger.warning("[RaytonTg] /rayton/tg/promote — invalid api_key")
+            return {'status': 'error', 'message': 'Unauthorized'}
+
+        tg_chat_id = str(kwargs.get('tg_chat_id', '')).strip()
+        tg_user_id = str(kwargs.get('tg_user_id', '')).strip()
+
+        if not tg_chat_id or not tg_user_id:
+            return {'status': 'error', 'message': 'tg_chat_id and tg_user_id are required'}
+
+        tg_chat = request.env['rayton.telegram.chat'].sudo().search([
+            ('tg_chat_id', '=', tg_chat_id),
+            ('state', '=', 'busy'),
+        ], limit=1)
+        if not tg_chat:
+            return {'status': 'error', 'message': 'Chat not found or not busy'}
+
+        # Promote the user
+        tg_chat.promote_to_admin(tg_user_id, stored_token)
+        _logger.info(
+            "[RaytonTg] Promoted user %s to admin in chat %s (via n8n webhook)",
+            tg_user_id, tg_chat_id,
+        )
+        return {'status': 'ok'}

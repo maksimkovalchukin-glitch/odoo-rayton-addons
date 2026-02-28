@@ -61,6 +61,40 @@ class RaytonTelegramChat(models.Model):
             })
         return True
 
+    def action_promote_manager_to_admin(self):
+        """
+        Promote the linked project's manager to TG group admin.
+        Call this AFTER the manager has joined the group via the invite link.
+        """
+        self.ensure_one()
+        token = self.env['ir.config_parameter'].sudo().get_param(
+            'rayton_project_hub.tg_bot_token', ''
+        )
+        if not token:
+            raise UserError(_('Telegram bot token не налаштовано (Налаштування → Системні параметри).'))
+
+        manager = self.project_id.user_id if self.project_id else None
+        if not manager:
+            raise UserError(_('До цієї TG групи не прив\'язано проект або менеджера.'))
+
+        tg_user_id = getattr(manager, 'tg_user_id', '') or ''
+        if not tg_user_id:
+            raise UserError(_(
+                'У менеджера %s не вказано Telegram User ID.\n'
+                'Додайте його у Налаштування → Користувачі → %s → поле "Telegram User ID".'
+            ) % (manager.name, manager.name))
+
+        self.promote_to_admin(tg_user_id, token)
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'title': 'Готово',
+                'message': f'{manager.name} призначено адміністратором TG групи.',
+                'type': 'success',
+            },
+        }
+
     def create_invite_link(self, token):
         """
         Create a one-time invite link for this Telegram group (valid 7 days).
@@ -124,6 +158,27 @@ class RaytonTelegramChat(models.Model):
                 )
         except Exception as e:
             _logger.warning("[RaytonTG] promoteChatMember error: %s", str(e))
+
+    def send_dm(self, tg_user_id, text, token):
+        """Send a direct message to a Telegram user (requires user to have started the bot first)."""
+        self.ensure_one()
+        if not tg_user_id or not token:
+            return
+        url = TG_API.format(token=token, method='sendMessage')
+        try:
+            resp = requests.post(url, json={
+                'chat_id': int(tg_user_id),
+                'text': text,
+                'parse_mode': 'HTML',
+                'disable_web_page_preview': True,
+            }, timeout=10)
+            data = resp.json()
+            if not data.get('ok'):
+                _logger.warning("[RaytonTG] sendMessage (DM) failed: %s", data.get('description', ''))
+            else:
+                _logger.info("[RaytonTG] DM sent to user %s", tg_user_id)
+        except Exception as e:
+            _logger.warning("[RaytonTG] sendMessage (DM) error: %s", str(e))
 
     def rename_chat(self, new_title, token):
         """Rename the Telegram group to match the project name."""
