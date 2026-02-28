@@ -26,6 +26,11 @@ class CrmLead(models.Model):
         string='Тип проекту',
         readonly=True,
     )
+    x_coordinates = fields.Char(
+        string='Координати / Google Maps',
+        help='Посилання Google Maps або GPS-координати об\'єкту (обов\'язково для ініціації проекту)',
+        copy=False,
+    )
 
     def action_initiate_project(self):
         """Open wizard to choose project template type."""

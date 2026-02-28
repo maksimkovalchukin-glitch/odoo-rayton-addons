@@ -28,6 +28,14 @@
                 />
             </xpath>
 
+            <!-- Coordinates field after mobile -->
+            <xpath expr="//field[@name='mobile']" position="after">
+                <field
+                    name="x_coordinates"
+                    placeholder="https://maps.google.com/... або 48.3794, 31.1656"
+                />
+            </xpath>
+
         </field>
     </record>
 

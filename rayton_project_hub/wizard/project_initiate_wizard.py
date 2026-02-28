@@ -1,5 +1,5 @@
 import logging
-from markupsafe import Markup
+from markupsafe import Markup, escape
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError
 
@@ -27,6 +27,11 @@ class RaytonProjectInitiateWizard(models.TransientModel):
         string='Назва угоди',
         readonly=True,
     )
+    lead_x_coordinates = fields.Char(
+        string='Координати / Google Maps',
+        related='lead_id.x_coordinates',
+        readonly=False,
+    )
     template_type = fields.Selection(
         selection=[
             ('ses', 'СЕС'),
@@ -42,6 +47,15 @@ class RaytonProjectInitiateWizard(models.TransientModel):
         store=False,
         readonly=True,
     )
+    client_notes = fields.Text(
+        string='Побажання клієнта',
+        help='Менеджер коротко підсумовує побажання та особливості клієнта',
+    )
+    lead_info_summary = fields.Html(
+        string='Інформація про проект',
+        compute='_compute_lead_info_summary',
+        store=False,
+    )
 
     @api.depends('lead_name', 'template_type')
     def _compute_project_name(self):
@@ -52,15 +66,128 @@ class RaytonProjectInitiateWizard(models.TransientModel):
             else:
                 rec.project_name = rec.lead_name or ''
 
+    @api.depends('lead_id', 'lead_id.x_coordinates')
+    def _compute_lead_info_summary(self):
+        for rec in self:
+            lead = rec.lead_id
+            if not lead:
+                rec.lead_info_summary = ''
+                continue
+
+            rows = []
+
+            solar_power = getattr(lead, 'x_solar_power', 0) or 0
+            storage_kwh = getattr(lead, 'x_storage_capacity_kwh', 0) or 0
+            system_type = getattr(lead, 'x_enegy_system_type', '') or ''
+            project_cat = getattr(lead, 'x_progectn', '') or ''
+
+            if solar_power:
+                rows.append(f'☀️ <b>Потужність СЕС:</b> {solar_power} кВт')
+            if storage_kwh:
+                rows.append(f'🔋 <b>Ємність УЗЕ:</b> {storage_kwh} кВт·год')
+            if system_type:
+                rows.append(f'⚡ <b>Тип системи:</b> {system_type}')
+            if project_cat:
+                rows.append(f'🏗 <b>Категорія:</b> {project_cat}')
+
+            partner = lead.partner_id
+            if partner:
+                addr_parts = [p for p in [
+                    partner.street, partner.city, partner.country_id.name
+                ] if p]
+                if addr_parts:
+                    rows.append(f'📍 <b>Адреса:</b> {", ".join(addr_parts)}')
+
+            contact_name = lead.contact_name or (partner.name if partner else '')
+            phone = lead.phone or lead.mobile or ''
+            if contact_name:
+                contact_str = contact_name
+                if phone:
+                    contact_str += f', {phone}'
+                rows.append(f'👤 <b>Контакт:</b> {contact_str}')
+
+            coords = lead.x_coordinates or ''
+            if coords:
+                if coords.startswith('http'):
+                    rows.append(
+                        f'🗺 <b>Координати:</b> <a href="{coords}" target="_blank">Google Maps</a>'
+                    )
+                else:
+                    rows.append(f'🗺 <b>Координати:</b> {coords}')
+
+            if rows:
+                rec.lead_info_summary = Markup('<br/>').join(Markup(r) for r in rows)
+            else:
+                rec.lead_info_summary = Markup('<em style="color:#888;">Немає додаткових даних про об\'єкт</em>')
+
+    def _build_rich_body(self, project_name, template_label, new_project, channel):
+        """Build rich HTML initiation message for channel and chatter."""
+        lead = self.lead_id
+        parts = [
+            f'🗂 <b>Проект:</b> <a href="/web#model=project.project'
+            f'&id={new_project.id}&view_type=form">{project_name}</a>',
+            f'📋 <b>Тип:</b> {template_label}',
+            f'💼 <b>Нагода:</b> {lead.name}',
+        ]
+
+        solar_power = getattr(lead, 'x_solar_power', 0) or 0
+        storage_kwh = getattr(lead, 'x_storage_capacity_kwh', 0) or 0
+        system_type = getattr(lead, 'x_enegy_system_type', '') or ''
+        project_cat = getattr(lead, 'x_progectn', '') or ''
+
+        if solar_power:
+            parts.append(f'☀️ <b>Потужність СЕС:</b> {solar_power} кВт')
+        if storage_kwh:
+            parts.append(f'🔋 <b>Ємність УЗЕ:</b> {storage_kwh} кВт·год')
+        if system_type:
+            parts.append(f'⚡ <b>Тип системи:</b> {system_type}')
+        if project_cat:
+            parts.append(f'🏗 <b>Категорія:</b> {project_cat}')
+
+        partner = lead.partner_id
+        if partner:
+            addr_parts = [p for p in [
+                partner.street, partner.city, partner.country_id.name
+            ] if p]
+            if addr_parts:
+                parts.append(f'📍 <b>Адреса:</b> {", ".join(addr_parts)}')
+
+        contact_name = lead.contact_name or (partner.name if partner else '')
+        phone = lead.phone or lead.mobile or ''
+        if contact_name:
+            contact_str = contact_name
+            if phone:
+                contact_str += f', {phone}'
+            parts.append(f'👤 <b>Контакт:</b> {contact_str}')
+
+        coords = lead.x_coordinates or ''
+        if coords:
+            if coords.startswith('http'):
+                parts.append(
+                    f'🗺 <b>Координати:</b> <a href="{coords}" target="_blank">Google Maps</a>'
+                )
+            else:
+                parts.append(f'🗺 <b>Координати:</b> {coords}')
+
+        parts.append(f'💬 <b>Канал Discuss:</b> #{channel.name}')
+
+        if self.client_notes:
+            safe_notes = str(escape(self.client_notes)).replace('\n', '<br/>')
+            parts.append(f'📝 <b>Побажання клієнта:</b><br/>{safe_notes}')
+
+        return Markup('<br/>').join(Markup(p) for p in parts)
+
     def action_confirm(self):
         """
         Main action:
-        1. Find project template by type
-        2. Create project from template with lead name
-        3. Create Discuss channel with same name
-        4. Link channel to project
-        5. Link project to lead
-        6. Send webhook to n8n
+        1. Validate coordinates are filled
+        2. Find project template by type
+        3. Create project from template with lead name
+        4. Create Discuss channel with same name
+        5. Link channel to project
+        6. Link project to lead
+        7. Post rich info message to channel + lead chatter
+        8. Send webhook to n8n
         """
         self.ensure_one()
 
@@ -71,6 +198,13 @@ class RaytonProjectInitiateWizard(models.TransientModel):
             raise UserError(_(
                 'Проект для цієї нагоди вже було ініційовано: %s'
             ) % self.lead_id.project_id.name)
+
+        # ── Validate coordinates ─────────────────────────────────────────────
+        if not self.lead_x_coordinates:
+            raise UserError(_(
+                'Координати об\'єкту обов\'язкові для ініціації проекту.\n'
+                'Введіть посилання Google Maps або GPS-координати у полі "Координати".'
+            ))
 
         template_label = TEMPLATE_NAMES.get(self.template_type, self.template_type)
         project_name = f"{self.lead_id.name} [{template_label}]"
@@ -83,7 +217,6 @@ class RaytonProjectInitiateWizard(models.TransientModel):
 
         # ── 2. Create project ────────────────────────────────────────────────
         if template:
-            # Copy from template
             new_project = template.copy(default={
                 'name': project_name,
                 'active': True,
@@ -92,7 +225,6 @@ class RaytonProjectInitiateWizard(models.TransientModel):
                 'project_template_type': self.template_type,
             })
         else:
-            # No template found - create blank project
             _logger.warning(
                 "[RaytonProjectHub] Template '%s' not found, creating blank project.",
                 template_label
@@ -117,42 +249,34 @@ class RaytonProjectInitiateWizard(models.TransientModel):
         # ── 4. Link channel to project ────────────────────────────────────────
         new_project.discuss_channel_id = channel.id
 
-        # Post project info as the first message in the Discuss channel
-        # so that team members always have a link back to the project.
+        # ── 5. Build rich initiation body ─────────────────────────────────────
+        rich_body = self._build_rich_body(project_name, template_label, new_project, channel)
+
+        # Post rich info as first message in channel
         channel.message_post(
-            body=Markup(
-                f'🗂 <b>Проект:</b> <a href="/web#model=project.project'
-                f'&id={new_project.id}&view_type=form">{project_name}</a><br/>'
-                f'📋 Тип: <b>{template_label}</b><br/>'
-                f'💼 Нагода: <b>{self.lead_id.name}</b>'
-            ),
+            body=rich_body,
             message_type='comment',
             subtype_xmlid='mail.mt_comment',
         )
 
-        # ── 5. Link project & mark lead as initiated ──────────────────────────
+        # ── 6. Link project & mark lead as initiated ──────────────────────────
         self.lead_id.write({
             'project_id': new_project.id,
             'project_initiated': True,
             'project_template_type': self.template_type,
         })
 
-        # Post message on lead chatter
+        # Post rich message on lead chatter
         self.lead_id.message_post(
-            body=Markup(
-                f'🚀 <b>Проект ініційовано</b><br/>'
-                f'Тип: <b>{template_label}</b><br/>'
-                f'Проект: <a href="/web#model=project.project&id={new_project.id}&view_type=form">{project_name}</a><br/>'
-                f'Канал Discuss: <b>#{channel.name}</b>'
-            ),
+            body=Markup(f'🚀 <b>Проект ініційовано</b><br/>') + rich_body,
             message_type='comment',
             subtype_xmlid='mail.mt_comment',
         )
 
-        # ── 6. Send webhook ────────────────────────────────────────────────────
+        # ── 7. Send webhook ────────────────────────────────────────────────────
         new_project._send_webhook(channel, self.env.user)
 
-        # ── 7. Return action to open the new project task list in list view ───
+        # ── 8. Return action to open the new project task list ─────────────────
         return {
             'type': 'ir.actions.act_window',
             'name': project_name,
