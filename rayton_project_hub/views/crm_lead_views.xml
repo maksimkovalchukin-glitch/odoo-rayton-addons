@@ -16,14 +16,12 @@
                     name="action_initiate_project"
                     type="object"
                     string="🚀 Ініціювати проект"
-                    class="btn-primary o_rayton_initiate_btn"
                     invisible="project_initiated"
                 />
                 <button
                     name="action_open_project"
                     type="object"
                     string="📁 Відкрити проект"
-                    class="btn-secondary"
                     invisible="not project_initiated"
                 />
             </xpath>
