@@ -1,8 +1,10 @@
 import base64
 import logging
+import re
+from html import unescape
+
 import requests
 from odoo import models
-from odoo.tools import html2plaintext
 
 _logger = logging.getLogger(__name__)
 
@@ -10,6 +12,63 @@ TG_BASE = 'https://api.telegram.org/bot{token}/{method}'
 
 # TG caption max length
 TG_CAPTION_LIMIT = 1024
+
+# Tags supported by Telegram HTML parse_mode
+_TG_ALLOWED_OPEN = re.compile(
+    r'<(b|strong|i|em|u|ins|s|strike|del|code|pre)(\s[^>]*)?>',
+    re.IGNORECASE,
+)
+_TG_ALLOWED_CLOSE = re.compile(
+    r'</(b|strong|i|em|u|ins|s|strike|del|code|pre)>',
+    re.IGNORECASE,
+)
+
+
+def _html_to_tg(html_body):
+    """
+    Convert Odoo HTML body to Telegram-safe HTML.
+
+    - <br> / </p> / </div> → newline
+    - <b>, <i>, <u>, <s>, <code>, <pre> and their aliases → kept as-is
+    - <a href="..."> → kept only for absolute URLs, otherwise text only
+    - everything else → stripped (text preserved)
+    - HTML entities → decoded
+    """
+    text = html_body or ''
+
+    # Block-level endings → newline
+    text = re.sub(r'<br\s*/?>', '\n', text, flags=re.IGNORECASE)
+    text = re.sub(r'</(p|div|li|tr|h[1-6])>', '\n', text, flags=re.IGNORECASE)
+
+    # Absolute <a href> → keep clickable; relative → keep only inner text
+    def _fix_anchor(m):
+        href = m.group(1)
+        if href.startswith('http://') or href.startswith('https://'):
+            return f'<a href="{href}">'  # keep only href, drop target= etc.
+        return ''               # strip relative link, text content survives
+
+    text = re.sub(r'<a\s[^>]*href=["\']([^"\']*)["\'][^>]*>', _fix_anchor, text, flags=re.IGNORECASE)
+    text = re.sub(r'</a>', '', text, flags=re.IGNORECASE)
+
+    # Strip all tags that are NOT in Telegram's allowed set
+    # Strategy: remove any <tag...> that is not in the allowed list
+    def _strip_tag(m):
+        tag = m.group(1).lower() if m.group(1) else ''
+        allowed = {'b', 'strong', 'i', 'em', 'u', 'ins', 's', 'strike',
+                   'del', 'code', 'pre'}
+        if tag in allowed:
+            return m.group(0)
+        return ''
+
+    text = re.sub(r'<(/?)(\w+)(\s[^>]*)?>', _strip_tag, text, flags=re.IGNORECASE)
+
+    # Decode HTML entities (&amp; &lt; &gt; &nbsp; &#nnn; etc.)
+    text = unescape(text)
+
+    # Collapse 3+ newlines to 2
+    text = re.sub(r'\n{3,}', '\n\n', text)
+
+    return text.strip()
 
 
 class DiscussChannel(models.Model):
@@ -49,7 +108,7 @@ class DiscussChannel(models.Model):
 
         chat_id = tg_chat.tg_chat_id
         author_name = message.author_id.name or 'Хтось'
-        body_text = html2plaintext(message.body or '').strip()
+        body_html = _html_to_tg(message.body or '')
         attachments = message.attachment_ids
 
         if attachments:
@@ -58,15 +117,15 @@ class DiscussChannel(models.Model):
                 caption = None
                 if idx == 0:
                     header = f'💬 <b>{author_name}</b> (Odoo):'
-                    if body_text:
-                        full = f'{header}\n{body_text}'
+                    if body_html:
+                        full = f'{header}\n{body_html}'
                     else:
                         full = header
                     caption = full[:TG_CAPTION_LIMIT]
                 self._rayton_send_attachment(token, chat_id, attachment, caption)
-        elif body_text:
+        elif body_html:
             # Text-only message
-            text = f'💬 <b>{author_name}</b> (Odoo):\n{body_text}'
+            text = f'💬 <b>{author_name}</b> (Odoo):\n{body_html}'
             self._rayton_tg_call(
                 token, 'sendMessage',
                 json_data={'chat_id': chat_id, 'text': text, 'parse_mode': 'HTML'},
