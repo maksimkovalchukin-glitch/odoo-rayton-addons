@@ -1,1 +1,1 @@
-from . import kp_wizard
+# wizard package — model removed, kept for package structure
