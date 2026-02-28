@@ -17,7 +17,6 @@
     'data': [
         'security/ir.model.access.csv',
         'views/telegram_chat_views.xml',
-        'views/res_config_settings_views.xml',
         'views/res_users_views.xml',
         'views/crm_lead_views.xml',
         'views/project_views.xml',
