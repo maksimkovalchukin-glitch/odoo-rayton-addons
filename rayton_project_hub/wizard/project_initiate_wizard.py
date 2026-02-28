@@ -263,6 +263,24 @@ class RaytonProjectInitiateWizard(models.TransientModel):
                 "[RaytonProjectHub] TG chat assigned: %s (%s)",
                 tg_chat.name, tg_chat.tg_chat_id,
             )
+
+            # Add initiator to TG group as admin (if tg_user_id is set)
+            tg_user_id = getattr(self.env.user, 'tg_user_id', '') or ''
+            if tg_user_id:
+                token = self.env['ir.config_parameter'].sudo().get_param(
+                    'rayton_project_hub.tg_bot_token', ''
+                )
+                if token:
+                    tg_chat.add_admin_to_chat(tg_user_id, token)
+                else:
+                    _logger.warning(
+                        "[RaytonProjectHub] TG bot token not set — cannot add initiator to TG group."
+                    )
+            else:
+                _logger.info(
+                    "[RaytonProjectHub] Initiator '%s' has no tg_user_id — skipping TG group add.",
+                    self.env.user.name,
+                )
         else:
             _logger.warning(
                 "[RaytonProjectHub] No free Telegram chats available for project '%s'.",

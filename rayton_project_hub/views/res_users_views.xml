@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Add tg_user_id to user preferences form -->
+    <record id="res_users_view_form_rayton" model="ir.ui.view">
+        <field name="name">res.users.view.form.inherit.rayton.tg</field>
+        <field name="model">res.users</field>
+        <field name="inherit_id" ref="base.view_users_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='login']" position="after">
+                <field name="tg_user_id"
+                       placeholder="Напр. 1685833526"
+                       help="Числовий Telegram ID. Отримати: надішліть /start боту @userinfobot"/>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>
