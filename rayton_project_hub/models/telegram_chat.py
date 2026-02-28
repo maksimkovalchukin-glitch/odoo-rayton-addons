@@ -121,3 +121,24 @@ class RaytonTelegramChat(models.Model):
             'can_promote_members': False,   # не може додавати інших адмінів
             'can_restrict_members': False,
         })
+
+    def rename_chat(self, new_title, token):
+        """Rename the Telegram group to match the project name."""
+        self.ensure_one()
+        if not new_title or not token:
+            return
+        url = TG_API.format(token=token, method='setChatTitle')
+        try:
+            resp = requests.post(url, json={
+                'chat_id': self.tg_chat_id,
+                'title': new_title,
+            }, timeout=10)
+            data = resp.json()
+            if not data.get('ok'):
+                _logger.warning(
+                    "[RaytonTG] setChatTitle failed: %s", data.get('description', '')
+                )
+            else:
+                _logger.info("[RaytonTG] Renamed TG chat to '%s'", new_title)
+        except Exception as e:
+            _logger.warning("[RaytonTG] setChatTitle error: %s", str(e))

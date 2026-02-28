@@ -270,12 +270,18 @@ class RaytonProjectInitiateWizard(models.TransientModel):
             tg_chat.name, tg_chat.tg_chat_id,
         )
 
+        # Rename TG group to match project name + add initiator as admin
+        token = self.env['ir.config_parameter'].sudo().get_param(
+            'rayton_project_hub.tg_bot_token', ''
+        )
+        if token:
+            tg_chat.rename_chat(project_name, token)
+        else:
+            _logger.warning("[RaytonProjectHub] TG bot token not set — cannot rename TG group.")
+
         # Add initiator to TG group as admin (if tg_user_id is set)
         tg_user_id = getattr(self.env.user, 'tg_user_id', '') or ''
         if tg_user_id:
-            token = self.env['ir.config_parameter'].sudo().get_param(
-                'rayton_project_hub.tg_bot_token', ''
-            )
             if token:
                 tg_chat.add_admin_to_chat(tg_user_id, token)
             else:

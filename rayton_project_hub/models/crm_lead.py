@@ -1,8 +1,29 @@
-from odoo import models, fields
+import re
+
+from odoo import models, fields, api
+
+
+def _clean_lead_name(name):
+    """Strip leading 'нагода' (case-insensitive) from opportunity name."""
+    if not name:
+        return name
+    return re.sub(r'(?i)^\s*нагода\s*', '', name).strip()
 
 
 class CrmLead(models.Model):
     _inherit = 'crm.lead'
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        for vals in vals_list:
+            if vals.get('name'):
+                vals['name'] = _clean_lead_name(vals['name'])
+        return super().create(vals_list)
+
+    def write(self, vals):
+        if vals.get('name'):
+            vals['name'] = _clean_lead_name(vals['name'])
+        return super().write(vals)
 
     project_id = fields.Many2one(
         'project.project',
