@@ -13,7 +13,6 @@
     'depends': ['sale', 'mail'],
     'data': [
         'security/ir.model.access.csv',
-        'wizard/kp_wizard_views.xml',
         'views/sale_order_views.xml',
     ],
     'installable': True,

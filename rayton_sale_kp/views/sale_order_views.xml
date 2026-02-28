@@ -7,29 +7,136 @@
         <field name="inherit_id" ref="sale.view_order_form"/>
         <field name="arch" type="xml">
 
+            <!-- ══ Status ribbons on main form ══════════════════════════════ -->
             <xpath expr="//field[@name='partner_id']" position="before">
-                <!-- Hidden kp_state field (needed for invisible conditions) -->
                 <field name="kp_state" invisible="1"/>
-
-                <!-- Button: generate KP (shown when not pending) -->
-                <button
-                    name="action_open_kp_wizard"
-                    type="object"
-                    string="🧾 Сформувати КП"
-                    class="btn-primary o_rayton_kp_btn"
-                    invisible="kp_state == 'pending'"
-                />
-
-                <!-- Status badge: visible when pending or done -->
                 <widget name="web_ribbon"
                         title="КП формується..."
                         bg_color="bg-warning"
                         invisible="kp_state != 'pending'"/>
-
                 <widget name="web_ribbon"
                         title="✅ КП готова"
                         bg_color="bg-success"
                         invisible="kp_state != 'done'"/>
+            </xpath>
+
+            <!-- ══ КП Generator tab ══════════════════════════════════════════ -->
+            <xpath expr="//notebook" position="inside">
+                <page string="🧾 Генератор КП" name="kp_generator">
+
+                    <!-- ── Тип КП ─────────────────────────────────────────── -->
+                    <group string="Тип комерційної пропозиції">
+                        <field name="kp_type" widget="radio"
+                               options="{'horizontal': true}"/>
+                    </group>
+
+                    <!-- ── Загальна інформація ─────────────────────────────── -->
+                    <group string="Загальна інформація" col="2">
+                        <field name="kp_project_name"
+                               placeholder="ТОВ САНТЕКО ГРУП"/>
+                        <field name="kp_manager_id"/>
+                        <field name="kp_region"/>
+                        <field name="kp_currency"/>
+                    </group>
+
+                    <!-- ── СЕС: режим розрахунку ──────────────────────────── -->
+                    <group string="Режим розрахунку СЕС"
+                           invisible="kp_type != 'ses'">
+                        <field name="kp_ses_mode" widget="radio"/>
+                    </group>
+
+                    <!-- ── СЕС: обладнання ────────────────────────────────── -->
+                    <group string="Параметри СЕС" col="2"
+                           invisible="kp_type != 'ses'">
+                        <field name="kp_module_type"/>
+                        <field name="kp_mount_type"/>
+                        <field name="kp_material_type"/>
+                        <field name="kp_ses_type"/>
+                        <field name="kp_power_reg"/>
+                        <field name="kp_monitoring"/>
+                        <field name="kp_price_vat_type"/>
+                        <field name="kp_price_per_kw" placeholder="Напр. 850"/>
+                    </group>
+
+                    <!-- ── Consumption ────────────────────────────────────── -->
+                    <group string="📊 Споживання клієнта"
+                           invisible="kp_type != 'ses' or kp_ses_mode != 'consumption'">
+                        <field name="kp_monthly_consumption"
+                               placeholder="Мінімум 10 МВт·год"/>
+                    </group>
+
+                    <!-- ── Power ──────────────────────────────────────────── -->
+                    <group string="⚡ Планова потужність"
+                           invisible="kp_type != 'ses' or kp_ses_mode != 'power'">
+                        <field name="kp_planned_dc_power"
+                               placeholder="Напр. 500"/>
+                    </group>
+
+                    <!-- ── Roof ───────────────────────────────────────────── -->
+                    <group string="🏠 Площа даху" col="2"
+                           invisible="kp_type != 'ses' or kp_ses_mode != 'roof'">
+                        <field name="kp_roof_area" placeholder="Напр. 2000"/>
+                        <field name="kp_roof_mount_type"/>
+                    </group>
+
+                    <!-- ── Manual ─────────────────────────────────────────── -->
+                    <group string="✍️ Інвертори (вручну)"
+                           invisible="kp_type != 'ses' or kp_ses_mode != 'manual'">
+                        <group col="2" string="Інвертор 1">
+                            <field name="kp_inv1_model" string="Модель"/>
+                            <field name="kp_inv1_qty"   string="Кількість"/>
+                        </group>
+                        <group col="2" string="Інвертор 2">
+                            <field name="kp_inv2_model" string="Модель"/>
+                            <field name="kp_inv2_qty"   string="Кількість"/>
+                        </group>
+                        <group col="2" string="Інвертор 3">
+                            <field name="kp_inv3_model" string="Модель"/>
+                            <field name="kp_inv3_qty"   string="Кількість"/>
+                        </group>
+                        <field name="kp_panel_qty" string="Кількість панелей"/>
+                    </group>
+
+                    <!-- ── DC/AC підказка (тільки manual) ────────────────── -->
+                    <group invisible="kp_type != 'ses' or kp_ses_mode != 'manual'">
+                        <field name="kp_manual_ratio_info"
+                               nolabel="1" readonly="1"
+                               style="font-weight:600; font-size:13px;
+                                      background:#f0f4ff; padding:8px 12px;
+                                      border-radius:6px; border:1px solid #c8d4f0;"/>
+                    </group>
+
+                    <!-- ── УЗЕ ────────────────────────────────────────────── -->
+                    <group string="🔋 Параметри УЗЕ" col="2"
+                           invisible="kp_type != 'uze'">
+                        <field name="kp_uze_model"/>
+                        <field name="kp_uze_qty"/>
+                        <field name="kp_uze_vat"       string="Вартість УЗЕ"/>
+                        <field name="kp_equipment_vat" string="Обладнання та матеріали"/>
+                        <field name="kp_usage_type"/>
+                        <field name="kp_delivery_term"/>
+                        <field name="kp_payment_terms" string="Умови оплати"/>
+                        <field name="kp_delivery_terms"/>
+                    </group>
+
+                    <!-- ── Кнопка генерації + статус ──────────────────────── -->
+                    <div class="d-flex align-items-center gap-3 mt-3 ms-2">
+                        <button name="action_generate_kp"
+                                type="object"
+                                string="🚀 Сформувати КП"
+                                class="btn btn-primary"
+                                invisible="kp_state == 'pending'"/>
+                        <span class="badge text-bg-warning fs-6"
+                              invisible="kp_state != 'pending'">
+                            ⏳ КП формується...
+                        </span>
+                        <span class="badge text-bg-success fs-6"
+                              invisible="kp_state != 'done'">
+                            ✅ КП готова
+                        </span>
+                    </div>
+
+                </page>
             </xpath>
 
         </field>
