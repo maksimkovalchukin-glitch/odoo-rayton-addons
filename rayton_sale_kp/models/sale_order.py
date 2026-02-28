@@ -20,7 +20,7 @@ class SaleOrder(models.Model):
             'target': 'new',
             'context': {
                 'default_sale_order_id': self.id,
-                'default_project_name': self.name or '',
-                'default_manager': self.user_id.name or self.env.user.name,
+                'default_project_name':  self.partner_id.name or self.name or '',
+                'default_manager_id':    (self.user_id or self.env.user).id,
             },
         }
