@@ -1,4 +1,6 @@
 import logging
+import time
+
 import requests
 from odoo import models, fields, _
 from odoo.exceptions import UserError
@@ -59,68 +61,69 @@ class RaytonTelegramChat(models.Model):
             })
         return True
 
-    def add_admin_to_chat(self, tg_user_id, token):
+    def create_invite_link(self, token):
         """
-        Add a user to the Telegram group and promote them to administrator.
+        Create a one-time invite link for this Telegram group (valid 7 days).
 
-        Steps:
-          1. unbanChatMember  — allows the user to join even if previously removed
-          2. addChatMember    — adds them to the group
-          3. promoteChatMember — grants admin rights (without ability to add other admins)
+        Note: Telegram Bot API does NOT have addChatMember — bots cannot
+        forcefully add users. The correct approach is to generate a personal
+        invite link and show it to the initiator so they can join themselves.
+        Once they join, promote_to_admin() can be called separately.
+        """
+        self.ensure_one()
+        if not token:
+            return None
+        url = TG_API.format(token=token, method='createChatInviteLink')
+        try:
+            resp = requests.post(url, json={
+                'chat_id': self.tg_chat_id,
+                'member_limit': 1,
+                'expire_date': int(time.time()) + 7 * 24 * 3600,  # 7 days
+            }, timeout=10)
+            data = resp.json()
+            if data.get('ok'):
+                link = data['result']['invite_link']
+                _logger.info("[RaytonTG] Invite link created for chat %s", self.tg_chat_id)
+                return link
+            else:
+                _logger.warning(
+                    "[RaytonTG] createChatInviteLink failed: %s", data.get('description', '')
+                )
+        except Exception as e:
+            _logger.warning("[RaytonTG] createChatInviteLink error: %s", str(e))
+        return None
 
-        Requires the bot to be an admin of the group with 'can_invite_users'
-        and 'can_promote_members' permissions.
+    def promote_to_admin(self, tg_user_id, token):
+        """
+        Promote an already-joined user to administrator.
+        Call this only after the user has joined the group via invite link.
         """
         self.ensure_one()
         if not tg_user_id or not token:
-            _logger.warning("[RaytonTG] add_admin_to_chat: missing tg_user_id or token")
             return
-
-        chat_id = self.tg_chat_id
-        user_id = int(tg_user_id)
-
-        def _call(method, payload):
-            url = TG_API.format(token=token, method=method)
-            try:
-                resp = requests.post(url, json=payload, timeout=10)
-                data = resp.json()
-                if not data.get('ok'):
-                    _logger.warning(
-                        "[RaytonTG] %s failed: %s", method, data.get('description', '')
-                    )
-                else:
-                    _logger.info("[RaytonTG] %s OK for user %s in chat %s", method, user_id, chat_id)
-                return data
-            except Exception as e:
-                _logger.warning("[RaytonTG] %s error: %s", method, str(e))
-                return {}
-
-        # 1. Unban (allows re-join if previously removed)
-        _call('unbanChatMember', {
-            'chat_id': chat_id,
-            'user_id': user_id,
-            'only_if_banned': True,
-        })
-
-        # 2. Add to group
-        _call('addChatMember', {
-            'chat_id': chat_id,
-            'user_id': user_id,
-        })
-
-        # 3. Promote to admin
-        _call('promoteChatMember', {
-            'chat_id': chat_id,
-            'user_id': user_id,
-            'can_manage_chat': True,
-            'can_change_info': True,
-            'can_delete_messages': True,
-            'can_invite_users': True,
-            'can_pin_messages': True,
-            'can_manage_video_chats': True,
-            'can_promote_members': False,   # не може додавати інших адмінів
-            'can_restrict_members': False,
-        })
+        url = TG_API.format(token=token, method='promoteChatMember')
+        try:
+            resp = requests.post(url, json={
+                'chat_id': self.tg_chat_id,
+                'user_id': int(tg_user_id),
+                'can_manage_chat': True,
+                'can_change_info': True,
+                'can_delete_messages': True,
+                'can_invite_users': True,
+                'can_pin_messages': True,
+                'can_manage_video_chats': True,
+                'can_promote_members': False,
+                'can_restrict_members': False,
+            }, timeout=10)
+            data = resp.json()
+            if data.get('ok'):
+                _logger.info("[RaytonTG] promoteChatMember OK for user %s", tg_user_id)
+            else:
+                _logger.warning(
+                    "[RaytonTG] promoteChatMember failed: %s", data.get('description', '')
+                )
+        except Exception as e:
+            _logger.warning("[RaytonTG] promoteChatMember error: %s", str(e))
 
     def rename_chat(self, new_title, token):
         """Rename the Telegram group to match the project name."""

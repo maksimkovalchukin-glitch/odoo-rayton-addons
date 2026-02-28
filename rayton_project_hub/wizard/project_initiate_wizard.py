@@ -270,29 +270,16 @@ class RaytonProjectInitiateWizard(models.TransientModel):
             tg_chat.name, tg_chat.tg_chat_id,
         )
 
-        # Rename TG group to match project name + add initiator as admin
+        # Rename TG group + generate personal invite link for initiator
         token = self.env['ir.config_parameter'].sudo().get_param(
             'rayton_project_hub.tg_bot_token', ''
         )
+        invite_link = None
         if token:
             tg_chat.rename_chat(project_name, token)
+            invite_link = tg_chat.create_invite_link(token)
         else:
-            _logger.warning("[RaytonProjectHub] TG bot token not set — cannot rename TG group.")
-
-        # Add initiator to TG group as admin (if tg_user_id is set)
-        tg_user_id = getattr(self.env.user, 'tg_user_id', '') or ''
-        if tg_user_id:
-            if token:
-                tg_chat.add_admin_to_chat(tg_user_id, token)
-            else:
-                _logger.warning(
-                    "[RaytonProjectHub] TG bot token not set — cannot add initiator to TG group."
-                )
-        else:
-            _logger.info(
-                "[RaytonProjectHub] Initiator '%s' has no tg_user_id — skipping TG group add.",
-                self.env.user.name,
-            )
+            _logger.warning("[RaytonProjectHub] TG bot token not set — cannot configure TG group.")
 
         # ── 5. Build rich initiation body ─────────────────────────────────────
         rich_body = self._build_rich_body(project_name, template_label, new_project, channel)
@@ -311,9 +298,15 @@ class RaytonProjectInitiateWizard(models.TransientModel):
             'project_template_type': self.template_type,
         })
 
-        # Post rich message on lead chatter
+        # Post rich message on lead chatter (+ personal TG invite link if generated)
+        lead_body = Markup('🚀 <b>Проект ініційовано</b><br/>') + rich_body
+        if invite_link:
+            lead_body += Markup(
+                f'<br/>🔗 <b>Запрошення до Telegram групи</b> (для ініціатора, діє 7 днів):<br/>'
+                f'<a href="{invite_link}">{invite_link}</a>'
+            )
         self.lead_id.message_post(
-            body=Markup(f'🚀 <b>Проект ініційовано</b><br/>') + rich_body,
+            body=lead_body,
             message_type='comment',
             subtype_xmlid='mail.mt_comment',
         )
