@@ -9,8 +9,8 @@
         <field name="arch" type="xml">
             <xpath expr="//field[@name='login']" position="after">
                 <field name="tg_user_id"
-                       placeholder="Напр. 1685833526"
-                       help="Числовий Telegram ID. Отримати: надішліть /start боту @userinfobot"/>
+                       string="Telegram User ID"
+                       placeholder="Напр. 1685833526"/>
             </xpath>
         </field>
     </record>
