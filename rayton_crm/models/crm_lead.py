@@ -56,11 +56,9 @@ class CrmLead(models.Model):
     loss_reason_text = fields.Char(string='Причина програшу')
     pipedrive_deal_id = fields.Integer(string='Pipedrive Deal ID', index=True)
 
-    # Підказка кредитного спеціаліста по регіону
+    # Кредитний спеціаліст угоди (заповнюється з імпорту або вручну)
     credit_specialist_id = fields.Many2one(
         'res.users', string='Кредитний спеціаліст',
-        compute='_compute_credit_specialist',
-        store=False,
     )
 
     def _compute_is_with_manager(self):
@@ -71,11 +69,6 @@ class CrmLead(models.Model):
     def _compute_transfer_count(self):
         for lead in self:
             lead.transfer_count = len(lead.transfer_ids)
-
-    def _compute_credit_specialist(self):
-        for lead in self:
-            state = lead.partner_id.state_id if lead.partner_id else False
-            lead.credit_specialist_id = state.credit_specialist_id if state else False
 
     def action_transfer_to_manager(self):
         self.ensure_one()

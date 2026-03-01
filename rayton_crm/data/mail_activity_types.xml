@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <record id="activity_type_call_client" model="mail.activity.type">
+        <field name="name">Телефонний дзвінок Клієнту</field>
+        <field name="icon">fa-phone</field>
+        <field name="delay_count">0</field>
+        <field name="delay_unit">days</field>
+    </record>
+
+    <record id="activity_type_outbound_call" model="mail.activity.type">
+        <field name="name">Вихідний дзвінок</field>
+        <field name="icon">fa-phone-square</field>
+        <field name="delay_count">0</field>
+        <field name="delay_unit">days</field>
+    </record>
+
+    <record id="activity_type_inbound_call" model="mail.activity.type">
+        <field name="name">Вхідний дзвінок</field>
+        <field name="icon">fa-phone</field>
+        <field name="delay_count">0</field>
+        <field name="delay_unit">days</field>
+    </record>
+
+    <record id="activity_type_missed_call" model="mail.activity.type">
+        <field name="name">Недозвон</field>
+        <field name="icon">fa-ban</field>
+        <field name="delay_count">1</field>
+        <field name="delay_unit">days</field>
+    </record>
+
+    <record id="activity_type_task" model="mail.activity.type">
+        <field name="name">Завдання КЦ</field>
+        <field name="icon">fa-check-square-o</field>
+        <field name="delay_count">0</field>
+        <field name="delay_unit">days</field>
+    </record>
+
+    <record id="activity_type_online_meeting" model="mail.activity.type">
+        <field name="name">Онлайн-зустріч</field>
+        <field name="icon">fa-video-camera</field>
+        <field name="delay_count">1</field>
+        <field name="delay_unit">days</field>
+    </record>
+
+    <record id="activity_type_offline_meeting" model="mail.activity.type">
+        <field name="name">Офлайн-зустріч</field>
+        <field name="icon">fa-handshake-o</field>
+        <field name="delay_count">1</field>
+        <field name="delay_unit">days</field>
+    </record>
+
+    <record id="activity_type_send_kp" model="mail.activity.type">
+        <field name="name">Надіслати КП</field>
+        <field name="icon">fa-file-text-o</field>
+        <field name="delay_count">1</field>
+        <field name="delay_unit">days</field>
+    </record>
+</odoo>

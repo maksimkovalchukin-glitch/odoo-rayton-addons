@@ -7,6 +7,7 @@
     'depends': ['crm', 'contacts', 'mail'],
     'data': [
         'security/groups.xml',
+        'data/mail_activity_types.xml',
         'security/ir.model.access.csv',
         'views/res_partner_views.xml',
         'views/crm_lead_views.xml',
