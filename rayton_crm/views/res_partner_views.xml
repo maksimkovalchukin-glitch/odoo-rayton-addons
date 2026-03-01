@@ -47,6 +47,18 @@
         </field>
     </record>
 
+    <!-- Ховаємо вкладку "Контакти та адреси" для дочірніх контактів -->
+    <record id="view_partner_form_hide_sub_contacts" model="ir.ui.view">
+        <field name="name">res.partner.form.hide.sub.contacts</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//page[@name='contacts_tab']" position="attributes">
+                <attribute name="invisible">parent_id</attribute>
+            </xpath>
+        </field>
+    </record>
+
     <!-- Список партнерів — прибираємо phone/mobile -->
     <record id="view_partner_list_phones" model="ir.ui.view">
         <field name="name">res.partner.list.phones</field>
