@@ -48,28 +48,36 @@ for _, row in df_contact.iterrows():
         continue
 
     body = body_map.get(msg_id, '') or ''
+
+    # Прибираємо старий неправильно вставлений "Контакт:" (з попереднього запуску)
+    # Попередній fallback вставляв: "...текстКонтакт: name<br/></p>" (без <br> перед)
     if 'Контакт:' in body:
-        already_has += 1
-        continue
+        # Видаляємо "Контакт: ...<br/>" або "Контакт: ..." перед </p>
+        body = re.sub(r'<br[/]?>Контакт:[^<]*', '', body)
+        body = re.sub(r'Контакт:[^<]*(?:<br[/]?>)?', '', body)
+        body_map[msg_id] = body
 
     # Прибираємо суфікс "(Контакт з бази ЯСНО)" та подібні
     contact_raw = str(row['Контактна особа']).strip()
     contact_name = re.sub(r'\s*\([^)]*\)\s*$', '', contact_raw).strip() or contact_raw
 
-    # Вставляємо після першого </strong>...<br/>
-    # Поточна структура: <strong>icon type</strong> status<br/>
-    # Хочемо: <strong>icon type</strong> status<br/>Контакт: name<br/>
+    # Вставляємо після першого </strong>...<br> або <br/>
+    # Odoo зберігає <br> (без /), тому шукаємо обидва варіанти
     marker = '</strong>'
     if marker in body:
-        # Знаходимо перший <br/> після </strong>
         idx_strong = body.index(marker) + len(marker)
-        idx_br = body.find('<br/>', idx_strong)
+        # Шукаємо <br> або <br/>
+        idx_br = body.find('<br>', idx_strong)
+        br_tag = '<br>'
+        if idx_br < 0:
+            idx_br = body.find('<br/>', idx_strong)
+            br_tag = '<br/>'
         if idx_br >= 0:
-            insert_pos = idx_br + len('<br/>')
-            new_body = body[:insert_pos] + ('Контакт: %s<br/>' % contact_name) + body[insert_pos:]
+            insert_pos = idx_br + len(br_tag)
+            new_body = body[:insert_pos] + ('Контакт: %s%s' % (contact_name, br_tag)) + body[insert_pos:]
         else:
-            # fallback: вставити перед </p>
-            new_body = body.replace('</p>', 'Контакт: %s<br/></p>' % contact_name, 1)
+            # Fallback: вставити перед </p> з переносом
+            new_body = body.replace('</p>', '<br>Контакт: %s</p>' % contact_name, 1)
     else:
         not_found += 1
         continue
