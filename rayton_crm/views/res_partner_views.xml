@@ -1,38 +1,39 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Форма компанії/контакту — вкладка телефонів -->
+    <!-- Окремий list view для res.partner.phone (Odoo підхопить автоматично) -->
+    <record id="view_partner_phone_list" model="ir.ui.view">
+        <field name="name">res.partner.phone.list</field>
+        <field name="model">res.partner.phone</field>
+        <field name="arch" type="xml">
+            <list editable="bottom">
+                <field name="phone_type" string="Тип"/>
+                <field name="phone" string="Номер"/>
+                <field name="is_primary" string="Основний"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Форма компанії/контакту — замінюємо phone/mobile на таблицю телефонів -->
     <record id="view_partner_form_phones" model="ir.ui.view">
         <field name="name">res.partner.form.phones</field>
         <field name="model">res.partner</field>
         <field name="inherit_id" ref="base.view_partner_form"/>
         <field name="arch" type="xml">
-            <!-- Замінюємо стандартні phone/mobile блоки таблицею телефонів -->
             <xpath expr="//field[@name='phone']" position="before">
-                <separator string="Телефони"/>
-                <field name="phone_ids" nolabel="1" colspan="2">
-                    <list editable="bottom">
-                        <field name="phone_type"/>
-                        <field name="phone"/>
-                        <field name="is_primary"/>
-                    </list>
-                </field>
+                <field name="phone_ids" string="Телефони" nolabel="1" colspan="2"/>
             </xpath>
             <xpath expr="//field[@name='phone']" position="replace"/>
             <xpath expr="//field[@name='mobile']" position="replace"/>
         </field>
     </record>
 
-    <!-- Список партнерів — додаємо колонку телефонів -->
+    <!-- Список партнерів — прибираємо phone/mobile -->
     <record id="view_partner_list_phones" model="ir.ui.view">
         <field name="name">res.partner.list.phones</field>
         <field name="model">res.partner</field>
         <field name="inherit_id" ref="base.view_partner_tree"/>
         <field name="arch" type="xml">
-            <xpath expr="//field[@name='phone']" position="replace">
-                <field name="phone_ids" widget="many2many_tags"
-                       options="{'color_field': 'is_primary'}"
-                       string="Телефони"/>
-            </xpath>
+            <xpath expr="//field[@name='phone']" position="replace"/>
             <xpath expr="//field[@name='mobile']" position="replace"/>
         </field>
     </record>

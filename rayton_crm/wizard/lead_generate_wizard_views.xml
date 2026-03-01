@@ -14,11 +14,11 @@
                 <group string="Розподіл операторів">
                     <field name="assignment_mode" widget="radio"/>
                     <field name="operator_id"
-                           attrs="{'invisible': [('assignment_mode', '!=', 'single')],
-                                   'required': [('assignment_mode', '=', 'single')]}"/>
+                           invisible="assignment_mode != 'single'"
+                           required="assignment_mode == 'single'"/>
                     <field name="operator_ids"
-                           attrs="{'invisible': [('assignment_mode', '!=', 'roundrobin')],
-                                   'required': [('assignment_mode', '=', 'roundrobin')]}"
+                           invisible="assignment_mode != 'roundrobin'"
+                           required="assignment_mode == 'roundrobin'"
                            widget="many2many_tags"/>
                 </group>
                 <footer>

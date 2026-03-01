@@ -1,11 +1,15 @@
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError
-from odoo.tools import html2plaintext
 
 
 class CrmLead(models.Model):
     _inherit = 'crm.lead'
 
+    contact_ids = fields.One2many(
+        related='partner_id.child_ids',
+        string='Контакти компанії',
+        readonly=True,
+    )
     transfer_ids = fields.One2many(
         'rayton.lead.transfer', 'lead_id',
         string='Передачі',
