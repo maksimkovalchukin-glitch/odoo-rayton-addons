@@ -7,17 +7,39 @@
         <field name="inherit_id" ref="crm.crm_lead_view_form"/>
         <field name="arch" type="xml">
 
+            <!-- Невидиме поле для умов invisible на кнопках -->
+            <xpath expr="//sheet" position="inside">
+                <field name="is_with_manager" invisible="True"/>
+            </xpath>
+
+            <!-- Ховаємо Очікуваний дохід і Імовірність — не потрібні -->
+            <xpath expr="//div[contains(@class,'oe_title')]/h2" position="attributes">
+                <attribute name="invisible">True</attribute>
+            </xpath>
+
+            <!-- Наші поля: тип проекту, споживання, банківський клієнт + нові поля угоди -->
+            <xpath expr="//field[@name='user_id']" position="after">
+                <field name="project_type" string="Тип проекту"/>
+                <field name="consumption" string="Споживання, МВт*год/міс"/>
+                <field name="is_bank_client" string="Банківський клієнт"/>
+                <field name="financing_type" string="Тип фінансування"/>
+                <field name="power_ses_kw" string="Потужність СЕС, кВт"/>
+                <field name="capacity_uze_kwh" string="Ємність УЗЕ, кВт·год"/>
+            </xpath>
+
             <!-- Кнопки передачі в заголовку (перед кнопкою Won) -->
             <xpath expr="//button[@name='action_set_won_rainbowman']" position="before">
                 <button name="action_transfer_to_manager"
                         string="📤 Передати менеджеру"
                         type="object"
                         class="btn-primary"
+                        invisible="is_with_manager"
                         groups="rayton_crm.group_operator,rayton_crm.group_credit,rayton_crm.group_kc_head"/>
                 <button name="action_return_to_kc"
                         string="🔄 Повернути на КЦ"
                         type="object"
                         class="btn-warning"
+                        invisible="not is_with_manager"
                         groups="rayton_crm.group_manager"/>
             </xpath>
 
@@ -35,6 +57,20 @@
                 <page string="Контакти" name="rayton_contacts">
                     <field name="contact_ids" readonly="1"
                            context="{'list_view_ref': 'rayton_crm.view_partner_contact_in_lead'}"/>
+                </page>
+                <page string="Деталі угоди" name="rayton_deal">
+                    <group string="Дати">
+                        <field name="primary_calc_date" string="Дата первинних розрахунків"/>
+                        <field name="measurement_date" string="Дата замірів"/>
+                        <field name="advance_planned_date" string="Планова дата авансу"/>
+                        <field name="advance_actual_date" string="Фактична дата авансу"/>
+                    </group>
+                    <group string="Технічна інформація">
+                        <field name="loss_reason_text" string="Причина програшу"
+                               invisible="not loss_reason_text"/>
+                        <field name="pipedrive_deal_id" string="Pipedrive ID"
+                               invisible="not pipedrive_deal_id"/>
+                    </group>
                 </page>
             </xpath>
 

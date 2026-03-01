@@ -53,8 +53,36 @@
         <field name="model">res.partner</field>
         <field name="inherit_id" ref="base.view_partner_form"/>
         <field name="arch" type="xml">
-            <xpath expr="//page[@name='contacts_tab']" position="attributes">
+            <xpath expr="//page[@name='contact_addresses']" position="attributes">
                 <attribute name="invisible">parent_id</attribute>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Вкладка Rayton на формі компанії/контакту -->
+    <record id="view_partner_form_rayton" model="ir.ui.view">
+        <field name="name">res.partner.form.rayton</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//page[@name='internal_notes']" position="before">
+                <page string="Rayton" name="rayton_info">
+                    <group string="Ідентифікація">
+                        <field name="edrpou" string="ЄДРПОУ"/>
+                        <field name="kved_name" string="КВЕД (назва)"/>
+                        <field name="director_name" string="Керівник"/>
+                        <field name="resource_link" string="Посилання з ресурсу" widget="url"/>
+                    </group>
+                    <group string="Класифікація">
+                        <field name="client_status" string="Статус клієнта"/>
+                        <field name="lead_temp" string="Температура ліда"/>
+                        <field name="partner_source" string="Джерело"/>
+                    </group>
+                    <group string="Проект">
+                        <field name="consumption_mwh" string="Споживання, МВт·год/міс"/>
+                        <field name="uze_proposal" string="Пропозиція УЗЕ"/>
+                    </group>
+                </page>
             </xpath>
         </field>
     </record>

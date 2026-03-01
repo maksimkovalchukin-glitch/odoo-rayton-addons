@@ -1,6 +1,12 @@
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError
 
+FINANCING_TYPE = [
+    ('own', 'Власні'),
+    ('credit', 'Кредитні'),
+    ('mixed', 'Власні (аванс)/Кредитні'),
+]
+
 
 class CrmLead(models.Model):
     _inherit = 'crm.lead'
@@ -23,12 +29,44 @@ class CrmLead(models.Model):
         help='Оператор що востаннє вів цей лід',
     )
 
+    # True = лід зараз у менеджера (Sales), False = у КЦ
+    is_with_manager = fields.Boolean(
+        string='У менеджера',
+        compute='_compute_is_with_manager',
+        store=False,
+    )
+
+    # Поля проекту
+    consumption = fields.Float(string='Споживання, МВт*год/міс', digits=(10, 2))
+    is_bank_client = fields.Boolean(string='Банківський клієнт')
+    project_type = fields.Selection([
+        ('ses', 'СЕС'),
+        ('uze', 'УЗЕ'),
+        ('ses_uze', 'СЕС+УЗЕ'),
+    ], string='Тип проекту')
+
+    # Поля угоди (Pipedrive deals)
+    power_ses_kw = fields.Float(string='Потужність СЕС, кВт', digits=(10, 2))
+    capacity_uze_kwh = fields.Float(string='Ємність УЗЕ, кВт·год', digits=(10, 2))
+    financing_type = fields.Selection(FINANCING_TYPE, string='Тип фінансування')
+    primary_calc_date = fields.Date(string='Дата первинних розрахунків')
+    measurement_date = fields.Date(string='Дата замірів')
+    advance_planned_date = fields.Date(string='Планова дата авансу')
+    advance_actual_date = fields.Date(string='Фактична дата авансу')
+    loss_reason_text = fields.Char(string='Причина програшу')
+    pipedrive_deal_id = fields.Integer(string='Pipedrive Deal ID', index=True)
+
     # Підказка кредитного спеціаліста по регіону
     credit_specialist_id = fields.Many2one(
         'res.users', string='Кредитний спеціаліст',
         compute='_compute_credit_specialist',
         store=False,
     )
+
+    def _compute_is_with_manager(self):
+        kc_team = self.env['crm.team'].search([('name', 'ilike', 'Колл')], limit=1)
+        for lead in self:
+            lead.is_with_manager = bool(kc_team) and lead.team_id.id != kc_team.id
 
     def _compute_transfer_count(self):
         for lead in self:
