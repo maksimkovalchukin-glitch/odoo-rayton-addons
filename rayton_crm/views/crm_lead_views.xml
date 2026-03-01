@@ -7,8 +7,8 @@
         <field name="inherit_id" ref="crm.crm_lead_all_leads"/>
         <field name="arch" type="xml">
 
-            <!-- Кнопки передачі в заголовку -->
-            <xpath expr="//button[@name='action_schedule_meeting']" position="before">
+            <!-- Кнопки передачі в заголовку (перед статус-баром стадії) -->
+            <xpath expr="//field[@name='stage_id']" position="before">
                 <button name="action_transfer_to_manager"
                         string="📤 Передати менеджеру"
                         type="object"
@@ -22,7 +22,7 @@
             </xpath>
 
             <!-- Stat button кількість передач -->
-            <xpath expr="//div[hasclass('oe_button_box')]" position="inside">
+            <xpath expr="//div[@name='button_box']" position="inside">
                 <button type="object" name="action_transfer_to_manager"
                         class="oe_stat_button" icon="fa-exchange"
                         groups="rayton_crm.group_operator,rayton_crm.group_credit,rayton_crm.group_kc_head">
