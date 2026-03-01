@@ -4,7 +4,8 @@
         <field name="name">rayton.manager.queue.list</field>
         <field name="model">rayton.manager.queue</field>
         <field name="arch" type="xml">
-            <tree editable="top" default_order="sequence">
+            <tree editable="top" default_order="queue_type,sequence">
+                <field name="queue_type"/>
                 <field name="sequence" widget="handle"/>
                 <field name="user_id"/>
                 <field name="is_paused"/>
@@ -18,5 +19,7 @@
         <field name="name">Черга менеджерів</field>
         <field name="res_model">rayton.manager.queue</field>
         <field name="view_mode">tree</field>
+        <field name="domain">[]</field>
+        <field name="context">{'group_by': 'queue_type'}</field>
     </record>
 </odoo>

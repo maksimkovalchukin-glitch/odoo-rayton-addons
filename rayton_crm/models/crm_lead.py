@@ -64,7 +64,7 @@ class CrmLead(models.Model):
     )
 
     def _compute_is_with_manager(self):
-        kc_team = self.env['crm.team'].search([('name', 'ilike', 'Колл')], limit=1)
+        kc_team = self.env['crm.team'].search([('name', 'ilike', 'Оператор')], limit=1)
         for lead in self:
             lead.is_with_manager = bool(kc_team) and lead.team_id.id != kc_team.id
 
@@ -94,10 +94,9 @@ class CrmLead(models.Model):
 
     def action_return_to_kc(self):
         self.ensure_one()
-        kc_team = self.env['crm.team'].search([('name', 'ilike', 'Колл')], limit=1)
+        kc_team = self.env['crm.team'].search([('name', 'ilike', 'Оператор')], limit=1)
         kc_stage = self.env['crm.stage'].search([
             ('name', 'ilike', 'паузі'),
-            ('team_id', '=', kc_team.id if kc_team else False),
         ], limit=1)
 
         operator = self.last_operator_id or self.env['res.users'].browse(self.env.uid)
