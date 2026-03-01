@@ -76,19 +76,19 @@
         </field>
     </record>
 
-    <!-- Діалог "Відкрити: Контакт" (sub-contact quick-edit) — додаємо phone_ids -->
-    <record id="view_partner_address_form_phones" model="ir.ui.view">
-        <field name="name">res.partner.address.form.phones</field>
+    <!-- Діалог "Відкрити: Контакт" (inline form в child_ids) — ховаємо phone/mobile, показуємо primary_phone -->
+    <record id="view_partner_child_form_phones" model="ir.ui.view">
+        <field name="name">res.partner.child.form.phones</field>
         <field name="model">res.partner</field>
-        <field name="inherit_id" ref="base.view_partner_address_form"/>
+        <field name="inherit_id" ref="base.view_partner_form"/>
         <field name="arch" type="xml">
-            <xpath expr="//field[@name='phone']" position="before">
-                <field name="phone_ids" string="Телефони" nolabel="1" colspan="2"/>
+            <xpath expr="//field[@name='child_ids']//form//field[@name='phone']" position="before">
+                <field name="primary_phone" string="Телефон" readonly="1"/>
             </xpath>
-            <xpath expr="//field[@name='phone']" position="attributes">
+            <xpath expr="//field[@name='child_ids']//form//field[@name='phone']" position="attributes">
                 <attribute name="invisible">True</attribute>
             </xpath>
-            <xpath expr="//field[@name='mobile']" position="attributes">
+            <xpath expr="//field[@name='child_ids']//form//field[@name='mobile']" position="attributes">
                 <attribute name="invisible">True</attribute>
             </xpath>
         </field>
