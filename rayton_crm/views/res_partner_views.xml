@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Окремий list view для res.partner.phone (Odoo підхопить автоматично) -->
+    <!-- Окремий list view для res.partner.phone -->
     <record id="view_partner_phone_list" model="ir.ui.view">
         <field name="name">res.partner.phone.list</field>
         <field name="model">res.partner.phone</field>
@@ -13,17 +13,15 @@
         </field>
     </record>
 
-    <!-- Форма компанії/контакту — замінюємо phone/mobile на таблицю телефонів -->
+    <!-- Форма: замінюємо phone/mobile на таблицю телефонів -->
     <record id="view_partner_form_phones" model="ir.ui.view">
         <field name="name">res.partner.form.phones</field>
         <field name="model">res.partner</field>
         <field name="inherit_id" ref="base.view_partner_form"/>
         <field name="arch" type="xml">
-            <!-- Додаємо phone_ids перед полем phone -->
             <xpath expr="//field[@name='phone']" position="before">
                 <field name="phone_ids" string="Телефони" nolabel="1" colspan="2"/>
             </xpath>
-            <!-- Ховаємо phone і mobile — НЕ видаляємо, бо вони потрібні для валідації context/domain -->
             <xpath expr="//field[@name='phone']" position="attributes">
                 <attribute name="invisible">True</attribute>
             </xpath>
@@ -41,31 +39,19 @@
             <tree>
                 <field name="name"/>
                 <field name="function" string="Посада"/>
-                <field name="phone" string="Телефон"/>
+                <field name="primary_phone" string="Телефон"/>
                 <field name="email"/>
             </tree>
         </field>
     </record>
 
-    <!-- Ховаємо вкладку "Контакти та адреси" для дочірніх контактів -->
-    <record id="view_partner_form_hide_sub_contacts" model="ir.ui.view">
-        <field name="name">res.partner.form.hide.sub.contacts</field>
-        <field name="model">res.partner</field>
-        <field name="inherit_id" ref="base.view_partner_form"/>
-        <field name="arch" type="xml">
-            <xpath expr="//page[@name='contact_addresses']" position="attributes">
-                <attribute name="invisible">parent_id</attribute>
-            </xpath>
-        </field>
-    </record>
-
-    <!-- Вкладка Rayton на формі компанії/контакту -->
+    <!-- Вкладка Rayton — перша, перед "Контакти та адреси" -->
     <record id="view_partner_form_rayton" model="ir.ui.view">
         <field name="name">res.partner.form.rayton</field>
         <field name="model">res.partner</field>
         <field name="inherit_id" ref="base.view_partner_form"/>
         <field name="arch" type="xml">
-            <xpath expr="//page[@name='internal_notes']" position="before">
+            <xpath expr="//page[@name='contact_addresses']" position="before">
                 <page string="Rayton" name="rayton_info">
                     <group string="Ідентифікація">
                         <field name="kved_name" string="КВЕД (назва)"/>
@@ -83,10 +69,14 @@
                     </group>
                 </page>
             </xpath>
+            <!-- Ховаємо "Контакти та адреси" для фізичних осіб -->
+            <xpath expr="//page[@name='contact_addresses']" position="attributes">
+                <attribute name="invisible">not is_company</attribute>
+            </xpath>
         </field>
     </record>
 
-    <!-- Список партнерів — замінюємо phone/mobile на primary_phone -->
+    <!-- Список партнерів — primary_phone замість phone/mobile -->
     <record id="view_partner_list_phones" model="ir.ui.view">
         <field name="name">res.partner.list.phones</field>
         <field name="model">res.partner</field>
