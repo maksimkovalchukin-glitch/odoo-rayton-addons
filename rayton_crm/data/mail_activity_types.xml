@@ -55,4 +55,25 @@
         <field name="delay_count">1</field>
         <field name="delay_unit">days</field>
     </record>
+
+    <record id="activity_type_send_pkp" model="mail.activity.type">
+        <field name="name">Відправка ПКП</field>
+        <field name="icon">fa-file-text-o</field>
+        <field name="delay_count">1</field>
+        <field name="delay_unit">days</field>
+    </record>
+
+    <record id="activity_type_lead_transfer" model="mail.activity.type">
+        <field name="name">Передача ліда</field>
+        <field name="icon">fa-exchange</field>
+        <field name="delay_count">0</field>
+        <field name="delay_unit">days</field>
+    </record>
+
+    <record id="activity_type_new_leads" model="mail.activity.type">
+        <field name="name">Обробка нових лідів</field>
+        <field name="icon">fa-filter</field>
+        <field name="delay_count">0</field>
+        <field name="delay_unit">days</field>
+    </record>
 </odoo>
