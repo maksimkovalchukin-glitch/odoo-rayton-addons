@@ -1,9 +1,10 @@
 """
-Фаза 5 (v2): Імпорт активностей з Pipedrive → mail.message в Odoo.
+Фаза 5 (v3): Імпорт активностей з Pipedrive → mail.message в Odoo.
 
-Виправлення vs v1:
-  - Правильний маппінг авторів (AUTHOR_MAP, без partial word match)
-  - subtype_id = False (не mt_note) → відображаються як activity log, не нотатка
+Виправлення vs v2:
+  - author_id = Призначено (хто виконував), не Автор (хто створював в Pipedrive)
+  - Ольга створювала 187k активностей, але виконавці — оператори
+  - subtype_id = False (activity log, не нотатка)
   - Дедублікація: один запис на (target, дата, тип, виконавець)
 
 Запуск:
@@ -64,6 +65,8 @@ AUTHOR_MAP = {
     'сергій ничипоренко':        None,
     'дмитро петров':             'петров',
     'олександр умнов':           None,
+    'роман':                     None,   # невідомий, → Admin
+    'владислава карась':         None,   # невідома, → Admin
 }
 
 def clean_str(v):
@@ -215,7 +218,9 @@ for _, row in df.iterrows():
     subject = clean_str(row.get('Тема')) or act_type
     done = clean_str(row.get('Виконано')) == 'Виконано'
 
-    author_pid = get_author_pid(row.get('Автор') or row.get('Призначено користувачеві'))
+    # Автор = хто створив в Pipedrive (часто Ольга/адмін)
+    # Призначено = хто ВИКОНУВАВ активність — це правильний автор для чаттера
+    author_pid = get_author_pid(row.get('Призначено користувачеві') or row.get('Автор'))
 
     # Тіло повідомлення
     status = '\u2713' if done else '\u25cb'
