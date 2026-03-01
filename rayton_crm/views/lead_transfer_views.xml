@@ -4,7 +4,7 @@
         <field name="name">rayton.lead.transfer.list</field>
         <field name="model">rayton.lead.transfer</field>
         <field name="arch" type="xml">
-            <list>
+            <tree>
                 <field name="create_date" string="Дата"/>
                 <field name="direction" string="Напрямок"/>
                 <field name="transfer_type" string="Тип"/>
@@ -18,7 +18,7 @@
                        decoration-danger="state == 'lost'"
                        widget="badge"/>
                 <field name="notes" string="Примітки"/>
-            </list>
+            </tree>
         </field>
     </record>
 
@@ -51,6 +51,6 @@
     <record id="action_lead_transfer" model="ir.actions.act_window">
         <field name="name">Передача лідів</field>
         <field name="res_model">rayton.lead.transfer</field>
-        <field name="view_mode">list</field>
+        <field name="view_mode">tree</field>
     </record>
 </odoo>

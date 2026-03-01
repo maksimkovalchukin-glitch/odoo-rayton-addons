@@ -5,11 +5,11 @@
         <field name="name">res.partner.phone.list</field>
         <field name="model">res.partner.phone</field>
         <field name="arch" type="xml">
-            <list editable="bottom">
+            <tree editable="bottom">
                 <field name="phone_type" string="Тип"/>
                 <field name="phone" string="Номер"/>
                 <field name="is_primary" string="Основний"/>
-            </list>
+            </tree>
         </field>
     </record>
 
