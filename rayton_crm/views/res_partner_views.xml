@@ -23,6 +23,7 @@
                 <field name="phone_ids" string="Телефони" nolabel="1" colspan="2"/>
             </xpath>
             <xpath expr="//label[@for='phone']" position="replace"/>
+            <xpath expr="//label[@for='mobile']" position="replace"/>
             <xpath expr="//field[@name='phone']" position="replace"/>
             <xpath expr="//field[@name='mobile']" position="replace"/>
         </field>
