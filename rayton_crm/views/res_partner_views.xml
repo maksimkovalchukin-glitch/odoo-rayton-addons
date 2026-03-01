@@ -76,6 +76,24 @@
         </field>
     </record>
 
+    <!-- Діалог "Відкрити: Контакт" (sub-contact quick-edit) — додаємо phone_ids -->
+    <record id="view_partner_address_form_phones" model="ir.ui.view">
+        <field name="name">res.partner.address.form.phones</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_address_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='phone']" position="before">
+                <field name="phone_ids" string="Телефони" nolabel="1" colspan="2"/>
+            </xpath>
+            <xpath expr="//field[@name='phone']" position="attributes">
+                <attribute name="invisible">True</attribute>
+            </xpath>
+            <xpath expr="//field[@name='mobile']" position="attributes">
+                <attribute name="invisible">True</attribute>
+            </xpath>
+        </field>
+    </record>
+
     <!-- Список партнерів — primary_phone замість phone/mobile -->
     <record id="view_partner_list_phones" model="ir.ui.view">
         <field name="name">res.partner.list.phones</field>
