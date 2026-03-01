@@ -33,6 +33,20 @@
         </field>
     </record>
 
+    <!-- Список контактів у вкладці ліда/нагоди CRM -->
+    <record id="view_partner_contact_in_lead" model="ir.ui.view">
+        <field name="name">res.partner.contact.in.lead.list</field>
+        <field name="model">res.partner</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="name"/>
+                <field name="function" string="Посада"/>
+                <field name="phone" string="Телефон"/>
+                <field name="email"/>
+            </tree>
+        </field>
+    </record>
+
     <!-- Список партнерів — прибираємо phone/mobile -->
     <record id="view_partner_list_phones" model="ir.ui.view">
         <field name="name">res.partner.list.phones</field>

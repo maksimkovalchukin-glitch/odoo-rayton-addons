@@ -33,14 +33,8 @@
             <!-- Вкладка контактів компанії -->
             <xpath expr="//page[@name='extra']" position="after">
                 <page string="Контакти" name="rayton_contacts">
-                    <field name="contact_ids" readonly="1">
-                        <list>
-                            <field name="name"/>
-                            <field name="function" string="Посада"/>
-                            <field name="phone" string="Телефон"/>
-                            <field name="email"/>
-                        </list>
-                    </field>
+                    <field name="contact_ids" readonly="1"
+                           context="{'list_view_ref': 'rayton_crm.view_partner_contact_in_lead'}"/>
                 </page>
             </xpath>
 
