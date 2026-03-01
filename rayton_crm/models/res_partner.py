@@ -28,7 +28,6 @@ class ResPartner(models.Model):
         string='Телефони',
     )
     # Поля з Pipedrive / збагачення
-    edrpou = fields.Char(string='ЄДРПОУ', size=10, index=True)
     kved_name = fields.Char(string='Назва КВЕДу')
     client_status = fields.Selection(PARTNER_STATUS, string='Статус клієнта')
     lead_temp = fields.Selection(LEAD_TEMP, string='Температура ліда')

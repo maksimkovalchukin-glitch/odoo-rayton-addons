@@ -68,7 +68,6 @@
             <xpath expr="//page[@name='internal_notes']" position="before">
                 <page string="Rayton" name="rayton_info">
                     <group string="Ідентифікація">
-                        <field name="edrpou" string="ЄДРПОУ"/>
                         <field name="kved_name" string="КВЕД (назва)"/>
                         <field name="director_name" string="Керівник"/>
                         <field name="resource_link" string="Посилання з ресурсу" widget="url"/>
