@@ -27,6 +27,19 @@ class ResPartner(models.Model):
         'res.partner.phone', 'partner_id',
         string='Телефони',
     )
+    primary_phone = fields.Char(
+        string='Телефон',
+        compute='_compute_primary_phone',
+        store=True,
+    )
+
+    @api.depends('phone_ids', 'phone_ids.phone', 'phone_ids.is_primary')
+    def _compute_primary_phone(self):
+        for partner in self:
+            primary = partner.phone_ids.filtered('is_primary')[:1]
+            if not primary:
+                primary = partner.phone_ids[:1]
+            partner.primary_phone = primary.phone if primary else False
     # Поля з Pipedrive / збагачення
     kved_name = fields.Char(string='Назва КВЕДу')
     client_status = fields.Selection(PARTNER_STATUS, string='Статус клієнта')
