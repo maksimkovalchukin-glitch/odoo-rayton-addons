@@ -36,10 +36,13 @@ def find_user(name):
     clean = str(name).strip().lower()
     if clean in surname_to_uid:
         return surname_to_uid[clean]
-    # Спробуємо по першому слову (прізвище)
     parts = clean.split()
-    if parts:
-        return surname_to_uid.get(parts[0])
+    # Спробуємо по першому слову (якщо Odoo-формат "Прізвище Ім'я")
+    if parts and surname_to_uid.get(parts[0]):
+        return surname_to_uid[parts[0]]
+    # Спробуємо по останньому слову (якщо Excel-формат "Ім'я Прізвище")
+    if parts and surname_to_uid.get(parts[-1]):
+        return surname_to_uid[parts[-1]]
     return None
 
 # Очищаємо старі записи

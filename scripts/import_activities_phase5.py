@@ -1,10 +1,10 @@
 """
-Фаза 5 (v3): Імпорт активностей з Pipedrive → mail.message в Odoo.
+Фаза 5 (v4): Імпорт активностей з Pipedrive → mail.message в Odoo.
 
-Виправлення vs v2:
-  - author_id = Призначено (хто виконував), не Автор (хто створював в Pipedrive)
-  - Ольга створювала 187k активностей, але виконавці — оператори
-  - subtype_id = False (activity log, не нотатка)
+Виправлення vs v3:
+  - subtype_id = mail.mt_activities (виглядає як виконана дія, не як нотатка)
+  - Ксенія Коваленко (Pipedrive) = Сущенко Оксана (Odoo) → ксенія коваленко: сущенко
+  - author_id = Призначено (хто виконував)
   - Дедублікація: один запис на (target, дата, тип, виконавець)
 
 Запуск:
@@ -49,7 +49,7 @@ AUTHOR_MAP = {
     'станіслав бобровицький':    'бобровицький',
     'павлов дмитро':             'павлов',
     'микола тубіш':              'тубіш',
-    'ксенія коваленко':          None,
+    'ксенія коваленко':          'сущенко',   # Оксана Сущенко в Odoo
     'artem':                     None,
     'ольга':                     None,
     'анатолій купчин':           None,
@@ -67,6 +67,7 @@ AUTHOR_MAP = {
     'олександр умнов':           None,
     'роман':                     None,   # невідомий, → Admin
     'владислава карась':         None,   # невідома, → Admin
+    'оксана сущенко':            'сущенко',   # запасне ім'я Ксенії Коваленко
 }
 
 def clean_str(v):
@@ -74,7 +75,7 @@ def clean_str(v):
         return ''
     return str(v).strip()
 
-print('=== Фаза 5 v2: Імпорт активностей ===')
+print('=== Фаза 5 v4: Імпорт активностей ===')
 
 # --- Users ---
 all_users = env['res.users'].search_read([('active', '=', True)], ['name', 'partner_id'])
@@ -123,6 +124,9 @@ if old_msg_ids:
     """)
     env.cr.commit()
     print(f'  ✓ Видалено {len(old_msg_ids)} повідомлень')
+
+# --- Subtype для виконаних активностей ---
+mt_activities = env.ref('mail.mt_activities').id
 
 # --- Довідники ---
 print('\n[2] Завантаження довідників...')
@@ -241,7 +245,7 @@ for _, row in df.iterrows():
             'date':         date_str,
             'author_id':    author_pid,
             'message_type': 'comment',
-            'subtype_id':   False,   # не нотатка — звичайний activity log
+            'subtype_id':   mt_activities,   # виглядає як виконана дія (Дії в чаттері)
         })
 
         env['ir.model.data'].sudo().create({
