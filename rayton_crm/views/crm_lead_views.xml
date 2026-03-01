@@ -4,11 +4,11 @@
     <record id="view_crm_lead_form_rayton" model="ir.ui.view">
         <field name="name">crm.lead.form.rayton</field>
         <field name="model">crm.lead</field>
-        <field name="inherit_id" ref="crm.crm_lead_all_leads"/>
+        <field name="inherit_id" ref="crm.crm_lead_view_form"/>
         <field name="arch" type="xml">
 
-            <!-- Кнопки передачі в заголовку (перед статус-баром стадії) -->
-            <xpath expr="//field[@name='stage_id']" position="before">
+            <!-- Кнопки передачі в заголовку (перед кнопкою Won) -->
+            <xpath expr="//button[@name='action_set_won_rainbowman']" position="before">
                 <button name="action_transfer_to_manager"
                         string="📤 Передати менеджеру"
                         type="object"
@@ -51,7 +51,7 @@
     <record id="view_crm_opportunity_form_credit" model="ir.ui.view">
         <field name="name">crm.lead.form.credit.hint</field>
         <field name="model">crm.lead</field>
-        <field name="inherit_id" ref="crm.crm_lead_all_leads"/>
+        <field name="inherit_id" ref="crm.crm_lead_view_form"/>
         <field name="arch" type="xml">
             <xpath expr="//field[@name='user_id']" position="after">
                 <field name="credit_specialist_id" readonly="1"
