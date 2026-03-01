@@ -1,18 +1,10 @@
 """
-Фаза 5: Імпорт 277,811 активностей з Pipedrive → mail.message (chatter) в Odoo.
+Фаза 5 (v2): Імпорт активностей з Pipedrive → mail.message в Odoo.
 
-Завершені активності → запис в chatter (log) на угоді/контакті/компанії.
-Пріоритет прив'язки: угода > контакт > організація
-
-Типи активностей Pipedrive → іконка в тілі повідомлення:
-  Телефонний дзвінок Клієнту → 📞
-  Вихідний дзвінок            → 📞
-  Вхідний дзвінок             → 📲
-  Недозвон                    → 📵
-  Завдання                    → ✅
-  Надіслано лист/КП           → ✉️
-  Онлайн-зустріч              → 🖥️
-  інше                        → 📌
+Виправлення vs v1:
+  - Правильний маппінг авторів (AUTHOR_MAP, без partial word match)
+  - subtype_id = False (не mt_note) → відображаються як activity log, не нотатка
+  - Дедублікація: один запис на (target, дата, тип, виконавець)
 
 Запуск:
   cd /var/odoo/2xqjwr7pzvj.cloudpepper.site
@@ -25,104 +17,147 @@ from datetime import datetime
 ACTIVITIES_PATH = '/var/odoo/2xqjwr7pzvj.cloudpepper.site/extra-addons/scripts/activities.xlsx'
 
 TYPE_ICON = {
-    'Телефонний дзвінок Клієнту':                   '📞',
-    'Вихідний дзвінок':                              '📞',
-    'Вхідний дзвінок':                               '📲',
-    'Недозвон':                                      '📵',
-    'Завдання':                                      '✅',
-    'Обробка нових':                                 '🔄',
-    'Надіслано лист/ КП✉️':                          '✉️',
-    'Повернення картки на оператора колл-центру⏸️':  '⏸️',
-    'Онлайн-зустріч':                                '🖥️',
-    'vdguk_vd_klyenta_fdbek':                        '📋',
+    'Телефонний дзвінок Клієнту':                    '📞',
+    'Вихідний дзвінок':                               '📞',
+    'Вхідний дзвінок':                                '📲',
+    'Недозвон':                                       '📵',
+    'Завдання':                                       '✅',
+    'Обробка нових':                                  '🔄',
+    'Надіслано лист/ КП\u2709\ufe0f':                 '\u2709\ufe0f',
+    'Повернення картки на оператора колл-центру\u23f8\ufe0f': '\u23f8\ufe0f',
+    'Онлайн-зустріч':                                 '🖥️',
+    'vdguk_vd_klyenta_fdbek':                         '📋',
+}
+
+# Маппінг автора Pipedrive → прізвище в Odoo (None = Admin)
+AUTHOR_MAP = {
+    'богдан безверхий':          None,
+    'наталія гадайчук':          'гадайчук',
+    'ігор бєлік':                None,
+    'сергій толочко':            'толочко',
+    'антон мазур':               None,
+    'олександр достовалов':      'достовалов',
+    'timur':                     None,
+    'віталій стоцький':          'стоцький',
+    'юрій лисенко':              'лисенко',
+    'юрій ходаківський':         'ходаківський',
+    'андрій селезньов':          'селезньов',
+    'олександр пилипенко':       None,
+    'андрій малиновський':       None,
+    'ольга вергун':              None,
+    'станіслав бобровицький':    'бобровицький',
+    'павлов дмитро':             'павлов',
+    'микола тубіш':              'тубіш',
+    'ксенія коваленко':          None,
+    'artem':                     None,
+    'ольга':                     None,
+    'анатолій купчин':           None,
+    'максим сидоров':            'сидоров',
+    'катерина манюхіна':         None,
+    'яна курнаєва':              'курнаєва',
+    'леся':                      'радіоненко',
+    'юрій (дніпро)':             None,
+    'ірина бакуменко':           'бакуменко',
+    'микола':                    'тубіш',
+    'дмитро':                    'яловенко',
+    'олександр коростіль':       'коростіль',
+    'сергій ничипоренко':        None,
+    'дмитро петров':             'петров',
+    'олександр умнов':           None,
 }
 
 def clean_str(v):
-    if pd.isna(v):
+    if v is None or (isinstance(v, float) and pd.isna(v)):
         return ''
     return str(v).strip()
 
-print('=== Фаза 5: Імпорт активностей ===')
-print('Читаємо activities.xlsx...')
-df = pd.read_excel(ACTIVITIES_PATH)
-print(f'Завантажено {len(df)} активностей')
+print('=== Фаза 5 v2: Імпорт активностей ===')
+
+# --- Users ---
+all_users = env['res.users'].search_read([('active', '=', True)], ['name', 'partner_id'])
+admin_pid = env.ref('base.user_admin').partner_id.id
+
+surname_to_pid = {}
+for u in all_users:
+    parts = u['name'].split()
+    if parts:
+        s = parts[0].replace('C', '\u0421').replace('c', '\u0441').lower()
+        surname_to_pid[s] = u['partner_id'][0]
+
+def get_author_pid(username):
+    if not username:
+        return admin_pid
+    clean = str(username).split('/')[0].split('-')[0].split('|')[0].strip().lower()
+    if clean in AUTHOR_MAP:
+        surname = AUTHOR_MAP[clean]
+        if surname is None:
+            return admin_pid
+        return surname_to_pid.get(surname, admin_pid)
+    return admin_pid
+
+# --- Видаляємо старі імпортовані активності ---
+print('\n[1] Видалення старих activity messages...')
+env.cr.execute("""
+    SELECT res_id FROM ir_model_data
+    WHERE module = '__import__'
+      AND model = 'mail.message'
+      AND name LIKE 'pipedrive_act_%'
+""")
+old_msg_ids = [r[0] for r in env.cr.fetchall()]
+print(f'  Знайдено старих: {len(old_msg_ids)}')
+
+if old_msg_ids:
+    # Видаляємо батчами
+    batch = 5000
+    for i in range(0, len(old_msg_ids), batch):
+        chunk = old_msg_ids[i:i+batch]
+        env.cr.execute("DELETE FROM mail_message WHERE id = ANY(%s)", [chunk])
+    env.cr.execute("""
+        DELETE FROM ir_model_data
+        WHERE module = '__import__'
+          AND model = 'mail.message'
+          AND name LIKE 'pipedrive_act_%'
+    """)
+    env.cr.commit()
+    print(f'  ✓ Видалено {len(old_msg_ids)} повідомлень')
 
 # --- Довідники ---
+print('\n[2] Завантаження довідників...')
 
-# 1. pipedrive deal_id → crm.lead.id
-deals = env['crm.lead'].search_read(
-    [('pipedrive_deal_id', '>', 0)], ['pipedrive_deal_id', 'id']
-)
+deals = env['crm.lead'].search_read([('pipedrive_deal_id', '>', 0)], ['pipedrive_deal_id', 'id'])
 deal_to_lead = {r['pipedrive_deal_id']: r['id'] for r in deals}
-print(f'  {len(deal_to_lead)} угод в системі')
+print(f'  {len(deal_to_lead)} угод')
 
-# 2. pipedrive person_id → res.partner.id
-persons = env['res.partner'].search_read(
-    [('pipedrive_person_id', '>', 0)], ['pipedrive_person_id', 'id']
-)
+persons = env['res.partner'].search_read([('pipedrive_person_id', '>', 0)], ['pipedrive_person_id', 'id'])
 person_to_partner = {r['pipedrive_person_id']: r['id'] for r in persons}
-print(f'  {len(person_to_partner)} контактів в системі')
+print(f'  {len(person_to_partner)} контактів')
 
-# 3. pipedrive org_id → res.partner.id
 imd = env['ir.model.data'].search_read(
-    [('module', '=', '__import__'), ('model', '=', 'res.partner'),
-     ('name', 'like', 'pipedrive_org_')],
+    [('module', '=', '__import__'), ('model', '=', 'res.partner'), ('name', 'like', 'pipedrive_org_')],
     ['name', 'res_id']
 )
 org_to_partner = {int(r['name'].replace('pipedrive_org_', '')): r['res_id'] for r in imd}
-print(f'  {len(org_to_partner)} організацій в системі')
+print(f'  {len(org_to_partner)} організацій')
 
-# 4. Користувачі
-all_users = env['res.users'].search_read([('active', '=', True)], ['name', 'partner_id'])
-name_to_partner_id = {}
-for u in all_users:
-    name_to_partner_id[u['name'].lower()] = u['partner_id'][0]
-    for part in u['name'].split():
-        name_to_partner_id[part.lower()] = u['partner_id'][0]
-admin_partner_id = env.ref('base.user_admin').partner_id.id
-
-def find_author(username):
-    if not username:
-        return admin_partner_id
-    u = str(username).strip().lower()
-    if u in name_to_partner_id:
-        return name_to_partner_id[u]
-    for part in u.split():
-        if part in name_to_partner_id:
-            return name_to_partner_id[part]
-    return admin_partner_id
-
-# 5. Subtype — внутрішня нотатка
-mt_note = env.ref('mail.mt_note').id
-
-# 6. Вже імпортовані
-existing_acts = set()
-imd_acts = env['ir.model.data'].search_read(
-    [('module', '=', '__import__'), ('model', '=', 'mail.message'),
-     ('name', 'like', 'pipedrive_act_')],
-    ['name']
-)
-for r in imd_acts:
-    try:
-        existing_acts.add(int(r['name'].replace('pipedrive_act_', '')))
-    except ValueError:
-        pass
-print(f'  {len(existing_acts)} вже імпортованих активностей')
+# --- Читаємо Excel ---
+print('\n[3] Читаємо activities.xlsx...')
+df = pd.read_excel(ACTIVITIES_PATH)
+print(f'  {len(df)} рядків')
 
 # --- Основний цикл ---
+print('\n[4] Імпорт...')
 created = 0
 skipped_no_target = 0
-skipped_existing = 0
+skipped_dup = 0
 errors = 0
+
+# Ключ дедублікації: (res_model, res_id, date_day, type, assigned)
+seen_keys = set()
 
 for _, row in df.iterrows():
     act_id = int(row['Ідентифікатор'])
 
-    if act_id in existing_acts:
-        skipped_existing += 1
-        continue
-
-    # Визначаємо прив'язку: угода > контакт > організація
+    # Визначаємо прив'язку
     res_model = False
     res_id = False
 
@@ -153,9 +188,7 @@ for _, row in df.iterrows():
         continue
 
     # Дата
-    date_raw = row.get('Час додавання')
-    if pd.isna(date_raw):
-        date_raw = row.get('Дата виконання')
+    date_raw = row.get('Час позначення як виконаного') or row.get('Час додавання') or row.get('Дата виконання')
     if pd.isna(date_raw):
         date_str = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     elif isinstance(date_raw, str):
@@ -167,23 +200,32 @@ for _, row in df.iterrows():
             date_str = str(date_raw)[:19]
 
     act_type = clean_str(row.get('Тип'))
+    assigned = clean_str(row.get('Призначено користувачеві'))
+    note = clean_str(row.get('Нотатка'))
+
+    # Дедублікація: (модель, id, дата(дн), тип, виконавець)
+    date_day = date_str[:10]
+    dedup_key = (res_model, res_id, date_day, act_type, assigned)
+    if dedup_key in seen_keys:
+        skipped_dup += 1
+        continue
+    seen_keys.add(dedup_key)
+
     icon = TYPE_ICON.get(act_type, '📌')
     subject = clean_str(row.get('Тема')) or act_type
-    note = clean_str(row.get('Нотатка'))
     done = clean_str(row.get('Виконано')) == 'Виконано'
-    assigned = clean_str(row.get('Призначено користувачеві'))
 
-    author_pid = find_author(row.get('Автор') or row.get('Призначено користувачеві'))
+    author_pid = get_author_pid(row.get('Автор') or row.get('Призначено користувачеві'))
 
-    # Формуємо тіло повідомлення
-    status = '✓' if done else '○'
-    lines = [f'<strong>{icon} {act_type}</strong> {status}']
+    # Тіло повідомлення
+    status = '\u2713' if done else '\u25cb'
+    lines = ['<strong>%s %s</strong> %s' % (icon, act_type, status)]
     if subject and subject != act_type:
-        lines.append(f'<em>{subject}</em>')
+        lines.append('<em>%s</em>' % subject)
     if assigned:
-        lines.append(f'Виконавець: {assigned}')
+        lines.append('Виконавець: %s' % assigned)
     if note:
-        lines.append(f'<br/>{note}')
+        lines.append('<br/>%s' % note)
     body = '<p>' + '<br/>'.join(lines) + '</p>'
 
     try:
@@ -194,31 +236,31 @@ for _, row in df.iterrows():
             'date':         date_str,
             'author_id':    author_pid,
             'message_type': 'comment',
-            'subtype_id':   mt_note,
+            'subtype_id':   False,   # не нотатка — звичайний activity log
         })
 
         env['ir.model.data'].sudo().create({
             'module':   '__import__',
             'model':    'mail.message',
-            'name':     f'pipedrive_act_{act_id}',
+            'name':     'pipedrive_act_%d' % act_id,
             'res_id':   msg.id,
         })
 
         created += 1
-        existing_acts.add(act_id)
 
     except Exception as e:
         errors += 1
         if errors <= 5:
-            print(f'  ПОМИЛКА (act {act_id}): {e}')
+            print('  ПОМИЛКА (act %d): %s' % (act_id, e))
 
-    if created % 2000 == 0 and created > 0:
+    if created % 5000 == 0 and created > 0:
         env.cr.commit()
-        print(f'  Прогрес: {created+skipped_existing+skipped_no_target}/{len(df)} (створено: {created})')
+        total = created + skipped_no_target + skipped_dup
+        print('  Прогрес: %d/%d (створено: %d, дублі: %d)' % (total, len(df), created, skipped_dup))
 
 env.cr.commit()
-print(f'\n=== Готово ===')
-print(f'Створено:         {created}')
-print(f'Без прив\'язки:    {skipped_no_target}')
-print(f'Вже існували:     {skipped_existing}')
-print(f'Помилки:          {errors}')
+print('\n=== Готово ===')
+print('Створено:           %d' % created)
+print('Без прив\'язки:      %d' % skipped_no_target)
+print('Дублі (пропущено):  %d' % skipped_dup)
+print('Помилки:            %d' % errors)
