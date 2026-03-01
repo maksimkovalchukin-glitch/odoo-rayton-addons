@@ -19,13 +19,17 @@
         <field name="model">res.partner</field>
         <field name="inherit_id" ref="base.view_partner_form"/>
         <field name="arch" type="xml">
-            <xpath expr="//field[@name='phone']" position="before">
+            <!-- Додаємо phone_ids на рівні групи, перед лейблом phone -->
+            <xpath expr="//label[@for='phone']" position="before">
                 <field name="phone_ids" string="Телефони" nolabel="1" colspan="2"/>
             </xpath>
-            <xpath expr="//label[@for='phone']" position="replace"/>
-            <xpath expr="//label[@for='mobile']" position="replace"/>
-            <xpath expr="//field[@name='phone']" position="replace"/>
-            <xpath expr="//field[@name='mobile']" position="replace"/>
+            <!-- Ховаємо phone і mobile — НЕ видаляємо, бо вони потрібні для валідації context/domain -->
+            <xpath expr="//field[@name='phone']" position="attributes">
+                <attribute name="invisible">True</attribute>
+            </xpath>
+            <xpath expr="//field[@name='mobile']" position="attributes">
+                <attribute name="invisible">True</attribute>
+            </xpath>
         </field>
     </record>
 
