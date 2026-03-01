@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Форма компанії/контакту — вкладка телефонів -->
+    <record id="view_partner_form_phones" model="ir.ui.view">
+        <field name="name">res.partner.form.phones</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="arch" type="xml">
+            <!-- Замінюємо стандартні phone/mobile блоки таблицею телефонів -->
+            <xpath expr="//field[@name='phone']" position="before">
+                <separator string="Телефони"/>
+                <field name="phone_ids" nolabel="1" colspan="2">
+                    <list editable="bottom">
+                        <field name="phone_type"/>
+                        <field name="phone"/>
+                        <field name="is_primary"/>
+                    </list>
+                </field>
+            </xpath>
+            <xpath expr="//field[@name='phone']" position="replace"/>
+            <xpath expr="//field[@name='mobile']" position="replace"/>
+        </field>
+    </record>
+
+    <!-- Список партнерів — додаємо колонку телефонів -->
+    <record id="view_partner_list_phones" model="ir.ui.view">
+        <field name="name">res.partner.list.phones</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='phone']" position="replace">
+                <field name="phone_ids" widget="many2many_tags"
+                       options="{'color_field': 'is_primary'}"
+                       string="Телефони"/>
+            </xpath>
+            <xpath expr="//field[@name='mobile']" position="replace"/>
+        </field>
+    </record>
+</odoo>

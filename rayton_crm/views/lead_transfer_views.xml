@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_lead_transfer_list" model="ir.ui.view">
+        <field name="name">rayton.lead.transfer.list</field>
+        <field name="model">rayton.lead.transfer</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="create_date" string="Дата"/>
+                <field name="direction" string="Напрямок"/>
+                <field name="transfer_type" string="Тип"/>
+                <field name="lead_id" string="Нагода"/>
+                <field name="partner_id" string="Компанія"/>
+                <field name="operator_id" string="Оператор"/>
+                <field name="manager_id" string="Менеджер"/>
+                <field name="state" string="Стан"
+                       decoration-success="state == 'won'"
+                       decoration-warning="state == 'returned'"
+                       decoration-danger="state == 'lost'"
+                       widget="badge"/>
+                <field name="notes" string="Примітки"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_lead_transfer_search" model="ir.ui.view">
+        <field name="name">rayton.lead.transfer.search</field>
+        <field name="model">rayton.lead.transfer</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="partner_id"/>
+                <field name="operator_id"/>
+                <field name="manager_id"/>
+                <filter name="to_manager" string="КЦ → Менеджер"
+                        domain="[('direction','=','to_manager')]"/>
+                <filter name="to_kc" string="Менеджер → КЦ"
+                        domain="[('direction','=','to_kc')]"/>
+                <filter name="new" string="Нові ліди"
+                        domain="[('transfer_type','=','new')]"/>
+                <filter name="old" string="Старі ліди"
+                        domain="[('transfer_type','=','old')]"/>
+                <group expand="0" string="Групувати за">
+                    <filter name="group_manager" string="Менеджер"
+                            context="{'group_by': 'manager_id'}"/>
+                    <filter name="group_operator" string="Оператор"
+                            context="{'group_by': 'operator_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_lead_transfer" model="ir.actions.act_window">
+        <field name="name">Передача лідів</field>
+        <field name="res_model">rayton.lead.transfer</field>
+        <field name="view_mode">list</field>
+    </record>
+</odoo>

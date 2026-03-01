@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_lead_transfer_wizard_form" model="ir.ui.view">
+        <field name="name">rayton.lead.transfer.wizard.form</field>
+        <field name="model">rayton.lead.transfer.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Передати менеджеру">
+                <group>
+                    <field name="lead_id" readonly="1"/>
+                    <field name="transfer_type" widget="radio"/>
+                </group>
+                <group>
+                    <field name="suggested_manager_id" readonly="1"
+                           string="Підказка"/>
+                    <field name="manager_id" string="Менеджер"/>
+                </group>
+                <group>
+                    <field name="notes" placeholder="Примітки для менеджера..."/>
+                </group>
+                <footer>
+                    <button name="action_confirm" string="Передати"
+                            type="object" class="btn-primary"/>
+                    <button string="Скасувати" class="btn-secondary"
+                            special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>

@@ -1,0 +1,8 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_partner_phone_user,res.partner.phone user,model_res_partner_phone,base.group_user,1,1,1,1
+access_manager_queue_kc_head,rayton.manager.queue kc_head,model_rayton_manager_queue,rayton_crm.group_kc_head,1,1,1,1
+access_manager_queue_read,rayton.manager.queue read,model_rayton_manager_queue,base.group_user,1,0,0,0
+access_lead_transfer_user,rayton.lead.transfer user,model_rayton_lead_transfer,base.group_user,1,1,1,0
+access_lead_transfer_kc_head,rayton.lead.transfer kc_head,model_rayton_lead_transfer,rayton_crm.group_kc_head,1,1,1,1
+access_lead_transfer_wizard,rayton.lead.transfer.wizard,model_rayton_lead_transfer_wizard,base.group_user,1,1,1,1
+access_lead_generate_wizard,rayton.lead.generate.wizard,model_rayton_lead_generate_wizard,rayton_crm.group_kc_head,1,1,1,1

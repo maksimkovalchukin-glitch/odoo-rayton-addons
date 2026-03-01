@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Кнопки передачі на формі ліда/нагоди -->
+    <record id="view_crm_lead_form_rayton" model="ir.ui.view">
+        <field name="name">crm.lead.form.rayton</field>
+        <field name="model">crm.lead</field>
+        <field name="inherit_id" ref="crm.crm_lead_all_leads"/>
+        <field name="arch" type="xml">
+            <!-- Кнопки в заголовку форми -->
+            <xpath expr="//button[@name='action_schedule_meeting']" position="before">
+                <!-- Кнопка передати менеджеру: видна операторам і кредитним -->
+                <button name="action_transfer_to_manager"
+                        string="📤 Передати менеджеру"
+                        type="object"
+                        class="btn-primary"
+                        groups="rayton_crm.group_operator,rayton_crm.group_credit,rayton_crm.group_kc_head"/>
+                <!-- Кнопка повернути на КЦ: видна менеджерам -->
+                <button name="action_return_to_kc"
+                        string="🔄 Повернути на КЦ"
+                        type="object"
+                        class="btn-warning"
+                        groups="rayton_crm.group_manager"/>
+            </xpath>
+
+            <!-- Вкладка контактів компанії -->
+            <xpath expr="//page[@name='extra']" position="after">
+                <page string="Контакти" name="rayton_contacts">
+                    <field name="partner_id" invisible="1"/>
+                    <field name="partner_id.child_ids" readonly="1"
+                           widget="many2many_tags"
+                           string="Контакти компанії"/>
+                    <list>
+                        <field name="partner_id.child_ids" nolabel="1">
+                            <list>
+                                <field name="name"/>
+                                <field name="function" string="Посада"/>
+                                <field name="phone_ids" string="Телефони"
+                                       widget="many2many_tags"/>
+                                <field name="email"/>
+                            </list>
+                        </field>
+                    </list>
+                </page>
+            </xpath>
+
+            <!-- Лічильник передач у заголовку -->
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button name="transfer_ids" type="object"
+                        class="oe_stat_button" icon="fa-exchange">
+                    <field name="transfer_count" widget="statinfo"
+                           string="Передач"/>
+                </button>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Підказка кредитного спеціаліста на формі нагоди -->
+    <record id="view_crm_opportunity_form_credit" model="ir.ui.view">
+        <field name="name">crm.lead.form.credit.hint</field>
+        <field name="model">crm.lead</field>
+        <field name="inherit_id" ref="crm.crm_lead_all_leads"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='user_id']" position="after">
+                <field name="credit_specialist_id" readonly="1"
+                       string="💳 Кредитний (підказка)"
+                       attrs="{'invisible': [('credit_specialist_id', '=', False)]}"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

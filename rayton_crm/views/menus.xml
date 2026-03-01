@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Черга менеджерів — у меню CRM для керівника КЦ -->
+    <menuitem id="menu_manager_queue"
+              name="Черга менеджерів"
+              parent="crm.crm_menu_root"
+              action="action_manager_queue"
+              sequence="20"
+              groups="rayton_crm.group_kc_head"/>
+
+    <!-- Передача лідів — у меню CRM для всіх -->
+    <menuitem id="menu_lead_transfer"
+              name="Передача лідів"
+              parent="crm.crm_menu_root"
+              action="action_lead_transfer"
+              sequence="25"/>
+
+    <!-- Приховуємо Звітність і Конфігурацію від операторів/менеджерів/кредитних -->
+    <record id="crm.crm_menu_report" model="ir.ui.menu">
+        <field name="groups_id" eval="[(4, ref('crm.group_crm_manager')), (4, ref('base.group_erp_manager'))]"/>
+    </record>
+
+    <record id="crm.crm_menu_config" model="ir.ui.menu">
+        <field name="groups_id" eval="[(4, ref('crm.group_crm_manager')), (4, ref('base.group_erp_manager'))]"/>
+    </record>
+</odoo>

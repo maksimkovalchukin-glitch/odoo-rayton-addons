@@ -1,0 +1,23 @@
+{
+    'name': 'Rayton: CRM',
+    'version': '17.0.1.0.0',
+    'summary': 'Кастомна CRM логіка для Rayton — ліди, нагоди, передача, телефонія',
+    'category': 'CRM',
+    'author': 'Rayton',
+    'depends': ['crm', 'contacts', 'mail'],
+    'data': [
+        'security/groups.xml',
+        'security/ir.model.access.csv',
+        'views/res_partner_views.xml',
+        'views/crm_lead_views.xml',
+        'views/manager_queue_views.xml',
+        'views/lead_transfer_views.xml',
+        'wizard/lead_transfer_wizard_views.xml',
+        'wizard/lead_generate_wizard_views.xml',
+        'views/menus.xml',
+    ],
+    'installable': True,
+    'application': False,
+    'auto_install': False,
+    'license': 'LGPL-3',
+}

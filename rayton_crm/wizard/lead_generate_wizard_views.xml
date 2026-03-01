@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_lead_generate_wizard_form" model="ir.ui.view">
+        <field name="name">rayton.lead.generate.wizard.form</field>
+        <field name="model">rayton.lead.generate.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Генерувати ліди">
+                <group>
+                    <field name="partner_count" string="Компаній обрано" readonly="1"/>
+                    <field name="source" string="Джерело бази"
+                           placeholder="напр. База агропідприємств Хмельниччини"/>
+                    <field name="skip_existing" string="Пропустити якщо є відкритий лід"/>
+                </group>
+                <group string="Розподіл операторів">
+                    <field name="assignment_mode" widget="radio"/>
+                    <field name="operator_id"
+                           attrs="{'invisible': [('assignment_mode', '!=', 'single')],
+                                   'required': [('assignment_mode', '=', 'single')]}"/>
+                    <field name="operator_ids"
+                           attrs="{'invisible': [('assignment_mode', '!=', 'roundrobin')],
+                                   'required': [('assignment_mode', '=', 'roundrobin')]}"
+                           widget="many2many_tags"/>
+                </group>
+                <footer>
+                    <button name="action_generate" string="Генерувати"
+                            type="object" class="btn-primary"/>
+                    <button string="Скасувати" class="btn-secondary"
+                            special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- Групова дія на res.partner -->
+    <record id="action_generate_leads_from_partners" model="ir.actions.server">
+        <field name="name">Генерувати ліди</field>
+        <field name="model_id" ref="base.model_res_partner"/>
+        <field name="binding_model_id" ref="base.model_res_partner"/>
+        <field name="binding_view_types">list</field>
+        <field name="state">code</field>
+        <field name="code">
+if records:
+    action = {
+        'type': 'ir.actions.act_window',
+        'name': 'Генерувати ліди',
+        'res_model': 'rayton.lead.generate.wizard',
+        'view_mode': 'form',
+        'target': 'new',
+        'context': {'active_ids': records.ids},
+    }
+    action = action
+        </field>
+    </record>
+</odoo>
