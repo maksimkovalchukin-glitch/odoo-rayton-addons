@@ -198,17 +198,25 @@ class RaytonRingostatCall(models.Model):
             'phone': ext_phone,
         })
 
-        # Команда КЦ (Оператор) — для первинної обробки
+        # Команда КЦ (Оператор) та стадія "Новий лід" — для первинної обробки
         kc_team = self.env['crm.team'].search([('name', 'ilike', 'Оператор')], limit=1)
+        new_stage = (
+            self.env['crm.stage'].search([('name', 'ilike', 'Новий лід')], limit=1)
+            or self.env['crm.stage'].search(
+                [('is_manager_pipeline', '=', False), ('is_won', '=', False)],
+                order='sequence asc', limit=1,
+            )
+        )
 
         type_label = 'Вхідний дзвінок' if call_type == 'transitin' else 'Вихідний дзвінок'
 
         lead = self.env['crm.lead'].sudo().create({
             'name': f'{type_label} {ext_phone}',
             'partner_id': partner.id,
-            'type': 'lead',
+            'type': 'opportunity',
             'user_id': user.id if user else False,
             'team_id': kc_team.id if kc_team else False,
+            'stage_id': new_stage.id if new_stage else False,
         })
 
         # Повідомлення в чаттері ліда
