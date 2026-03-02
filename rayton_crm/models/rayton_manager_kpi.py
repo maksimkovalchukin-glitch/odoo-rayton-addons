@@ -62,7 +62,6 @@ class RaytonManagerKpi(models.Model):
 
     # ── Розрахунок ──────────────────────────────────────────────────────── #
 
-    @api.model
     def action_refresh_all(self):
         today = date.today()
         first_day      = today.replace(day=1)
@@ -190,7 +189,6 @@ class RaytonManagerKpi(models.Model):
 
         return {'type': 'ir.actions.client', 'tag': 'reload'}
 
-    @api.model
     def action_open_kpi(self):
         self.action_refresh_all()
         return {
