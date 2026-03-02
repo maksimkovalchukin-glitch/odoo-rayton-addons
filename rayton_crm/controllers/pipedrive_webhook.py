@@ -163,24 +163,33 @@ class PipedriveWebhook(http.Controller):
             return {'status': 'empty'}
 
         meta = data.get('meta', {})
-        action = meta.get('action')       # added / updated / deleted
-        obj    = meta.get('object')       # deal / person / organization / activity
-        current  = data.get('current') or {}
+
+        # Pipedrive v2: meta.entity + data['data'] + action: change/create/delete
+        # Pipedrive v1: meta.object + data['current'] + action: updated/added/deleted
+        obj    = meta.get('entity') or meta.get('object')
+        action = meta.get('action', '')
+
+        # Нормалізуємо action до v1-стилю для уніфікованої логіки
+        action_norm = {'change': 'updated', 'create': 'added', 'delete': 'deleted'}.get(action, action)
+
+        # v2: поточні дані в data['data'], v1: в data['current']
+        current  = data.get('data') or data.get('current') or {}
         previous = data.get('previous') or {}
 
-        _logger.info('Pipedrive webhook: %s.%s id=%s', obj, action, meta.get('id'))
+        _logger.info('Pipedrive webhook: %s.%s (raw=%s) id=%s',
+                     obj, action_norm, action, meta.get('entity_id') or meta.get('id'))
 
         try:
             env = request.env(user=request.env.ref('base.user_admin').id)
 
             if obj == 'deal':
-                self._on_deal(env, action, current, previous)
+                self._on_deal(env, action_norm, current, previous)
             elif obj == 'activity':
-                self._on_activity(env, action, current)
+                self._on_activity(env, action_norm, current)
             elif obj == 'person':
-                self._on_person(env, action, current)
+                self._on_person(env, action_norm, current)
             elif obj == 'organization':
-                self._on_organization(env, action, current)
+                self._on_organization(env, action_norm, current)
 
         except Exception as e:
             _logger.error('Pipedrive webhook error (%s.%s): %s', obj, action, e, exc_info=True)
