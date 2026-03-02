@@ -1,1 +1,1 @@
-# Ringostat controllers — будуть додані пізніше
+from . import pipedrive_webhook
