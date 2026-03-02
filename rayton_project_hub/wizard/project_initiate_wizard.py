@@ -315,8 +315,9 @@ class RaytonProjectInitiateWizard(models.TransientModel):
         # ── 5. Build rich initiation body ─────────────────────────────────────
         rich_body = self._build_rich_body(project_name, template_label, new_project, channel)
 
-        # Post rich info as first message in channel
-        channel.message_post(
+        # Post rich info as first message in channel.
+        # tg_no_forward=True because post_and_pin() already sent the summary to TG.
+        channel.with_context(tg_no_forward=True).message_post(
             body=rich_body,
             message_type='comment',
             subtype_xmlid='mail.mt_comment',
