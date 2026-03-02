@@ -528,10 +528,25 @@ class RaytonPanelManager {
     }
 }
 
+// ─── Shared helper to extract project ID from context OR domain ──────────────
+
+function getProjectIdFromModel(model) {
+    const ctx = model?.config?.context || {};
+    // 1. From context (CRM wizard, direct navigation)
+    if (ctx.default_project_id) return ctx.default_project_id;
+    if (ctx.active_id) return ctx.active_id;
+    // 2. From domain filter — when opening project tasks from the Projects list
+    //    Odoo passes [['project_id', '=', 123]] in the domain instead of context
+    const domain = model?.config?.domain || [];
+    for (const clause of domain) {
+        if (Array.isArray(clause) && clause[0] === 'project_id' && clause[1] === '=') {
+            return clause[2];
+        }
+    }
+    return null;
+}
+
 // ─── Patch KanbanController — show chat panel in kanban task view ────────────
-// Note: NO redirect to list — user can switch views freely.
-// The action's view_mode='list,kanban,form' already ensures list is default
-// when the project is opened from CRM or the wizard.
 
 patch(KanbanController.prototype, {
     setup() {
@@ -567,8 +582,7 @@ patch(KanbanController.prototype, {
     },
 
     _getProjectId() {
-        const ctx = this.model?.config?.context || {};
-        return ctx.default_project_id || ctx.active_id || null;
+        return getProjectIdFromModel(this.model);
     },
 });
 
@@ -608,7 +622,6 @@ patch(ListController.prototype, {
     },
 
     _getProjectId() {
-        const ctx = this.model?.config?.context || {};
-        return ctx.default_project_id || ctx.active_id || null;
+        return getProjectIdFromModel(this.model);
     },
 });

@@ -61,6 +61,74 @@ class RaytonTelegramChat(models.Model):
             })
         return True
 
+    @api.model
+    def action_create_pool_group(self):
+        """
+        Create a new Telegram supergroup via the Telethon microservice and add it to the pool.
+
+        The service will:
+          1. Create the supergroup
+          2. Set 'Chat history for new members' = Visible
+          3. Add the bot and promote it to admin
+
+        Requires system parameters:
+          rayton_project_hub.tg_service_url
+          rayton_project_hub.tg_service_secret
+        """
+        service_url = self.env['ir.config_parameter'].sudo().get_param(
+            'rayton_project_hub.tg_service_url', ''
+        )
+        service_secret = self.env['ir.config_parameter'].sudo().get_param(
+            'rayton_project_hub.tg_service_secret', ''
+        )
+        if not service_url or not service_secret:
+            raise UserError(_(
+                'Telethon-сервіс не налаштовано.\n'
+                'Додайте системні параметри:\n'
+                '  rayton_project_hub.tg_service_url\n'
+                '  rayton_project_hub.tg_service_secret'
+            ))
+
+        # Auto-generate title: "Резервна N" where N = total groups + 1
+        count = self.search_count([]) + 1
+        title = f'Резервна {count}'
+
+        try:
+            resp = requests.post(
+                f'{service_url.rstrip("/")}/create_group',
+                json={'title': title},
+                headers={'x-secret': service_secret},
+                timeout=30,
+            )
+            resp.raise_for_status()
+            data = resp.json()
+        except Exception as e:
+            raise UserError(_('Помилка виклику Telethon-сервісу: %s') % str(e))
+
+        if data.get('status') != 'ok':
+            raise UserError(_('Сервіс повернув помилку: %s') % data.get('detail', str(data)))
+
+        chat_id = data['chat_id']
+        actual_title = data.get('title', title)
+
+        self.create({
+            'name': actual_title,
+            'tg_chat_id': chat_id,
+            'state': 'free',
+        })
+        _logger.info("[RaytonTG] Pool group created: %s (%s)", actual_title, chat_id)
+
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'title': 'Групу створено!',
+                'message': f'Telegram-група "{actual_title}" ({chat_id}) додана до пулу.',
+                'type': 'success',
+                'sticky': False,
+            },
+        }
+
     def action_promote_manager_to_admin(self):
         """
         Promote the linked project's manager to TG group admin.
@@ -201,6 +269,82 @@ class RaytonTelegramChat(models.Model):
             if not tg_user_id:
                 continue
             chat.promote_to_admin(tg_user_id, token)
+
+    def set_history_visible(self):
+        """
+        Make 'Chat history for new members' visible via the Telethon microservice.
+        The Bot API cannot change this setting — only a real user account (MTProto) can.
+
+        Requires system parameters:
+          rayton_project_hub.tg_service_url    e.g. http://localhost:8001
+          rayton_project_hub.tg_service_secret  shared secret matching SERVICE_SECRET in .env
+        """
+        self.ensure_one()
+        service_url = self.env['ir.config_parameter'].sudo().get_param(
+            'rayton_project_hub.tg_service_url', ''
+        )
+        service_secret = self.env['ir.config_parameter'].sudo().get_param(
+            'rayton_project_hub.tg_service_secret', ''
+        )
+        if not service_url or not service_secret:
+            _logger.warning(
+                "[RaytonTG] Telethon service not configured "
+                "(rayton_project_hub.tg_service_url / tg_service_secret) — skipping set_history_visible"
+            )
+            return
+        try:
+            resp = requests.post(
+                f'{service_url.rstrip("/")}/set_history_visible',
+                json={'chat_id': self.tg_chat_id, 'visible': True},
+                headers={'x-secret': service_secret},
+                timeout=15,
+            )
+            data = resp.json()
+            if data.get('status') == 'ok':
+                _logger.info("[RaytonTG] Chat history set to VISIBLE for %s", self.tg_chat_id)
+            else:
+                _logger.warning("[RaytonTG] set_history_visible returned: %s", data)
+        except Exception as e:
+            _logger.warning("[RaytonTG] set_history_visible error: %s", str(e))
+
+    def post_and_pin(self, text, token):
+        """
+        Send a message to the TG group and immediately pin it.
+        Pinned messages are visible to ALL members regardless of
+        the 'Chat history for new members' setting (Hidden/Visible).
+        """
+        self.ensure_one()
+        if not text or not token:
+            return
+        url_send = TG_API.format(token=token, method='sendMessage')
+        try:
+            resp = requests.post(url_send, json={
+                'chat_id': self.tg_chat_id,
+                'text': text,
+                'parse_mode': 'HTML',
+                'disable_web_page_preview': True,
+                'disable_notification': True,
+            }, timeout=10)
+            data = resp.json()
+            if data.get('ok'):
+                message_id = data['result']['message_id']
+                url_pin = TG_API.format(token=token, method='pinChatMessage')
+                requests.post(url_pin, json={
+                    'chat_id': self.tg_chat_id,
+                    'message_id': message_id,
+                    'disable_notification': True,
+                }, timeout=10)
+                _logger.info(
+                    "[RaytonTG] Posted and pinned summary in chat %s (msg_id=%s)",
+                    self.tg_chat_id, message_id,
+                )
+            else:
+                _logger.warning(
+                    "[RaytonTG] post_and_pin sendMessage failed: %s",
+                    data.get('description', ''),
+                )
+        except Exception as e:
+            _logger.warning("[RaytonTG] post_and_pin error: %s", str(e))
 
     def rename_chat(self, new_title, token):
         """Rename the Telegram group to match the project name."""

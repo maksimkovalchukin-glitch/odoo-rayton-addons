@@ -177,6 +177,55 @@ class RaytonProjectInitiateWizard(models.TransientModel):
 
         return Markup('<br/>').join(Markup(p) for p in parts)
 
+    def _build_tg_summary(self, project_name, template_label):
+        """Build a Telegram-compatible HTML summary for pinning in the TG group."""
+        lead = self.lead_id
+        lines = [f'🚀 <b>Проект ініційовано!</b>\n━━━━━━━━━━━━━━━━━━━━━━']
+        lines.append(f'🗂 <b>Проект:</b> {project_name}')
+        lines.append(f'📋 <b>Тип:</b> {template_label}')
+
+        solar_power = getattr(lead, 'x_solar_power', 0) or 0
+        storage_kwh = getattr(lead, 'x_storage_capacity_kwh', 0) or 0
+        system_type = getattr(lead, 'x_enegy_system_type', '') or ''
+        project_cat = getattr(lead, 'x_progectn', '') or ''
+
+        if solar_power:
+            lines.append(f'☀️ <b>Потужність СЕС:</b> {solar_power} кВт')
+        if storage_kwh:
+            lines.append(f'🔋 <b>Ємність УЗЕ:</b> {storage_kwh} кВт·год')
+        if system_type:
+            lines.append(f'⚡ <b>Тип системи:</b> {system_type}')
+        if project_cat:
+            lines.append(f'🏗 <b>Категорія:</b> {project_cat}')
+
+        partner = lead.partner_id
+        if partner:
+            addr_parts = [p for p in [
+                partner.street, partner.city, partner.country_id.name
+            ] if p]
+            if addr_parts:
+                lines.append(f'📍 <b>Адреса:</b> {", ".join(addr_parts)}')
+
+        contact_name = lead.contact_name or (partner.name if partner else '')
+        phone = lead.phone or lead.mobile or ''
+        if contact_name:
+            contact_str = contact_name
+            if phone:
+                contact_str += f', {phone}'
+            lines.append(f'👤 <b>Контакт:</b> {contact_str}')
+
+        coords = lead.x_coordinates or ''
+        if coords:
+            if coords.startswith('http'):
+                lines.append(f'🗺 <b>Координати:</b> <a href="{coords}">Google Maps</a>')
+            else:
+                lines.append(f'🗺 <b>Координати:</b> {coords}')
+
+        if self.client_notes:
+            lines.append(f'📝 <b>Побажання клієнта:</b>\n{self.client_notes}')
+
+        return '\n'.join(lines)
+
     def action_confirm(self):
         """
         Main action:
@@ -278,6 +327,11 @@ class RaytonProjectInitiateWizard(models.TransientModel):
         tg_user_id = getattr(self.env.user, 'tg_user_id', '') or ''
 
         if token:
+            # Make chat history visible for new members via Telethon service.
+            # Must run BEFORE createChatInviteLink (which can trigger supergroup
+            # upgrade and reset the setting to Hidden).
+            tg_chat.set_history_visible()
+
             tg_chat.rename_chat(project_name, token)
 
             # Try to promote immediately — works if initiator is already in the group
@@ -286,6 +340,14 @@ class RaytonProjectInitiateWizard(models.TransientModel):
 
             # Create personal invite link (one-time, 7 days)
             invite_link = tg_chat.create_invite_link(token)
+
+            # Post project summary to TG group and PIN it.
+            # Pinned messages are visible to ALL members regardless of
+            # the group's 'Chat history for new members' setting.
+            tg_chat.post_and_pin(
+                self._build_tg_summary(project_name, template_label),
+                token,
+            )
 
             # Send invite link as Telegram DM to initiator (requires /start to bot first)
             if tg_user_id and invite_link:
