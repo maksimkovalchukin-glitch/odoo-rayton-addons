@@ -1,4 +1,6 @@
 import logging
+
+import requests
 from markupsafe import Markup, escape
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError
@@ -298,66 +300,17 @@ class RaytonProjectInitiateWizard(models.TransientModel):
         # ── 4. Link channel to project ────────────────────────────────────────
         new_project.discuss_channel_id = channel.id
 
-        # ── 4b. Auto-assign a free Telegram chat ──────────────────────────────
-        tg_chat = self.env['rayton.telegram.chat'].search([
-            ('state', '=', 'free'),
-        ], limit=1)
-        if not tg_chat:
-            raise UserError(_(
-                'Неможливо ініціювати проект: у пулі не залишилося вільних Telegram-груп.\n\n'
-                'Будь ласка, зверніться до адміністратора — потрібно додати нові групи у розділі\n'
-                'Проект → Конфігурація → Telegram групи.'
-            ))
+        # ── 4b. Create Telegram group via Telethon ────────────────────────────
+        tg_chat = self._create_tg_group_via_telethon(project_name, new_project, channel)
 
-        tg_chat.write({
-            'state': 'busy',
-            'project_id': new_project.id,
-            'discuss_channel_id': channel.id,
-        })
-        _logger.info(
-            "[RaytonProjectHub] TG chat assigned: %s (%s)",
-            tg_chat.name, tg_chat.tg_chat_id,
-        )
-
-        # Rename TG group, try to promote initiator to admin, send DM with invite link
         token = self.env['ir.config_parameter'].sudo().get_param(
             'rayton_project_hub.tg_bot_token', ''
         )
-        invite_link = None
-        tg_user_id = getattr(self.env.user, 'tg_user_id', '') or ''
-
-        if token:
-            # Make chat history visible for new members via Telethon service.
-            # Must run BEFORE createChatInviteLink (which can trigger supergroup
-            # upgrade and reset the setting to Hidden).
-            tg_chat.set_history_visible()
-
-            tg_chat.rename_chat(project_name, token)
-
-            # Try to promote immediately — works if initiator is already in the group
-            if tg_user_id:
-                tg_chat.promote_to_admin(tg_user_id, token)
-
-            # Create personal invite link (one-time, 7 days)
-            invite_link = tg_chat.create_invite_link(token)
-
-            # Post project summary to TG group and PIN it.
-            # Pinned messages are visible to ALL members regardless of
-            # the group's 'Chat history for new members' setting.
+        if token and tg_chat:
             tg_chat.post_and_pin(
                 self._build_tg_summary(project_name, template_label),
                 token,
             )
-
-            # Send invite link as Telegram DM to initiator (requires /start to bot first)
-            if tg_user_id and invite_link:
-                tg_chat.send_dm(tg_user_id, (
-                    f'🚀 <b>Проект ініційовано:</b> {project_name}\n\n'
-                    f'Ваше персональне запрошення до TG групи:\n{invite_link}\n\n'
-                    f'Після вступу натисніть кнопку нижче щоб стати адміністратором.'
-                ), token)
-        else:
-            _logger.warning("[RaytonProjectHub] TG bot token not set — cannot configure TG group.")
 
         # ── 5. Build rich initiation body ─────────────────────────────────────
         rich_body = self._build_rich_body(project_name, template_label, new_project, channel)
@@ -376,13 +329,8 @@ class RaytonProjectInitiateWizard(models.TransientModel):
             'project_template_type': self.template_type,
         })
 
-        # Post rich message on lead chatter (+ personal TG invite link if generated)
+        # Post rich message on lead chatter
         lead_body = Markup('🚀 <b>Проект ініційовано</b><br/>') + rich_body
-        if invite_link:
-            lead_body += Markup(
-                f'<br/>🔗 <b>Запрошення до Telegram групи</b> (для ініціатора, діє 7 днів):<br/>'
-                f'<a href="{invite_link}">{invite_link}</a>'
-            )
         self.lead_id.message_post(
             body=lead_body,
             message_type='comment',
@@ -405,3 +353,76 @@ class RaytonProjectInitiateWizard(models.TransientModel):
             },
             'target': 'current',
         }
+
+    def _create_tg_group_via_telethon(self, project_name, new_project, channel):
+        """
+        Create a Telegram supergroup via the Telethon microservice and save to pool.
+        Adds the initiator (telegram_username from res.users) and all mandatory members.
+        Returns rayton.telegram.chat record or None on failure.
+        """
+        service_url = self.env['ir.config_parameter'].sudo().get_param(
+            'rayton_project_hub.tg_service_url', ''
+        )
+        service_secret = self.env['ir.config_parameter'].sudo().get_param(
+            'rayton_project_hub.tg_service_secret', ''
+        )
+        if not service_url or not service_secret:
+            _logger.warning(
+                "[RaytonProjectHub] Telethon service not configured — TG group not created."
+            )
+            return None
+
+        def _norm(u):
+            u = (u or '').strip()
+            return u if u.startswith('@') else f'@{u}' if u else None
+
+        usernames = []
+        admin_usernames = []
+
+        # Initiator — always added as admin
+        initiator_username = _norm(getattr(self.env.user, 'telegram_username', '') or '')
+        if initiator_username:
+            usernames.append(initiator_username)
+            admin_usernames.append(initiator_username)
+
+        # Mandatory members configured in Налаштування → Учасники Telegram груп
+        mandatory = self.env['rayton.telegram.member'].search([('role', '=', 'mandatory')])
+        for m in mandatory:
+            uname = _norm(m.username)
+            if uname and uname not in usernames:
+                usernames.append(uname)
+                if m.is_admin:
+                    admin_usernames.append(uname)
+
+        try:
+            resp = requests.post(
+                f'{service_url.rstrip("/")}/create_group',
+                json={
+                    'title': project_name,
+                    'usernames': usernames,
+                    'admin_usernames': admin_usernames,
+                },
+                headers={'x-secret': service_secret},
+                timeout=60,
+            )
+            resp.raise_for_status()
+            data = resp.json()
+        except Exception as e:
+            _logger.warning("[RaytonProjectHub] TG group creation failed: %s", e)
+            return None
+
+        if data.get('status') != 'ok':
+            _logger.warning("[RaytonProjectHub] TG service error: %s", data)
+            return None
+
+        tg_chat = self.env['rayton.telegram.chat'].create({
+            'name': project_name,
+            'tg_chat_id': data['chat_id'],
+            'state': 'busy',
+            'project_id': new_project.id,
+            'discuss_channel_id': channel.id,
+        })
+        _logger.info(
+            "[RaytonProjectHub] TG group created: %s (%s)", project_name, data['chat_id']
+        )
+        return tg_chat

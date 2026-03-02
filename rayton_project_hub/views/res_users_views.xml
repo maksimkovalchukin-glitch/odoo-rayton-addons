@@ -11,6 +11,9 @@
                 <field name="tg_user_id"
                        string="Telegram User ID"
                        placeholder="Напр. 1685833526"/>
+                <field name="telegram_username"
+                       string="Telegram @username"
+                       placeholder="Напр. @ivan_manager"/>
             </xpath>
         </field>
     </record>

@@ -9,6 +9,11 @@ class ResUsers(models.Model):
         help='Числовий ID користувача в Telegram (не username). '
              'Отримати можна через бота @userinfobot — надішліть йому /start.',
     )
+    telegram_username = fields.Char(
+        string='Telegram @username',
+        help='Нікнейм в Telegram (з @ або без). Використовується для автоматичного '
+             'запрошення в групу при ініціації проекту.',
+    )
 
     def _register_hook(self):
         """
@@ -23,5 +28,8 @@ class ResUsers(models.Model):
         """
         self.env.cr.execute(
             "ALTER TABLE res_users ADD COLUMN IF NOT EXISTS tg_user_id varchar;"
+        )
+        self.env.cr.execute(
+            "ALTER TABLE res_users ADD COLUMN IF NOT EXISTS telegram_username varchar;"
         )
         return super()._register_hook()
