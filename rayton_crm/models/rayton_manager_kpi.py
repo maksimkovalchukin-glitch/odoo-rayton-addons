@@ -189,3 +189,14 @@ class RaytonManagerKpi(models.Model):
                 self.create(vals)
 
         return {'type': 'ir.actions.client', 'tag': 'reload'}
+
+    @api.model
+    def action_open_kpi(self):
+        self.action_refresh_all()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'КПІ Менеджерів',
+            'res_model': 'rayton.manager.kpi',
+            'view_mode': 'tree',
+            'view_id': self.env.ref('rayton_crm.view_rayton_manager_kpi_tree').id,
+        }

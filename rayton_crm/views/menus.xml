@@ -19,7 +19,7 @@
     <menuitem id="menu_manager_kpi"
               name="КПІ Менеджерів"
               parent="crm.crm_menu_root"
-              action="action_rayton_manager_kpi"
+              action="action_open_kpi_server"
               sequence="30"
               groups="base.group_erp_manager,rayton_crm.group_kc_head,rayton_crm.group_manager"/>
 

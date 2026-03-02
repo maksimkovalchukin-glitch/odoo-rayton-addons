@@ -70,17 +70,15 @@
         </field>
     </record>
 
-    <!-- Server action — доступний з ⚙️ навіть при порожньому списку -->
-    <record id="action_refresh_kpi_server" model="ir.actions.server">
-        <field name="name">🔄 Оновити КПІ</field>
+    <!-- Server action для меню — автооновлює КПІ при відкритті -->
+    <record id="action_open_kpi_server" model="ir.actions.server">
+        <field name="name">КПІ Менеджерів</field>
         <field name="model_id" ref="model_rayton_manager_kpi"/>
-        <field name="binding_model_id" ref="model_rayton_manager_kpi"/>
-        <field name="binding_view_types">list</field>
         <field name="state">code</field>
-        <field name="code">env['rayton.manager.kpi'].action_refresh_all()</field>
+        <field name="code">action = env['rayton.manager.kpi'].action_open_kpi()</field>
     </record>
 
-    <!-- Action -->
+    <!-- Window action (залишаємо для прямого посилання) -->
     <record id="action_rayton_manager_kpi" model="ir.actions.act_window">
         <field name="name">КПІ Менеджерів</field>
         <field name="res_model">rayton.manager.kpi</field>
