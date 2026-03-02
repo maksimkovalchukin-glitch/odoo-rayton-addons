@@ -70,12 +70,12 @@
         </field>
     </record>
 
-    <!-- Server action для меню — автооновлює КПІ при відкритті -->
+    <!-- Server action для меню — відкриває wizard вибору місяця -->
     <record id="action_open_kpi_server" model="ir.actions.server">
         <field name="name">КПІ Менеджерів</field>
         <field name="model_id" ref="model_rayton_manager_kpi"/>
         <field name="state">code</field>
-        <field name="code">action = env['rayton.manager.kpi'].action_open_kpi()</field>
+        <field name="code">action = env.ref('rayton_crm.action_kpi_period_wizard').read()[0]</field>
     </record>
 
     <!-- Window action (залишаємо для прямого посилання) -->

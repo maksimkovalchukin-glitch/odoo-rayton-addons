@@ -10,3 +10,4 @@ access_manager_kpi_admin,rayton.manager.kpi admin,model_rayton_manager_kpi,base.
 access_manager_kpi_manager,rayton.manager.kpi manager,model_rayton_manager_kpi,rayton_crm.group_manager,1,1,1,0
 access_manager_kpi_kc_head,rayton.manager.kpi kc_head,model_rayton_manager_kpi,rayton_crm.group_kc_head,1,1,1,0
 access_manager_kpi_read,rayton.manager.kpi read,model_rayton_manager_kpi,base.group_user,1,0,0,0
+access_kpi_period_wizard,rayton.kpi.period.wizard,model_rayton_kpi_period_wizard,base.group_user,1,1,1,1

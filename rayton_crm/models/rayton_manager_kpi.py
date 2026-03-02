@@ -62,8 +62,15 @@ class RaytonManagerKpi(models.Model):
 
     # ── Розрахунок ──────────────────────────────────────────────────────── #
 
-    def action_refresh_all(self):
-        today = date.today()
+    def action_refresh_all(self, period_date=None):
+        if period_date:
+            if isinstance(period_date, str):
+                from datetime import datetime as dt
+                today = dt.strptime(period_date, '%Y-%m-%d').date()
+            else:
+                today = period_date
+        else:
+            today = date.today()
         first_day      = today.replace(day=1)
         last_day       = first_day + relativedelta(months=1) - relativedelta(days=1)
         next_mo_start  = first_day + relativedelta(months=1)

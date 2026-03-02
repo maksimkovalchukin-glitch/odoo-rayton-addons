@@ -15,6 +15,7 @@
         'views/lead_transfer_views.xml',
         'wizard/lead_transfer_wizard_views.xml',
         'wizard/lead_generate_wizard_views.xml',
+        'wizard/kpi_period_wizard_views.xml',
         'views/rayton_manager_kpi_views.xml',
         'views/menus.xml',
     ],
