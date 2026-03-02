@@ -17,6 +17,14 @@
         <field name="model">rayton.telegram.chat</field>
         <field name="arch" type="xml">
             <tree string="Telegram групи" decoration-success="state == 'free'" decoration-muted="state == 'busy'">
+                <header>
+                    <button name="action_create_pool_group" type="object"
+                            string="➕ Створити нову TG групу" class="btn-primary"/>
+                </header>
+                <control>
+                    <button name="action_create_pool_group" type="object"
+                            string="Створити нову TG групу"/>
+                </control>
                 <field name="name"/>
                 <field name="tg_chat_id"/>
                 <field name="state" widget="badge"

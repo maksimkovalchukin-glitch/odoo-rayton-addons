@@ -94,7 +94,8 @@ BOT_ADMIN_RIGHTS = ChatAdminRights(
 
 class CreateGroupRequest(BaseModel):
     title: str
-    bot_username: str = ""   # overrides TG_BOT_USERNAME env if provided
+    bot_username: str = ""        # overrides TG_BOT_USERNAME env if provided
+    usernames: list[str] = []     # extra Telegram @usernames to invite
 
 
 class SetHistoryRequest(BaseModel):
@@ -182,7 +183,18 @@ async def create_group(
         except Exception as e:
             logger.warning("Could not promote bot to admin: %s", e)
 
-    # ── 5. Build Bot API chat_id ──────────────────────────────────────────────
+    # ── 5. Invite extra users ─────────────────────────────────────────────────
+    for uname in req.usernames:
+        try:
+            user_entity = await _client.get_entity(uname)
+            await _client(InviteToChannelRequest(channel=channel, users=[user_entity]))
+            logger.info("User %s added to group %s", uname, channel.id)
+        except UserAlreadyParticipantError:
+            logger.info("User %s already in group %s", uname, channel.id)
+        except Exception as e:
+            logger.warning("Could not add user %s: %s", uname, e)
+
+    # ── 6. Build Bot API chat_id ──────────────────────────────────────────────
     # Telethon returns bare channel.id (positive int).
     # Bot API uses -100{channel_id} format for supergroups.
     chat_id_bot_api = f"-100{channel.id}"
