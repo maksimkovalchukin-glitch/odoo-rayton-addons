@@ -89,7 +89,7 @@ class RaytonManagerKpi(models.Model):
             leads = self.env['crm.lead'].search([
                 ('user_id', '=', manager.id),
                 ('active', '=', True),
-                ('is_won', '=', False),
+                ('stage_id.is_won', '=', False),
                 ('type', '=', 'opportunity'),
             ])
             lead_ids = leads.ids
