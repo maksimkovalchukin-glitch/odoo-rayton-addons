@@ -81,8 +81,11 @@ class RaytonManagerKpi(models.Model):
         comm_type_ids   = comm_types.ids or [0]
         meeting_type_ids = meeting_types.ids or [0]
 
-        manager_group = self.env.ref('rayton_crm.group_manager')
-        managers = manager_group.users
+        manager_group  = self.env.ref('rayton_crm.group_manager')
+        kc_head_group  = self.env.ref('rayton_crm.group_kc_head')
+        managers = (manager_group.users - kc_head_group.users).filtered(
+            lambda u: u.active and not u.share and u.id != 1
+        )
 
         for manager in managers:
             leads = self.env['crm.lead'].search([
