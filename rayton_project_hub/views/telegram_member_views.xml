@@ -10,12 +10,13 @@
                 <group>
                     <field name="title" placeholder="Назва нової TG групи"/>
                 </group>
-                <field name="member_ids" widget="many2many_tags"
+                <field name="member_ids"
                        placeholder="Почніть вводити ім'я...">
                     <tree editable="bottom">
                         <field name="name"/>
                         <field name="username"/>
                         <field name="role"/>
+                        <field name="is_admin" widget="boolean_toggle" string="Адмін"/>
                     </tree>
                 </field>
                 <footer>
@@ -42,6 +43,7 @@
                 <field name="role" widget="badge"
                        decoration-success="role == 'mandatory'"
                        decoration-muted="role == 'optional'"/>
+                <field name="is_admin" widget="boolean_toggle"/>
             </tree>
         </field>
     </record>
@@ -57,6 +59,7 @@
                         <field name="name"/>
                         <field name="username" placeholder="@ivan_manager"/>
                         <field name="role"/>
+                        <field name="is_admin"/>
                     </group>
                 </sheet>
             </form>
@@ -94,6 +97,15 @@
         parent="project.menu_project_config"
         action="rayton_telegram_member_action"
         sequence="101"
+    />
+
+    <!-- ── Quick-create shortcut in Configuration menu ── -->
+    <menuitem
+        id="rayton_telegram_create_group_menu"
+        name="➕ Створити TG групу"
+        parent="project.menu_project_config"
+        action="action_open_create_tg_group_wizard"
+        sequence="102"
     />
 
 </odoo>

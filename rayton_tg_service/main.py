@@ -96,6 +96,7 @@ class CreateGroupRequest(BaseModel):
     title: str
     bot_username: str = ""        # overrides TG_BOT_USERNAME env if provided
     usernames: list[str] = []     # extra Telegram @usernames to invite
+    admin_usernames: list[str] = []  # subset of usernames to promote to admin
 
 
 class SetHistoryRequest(BaseModel):
@@ -184,15 +185,31 @@ async def create_group(
             logger.warning("Could not promote bot to admin: %s", e)
 
     # ── 5. Invite extra users ─────────────────────────────────────────────────
+    admin_set = set(req.admin_usernames)
     for uname in req.usernames:
+        user_entity = None
         try:
             user_entity = await _client.get_entity(uname)
             await _client(InviteToChannelRequest(channel=channel, users=[user_entity]))
             logger.info("User %s added to group %s", uname, channel.id)
         except UserAlreadyParticipantError:
             logger.info("User %s already in group %s", uname, channel.id)
+            user_entity = await _client.get_entity(uname)
         except Exception as e:
             logger.warning("Could not add user %s: %s", uname, e)
+
+        # Promote to admin if requested
+        if user_entity and uname in admin_set:
+            try:
+                await _client(EditAdminRequest(
+                    channel=channel,
+                    user_id=user_entity,
+                    admin_rights=BOT_ADMIN_RIGHTS,
+                    rank="",
+                ))
+                logger.info("User %s promoted to admin in group %s", uname, channel.id)
+            except Exception as e:
+                logger.warning("Could not promote user %s to admin: %s", uname, e)
 
     # ── 6. Build Bot API chat_id ──────────────────────────────────────────────
     # Telethon returns bare channel.id (positive int).

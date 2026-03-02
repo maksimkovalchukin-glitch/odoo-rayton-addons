@@ -44,9 +44,11 @@ class RaytonTelegramCreateWizard(models.TransientModel):
                 '  rayton_project_hub.tg_service_secret'
             ))
 
-        usernames = [m.username for m in self.member_ids if m.username]
-        # Normalize usernames: ensure @ prefix
-        usernames = [u if u.startswith('@') else f'@{u}' for u in usernames]
+        def _norm(u):
+            return u if u.startswith('@') else f'@{u}'
+
+        usernames = [_norm(m.username) for m in self.member_ids if m.username]
+        admin_usernames = [_norm(m.username) for m in self.member_ids if m.username and m.is_admin]
 
         try:
             resp = requests.post(
@@ -54,6 +56,7 @@ class RaytonTelegramCreateWizard(models.TransientModel):
                 json={
                     'title': self.title,
                     'usernames': usernames,
+                    'admin_usernames': admin_usernames,
                 },
                 headers={'x-secret': service_secret},
                 timeout=60,

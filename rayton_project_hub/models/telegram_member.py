@@ -22,6 +22,11 @@ class RaytonTelegramMember(models.Model):
         required=True,
         help='Обов\'язкові автоматично підтягуються у wizard створення групи.',
     )
+    is_admin = fields.Boolean(
+        string='Адмін',
+        default=False,
+        help='Чи призначити цього учасника адміністратором групи.',
+    )
 
     _sql_constraints = [
         ('username_unique', 'UNIQUE(username)', 'Такий нікнейм вже додано!'),
