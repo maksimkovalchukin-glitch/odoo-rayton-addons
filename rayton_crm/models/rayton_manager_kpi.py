@@ -87,6 +87,9 @@ class RaytonManagerKpi(models.Model):
             lambda u: u.active and not u.share and u.id != 1
         )
 
+        # Видалити записи для юзерів яких більше немає в списку менеджерів
+        self.search([('user_id', 'not in', managers.ids)]).unlink()
+
         for manager in managers:
             leads = self.env['crm.lead'].search([
                 ('user_id', '=', manager.id),
