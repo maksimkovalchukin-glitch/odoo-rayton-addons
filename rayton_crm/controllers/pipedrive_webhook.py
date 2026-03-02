@@ -94,39 +94,59 @@ CREDIT_SPECIALIST_OPTION_MAP = {
     265: None,         # Владислав Карась — не в Odoo
 }
 
-# Pipedrive activity type → mail.activity.type name в Odoo
-ACTIVITY_TYPE_MAP = {
-    'Телефонний дзвінок Клієнту':                         'Телефонний дзвінок Клієнту',
-    'Вихідний дзвінок':                                   'Вихідний дзвінок',
-    'Вхідний дзвінок':                                    'Вхідний дзвінок',
-    'Недозвон':                                           'Недозвон',
-    'Пропущений дзвінок':                                 'Недозвон',
-    'Завдання':                                           'Завдання КЦ',
-    'Завдання (реалізація проекту / взаємодія з технічним Департаментом)': 'Завдання КЦ',
-    'Обробка нових':                                      'Обробка нових лідів',
-    'Надіслано лист/ КП✉️':                               'Надіслати КП',
-    'Відправка ПКП✉️':                                    'Відправка ПКП',
-    'Онлайн-зустріч':                                     'Онлайн-зустріч',
-    'Офлайн-зустріч з Клієнтом / Партнером':              'Офлайн-зустріч',
-    'Передача картки на МП / ПКП новий лід🔥':             'Передача ліда',
-    'Передача картки на МП / ПКП старий лід🔥':            'Передача ліда',
-    'Передача картки на МВК':                             'Передача ліда',
+# Pipedrive activity key_string → (Odoo type name, display label, icon)
+# key_strings отримано через GET /activityTypes
+ACTIVITY_KEY_MAP = {
+    'call':                       ('Телефонний дзвінок Клієнту', 'Телефонний дзвінок Клієнту', '📞'),
+    'nedozvon':                   ('Недозвон',                   'Недозвон',                   '📵'),
+    'telefonniy_dzvnok_partners': ('Телефонний дзвінок Клієнту', 'Тел. дзвінок (партнерство)', '📞'),
+    'vdpravka_kp_uzeses':         ('Надіслати КП',               'Надіслано лист/КП',          '✉️'),
+    'peredacha_kartki_na_mp__pk1':('Передача ліда',              'Передача картки (новий лід)','🚀'),
+    'peredacha_kartki_na_mp__pk2':('Передача ліда',              'Передача картки (старий лід)','🚀'),
+    'peredacha_kartki_na_mp__pk': ('Передача ліда',              'Передача картки',            '🚀'),
+    'peredacha_kartki_na_mvk':    ('Передача ліда',              'Передача картки на МВК',     '🚀'),
+    'poshuk_lpr':                 ('Обробка нових лідів',        'Обробка нових',              '🔄'),
+    'vdpravka_pkp':               ('Відправка ПКП',              'Відправка ПКП',              '✉️'),
+    'email':                      ('Надіслати КП',               'Ел. пошта',                  '✉️'),
+    'meeting':                    ('Онлайн-зустріч',             'Онлайн-зустріч',             '🖥️'),
+    'oflayn_zustrch':             ('Офлайн-зустріч',             'Офлайн-зустріч',             '🤝'),
+    'task':                       ('Завдання КЦ',                'Завдання',                   '✅'),
+    'zavdannya_realzatsya_proek': ('Завдання КЦ',                'Завдання (реалізація)',       '✅'),
+    'deadline':                   ('Завдання КЦ',                'Термін виконання',            '✅'),
+    'task1':                      ('Завдання КЦ',                'Завдання',                   '✅'),
+    'inbound_call':               ('Вхідний дзвінок',            'Вхідний дзвінок',            '📲'),
+    'vkhdniy_dzvnok':             ('Вхідний дзвінок',            'Вхідний дзвінок',            '📲'),
+    'missed_call':                ('Недозвон',                   'Пропущений дзвінок',         '📵'),
+    'propushcheniy_dzvnok':       ('Недозвон',                   'Пропущений дзвінок',         '📵'),
+    'outbound_call':              ('Вихідний дзвінок',           'Вихідний дзвінок',           '📞'),
+    'vikhdniy_dzvnok':            ('Вихідний дзвінок',           'Вихідний дзвінок',           '📞'),
+    'lunch':                      (None,                         'Діловий обід',               '🍽️'),
+    'nshe':                       (None,                         'Дублі та інше',              '📌'),
+    'nevdpovdniy_ld_povernennya': (None,                         'Невідповідний лід',          '❌'),
+    'priynyato_v_robotu':         (None,                         'Прийнято в роботу',          '✅'),
+    'povernennya_kartki_na_oper': (None,                         'Повернення на оператора',    '⏸️'),
+    'vdguk_vd_klyenta_fdbek':     (None,                         'Відгук від клієнта',         '💬'),
+    'provedennya_navchannya_ban': (None,                         'Проведення навчання',        '📚'),
+    'pdgotovka_dogovoru':         (None,                         'Підготовка договору',        '📝'),
 }
 
-TYPE_ICON = {
-    'Телефонний дзвінок Клієнту': '📞',
-    'Вихідний дзвінок':           '📞',
-    'Вхідний дзвінок':            '📲',
-    'Недозвон':                   '📵',
-    'Пропущений дзвінок':         '📵',
-    'Завдання':                   '✅',
-    'Обробка нових':              '🔄',
-    'Онлайн-зустріч':             '🖥️',
-    'Офлайн-зустріч з Клієнтом / Партнером': '🤝',
-    'Надіслано лист/ КП✉️':       '✉️',
-    'Відправка ПКП✉️':            '✉️',
-    'Передача картки на МП / ПКП новий лід🔥': '🚀',
-    'Передача картки на МП / ПКП старий лід🔥': '🚀',
+# Fallback: display name → Odoo type (для зворотної сумісності з v1 і subject-lookup)
+ACTIVITY_NAME_MAP = {
+    'Телефонний дзвінок Клієнту':                                  'Телефонний дзвінок Клієнту',
+    'Вихідний дзвінок':                                            'Вихідний дзвінок',
+    'Вхідний дзвінок':                                             'Вхідний дзвінок',
+    'Недозвон':                                                    'Недозвон',
+    'Пропущений дзвінок':                                          'Недозвон',
+    'Завдання':                                                    'Завдання КЦ',
+    'Завдання (реалізація проекту / взаємодія з технічним Департаментом)': 'Завдання КЦ',
+    'Обробка нових':                                               'Обробка нових лідів',
+    'Надіслано лист/ КП':                                          'Надіслати КП',
+    'Відправка ПКП':                                               'Відправка ПКП',
+    'Онлайн-зустріч':                                              'Онлайн-зустріч',
+    'Офлайн-зустріч з Клієнтом / Партнером':                       'Офлайн-зустріч',
+    'Передача картки на МП / ПКП новий лід':                       'Передача ліда',
+    'Передача картки на МП / ПКП старий лід':                      'Передача ліда',
+    'Передача картки на МВК':                                      'Передача ліда',
 }
 
 
@@ -414,11 +434,20 @@ class PipedriveWebhook(http.Controller):
         assigned_name = assigned.get('name', '') if isinstance(assigned, dict) else ''
         author_pid = self._get_author_pid(env, assigned_name)
 
-        # Тип активності
-        act_type = str(current.get('type') or '')
-        icon = TYPE_ICON.get(act_type, '📌')
-        note = str(current.get('note') or '').strip()
+        # Тип активності — шукаємо спочатку по key_string (v2), потім по display name (v1/subject)
+        type_key = str(current.get('type') or '')
+        note    = str(current.get('note') or '').strip()
         subject = str(current.get('subject') or '').strip()
+
+        key_entry = ACTIVITY_KEY_MAP.get(type_key)
+        if key_entry:
+            odoo_type_name, display_label, icon = key_entry
+        else:
+            # fallback: шукаємо по subject або display name
+            odoo_type_name = ACTIVITY_NAME_MAP.get(subject) or ACTIVITY_NAME_MAP.get(type_key)
+            display_label  = subject or type_key
+            icon           = '📌'
+
         done_mark = '✓'
 
         # Контактна особа
@@ -428,8 +457,9 @@ class PipedriveWebhook(http.Controller):
         else:
             contact_name = ''
 
-        lines = ['<strong>%s %s</strong> %s' % (icon, act_type, done_mark)]
-        if subject and subject != act_type:
+        lines = ['<strong>%s %s</strong> %s' % (icon, display_label, done_mark)]
+        # subject показуємо лише якщо він відрізняється від display_label
+        if subject and subject != display_label:
             lines.append('<em>%s</em>' % subject)
         if contact_name:
             lines.append('Контакт: %s' % contact_name)
@@ -440,7 +470,6 @@ class PipedriveWebhook(http.Controller):
         body = '<p>' + '<br>'.join(lines) + '</p>'
 
         # mail_activity_type_id
-        odoo_type_name = ACTIVITY_TYPE_MAP.get(act_type, '')
         activity_type = False
         if odoo_type_name:
             activity_type = env['mail.activity.type'].search(
