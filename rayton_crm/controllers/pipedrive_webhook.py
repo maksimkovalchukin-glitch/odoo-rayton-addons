@@ -379,6 +379,13 @@ class PipedriveWebhook(http.Controller):
                 if uid:
                     vals['credit_specialist_id'] = uid
 
+        # project_number (text) → № проекту
+        project_num_key = cfg.get_param('pipedrive.field.project_number', '')
+        if project_num_key and project_num_key in current:
+            pnum = current.get(project_num_key)
+            if pnum:
+                vals['project_number'] = str(pnum)
+
         return vals
 
     # ------------------------------------------------------------------ #
