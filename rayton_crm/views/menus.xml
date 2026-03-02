@@ -1,6 +1,53 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Черга менеджерів — у меню CRM для керівника КЦ -->
+    <!-- ══════════════════════════════════════════════════════════════
+         Actions для ЛІДИ і НАГОДИ
+    ══════════════════════════════════════════════════════════════════ -->
+
+    <!-- ЛІДИ — канбан воронки Оператори (team_id=5) для розбору/кваліфікації -->
+    <record id="action_leads_qualify_kanban" model="ir.actions.act_window">
+        <field name="name">Ліди</field>
+        <field name="res_model">crm.lead</field>
+        <field name="view_mode">kanban,list,form,activity</field>
+        <field name="domain">[('team_id', '=', 5)]</field>
+        <field name="context">{'default_team_id': 5}</field>
+    </record>
+
+    <!-- НАГОДИ — канбан воронки Менеджери (team_id=1) -->
+    <record id="action_opportunities_kanban" model="ir.actions.act_window">
+        <field name="name">Нагоди</field>
+        <field name="res_model">crm.lead</field>
+        <field name="view_mode">kanban,list,form,calendar,activity</field>
+        <field name="domain">[('team_id', '=', 1)]</field>
+        <field name="context">{'default_team_id': 1, 'default_type': 'opportunity'}</field>
+    </record>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         Структура меню CRM:
+         ЛІДИ | НАГОДИ | Черга | Передача | КПІ | Дзвінки | Телефони | Звітність | Налаштування
+    ══════════════════════════════════════════════════════════════════ -->
+
+    <!-- ЛІДИ (seq=5): замінюємо action на kanban Оператори, показуємо операторам та кц -->
+    <record id="crm.crm_menu_leads" model="ir.ui.menu">
+        <field name="name">Ліди</field>
+        <field name="sequence">5</field>
+        <field name="action" ref="action_leads_qualify_kanban"/>
+        <field name="groups_id" eval="[(6, 0, [
+            ref('rayton_crm.group_operator'),
+            ref('rayton_crm.group_kc_head'),
+            ref('base.group_erp_manager'),
+        ])]"/>
+    </record>
+
+    <!-- НАГОДИ (seq=10): нове меню для менеджерів та адмінів -->
+    <menuitem id="menu_crm_opportunities"
+              name="Нагоди"
+              parent="crm.crm_menu_root"
+              action="action_opportunities_kanban"
+              sequence="10"
+              groups="rayton_crm.group_manager,rayton_crm.group_kc_head,base.group_erp_manager"/>
+
+    <!-- Черга менеджерів (seq=20) — для керівника КЦ -->
     <menuitem id="menu_manager_queue"
               name="Черга менеджерів"
               parent="crm.crm_menu_root"
@@ -8,14 +55,14 @@
               sequence="20"
               groups="rayton_crm.group_kc_head"/>
 
-    <!-- Передача лідів — у меню CRM для всіх -->
+    <!-- Передача лідів (seq=25) — для всіх -->
     <menuitem id="menu_lead_transfer"
               name="Передача лідів"
               parent="crm.crm_menu_root"
               action="action_lead_transfer"
               sequence="25"/>
 
-    <!-- КПІ менеджерів — у меню CRM для адмінів та керівника КЦ -->
+    <!-- КПІ Менеджерів (seq=30) — для адмінів, керівника КЦ та менеджерів -->
     <menuitem id="menu_manager_kpi"
               name="КПІ Менеджерів"
               parent="crm.crm_menu_root"
@@ -23,7 +70,7 @@
               sequence="30"
               groups="base.group_erp_manager,rayton_crm.group_kc_head,rayton_crm.group_manager"/>
 
-    <!-- Дзвінки Ringostat — для адмінів та керівника КЦ -->
+    <!-- Дзвінки Ringostat (seq=35) — для адмінів та керівника КЦ -->
     <menuitem id="menu_ringostat_calls"
               name="Дзвінки Ringostat"
               parent="crm.crm_menu_root"
@@ -31,7 +78,7 @@
               sequence="35"
               groups="base.group_erp_manager,rayton_crm.group_kc_head"/>
 
-    <!-- Виключені телефони — тільки для адмінів -->
+    <!-- Виключені телефони (seq=36) — тільки для адмінів -->
     <menuitem id="menu_ringostat_excluded"
               name="Виключені телефони"
               parent="crm.crm_menu_root"
@@ -39,16 +86,27 @@
               sequence="36"
               groups="base.group_erp_manager"/>
 
-    <!-- Приховуємо Leads, Звітність і Конфігурацію — тільки для адмінів -->
-    <record id="crm.crm_menu_leads" model="ir.ui.menu">
-        <field name="groups_id" eval="[(4, ref('base.group_erp_manager'))]"/>
-    </record>
-
+    <!-- Звітність — в кінці (seq=90), тільки для адмінів -->
     <record id="crm.crm_menu_report" model="ir.ui.menu">
-        <field name="groups_id" eval="[(4, ref('base.group_erp_manager'))]"/>
+        <field name="sequence">90</field>
+        <field name="groups_id" eval="[(6, 0, [ref('base.group_erp_manager')])]"/>
     </record>
 
+    <!-- Налаштування — в кінці (seq=95), тільки для адмінів -->
     <record id="crm.crm_menu_config" model="ir.ui.menu">
-        <field name="groups_id" eval="[(4, ref('base.group_erp_manager'))]"/>
+        <field name="sequence">95</field>
+        <field name="groups_id" eval="[(6, 0, [ref('base.group_erp_manager')])]"/>
+    </record>
+
+    <!-- Продажі (стандартний підрозділ) — в кінці (seq=98), тільки для адмінів -->
+    <record id="crm.crm_menu_sales" model="ir.ui.menu">
+        <field name="sequence">98</field>
+        <field name="groups_id" eval="[(6, 0, [ref('base.group_erp_manager')])]"/>
+    </record>
+
+    <!-- Імпорт і синхронізація — в кінці (seq=99), тільки для адмінів -->
+    <record id="crm.menu_import_crm" model="ir.ui.menu">
+        <field name="sequence">99</field>
+        <field name="groups_id" eval="[(6, 0, [ref('base.group_erp_manager')])]"/>
     </record>
 </odoo>
