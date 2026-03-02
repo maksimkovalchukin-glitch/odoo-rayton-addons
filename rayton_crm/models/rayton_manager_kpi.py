@@ -121,14 +121,13 @@ class RaytonManagerKpi(models.Model):
             """, [lead_ids, comm_type_ids, first_day, last_day])
             leads_with_comm = cr.fetchone()[0]
 
-            # 2b: заплановані на наступний місяць
+            # 2b: заплановані — є наступна активність в Pipedrive
             cr.execute("""
-                SELECT COUNT(DISTINCT res_id)
-                FROM mail_activity
-                WHERE res_model = 'crm.lead'
-                  AND res_id = ANY(%s)
-                  AND date_deadline >= %s AND date_deadline <= %s
-            """, [lead_ids, next_mo_start, next_mo_end])
+                SELECT COUNT(*)
+                FROM crm_lead
+                WHERE id = ANY(%s)
+                  AND pipedrive_next_activity_date IS NOT NULL
+            """, [lead_ids])
             leads_with_planned = cr.fetchone()[0]
 
             # 2c: прострочені завдання

@@ -386,6 +386,13 @@ class PipedriveWebhook(http.Controller):
             if pnum:
                 vals['project_number'] = str(pnum)
 
+        # next_activity_date → наступна запланована активність з Pipedrive
+        nad = current.get('next_activity_date')
+        if nad:
+            vals['pipedrive_next_activity_date'] = nad
+        elif 'next_activity_date' in current:
+            vals['pipedrive_next_activity_date'] = False
+
         return vals
 
     # ------------------------------------------------------------------ #
