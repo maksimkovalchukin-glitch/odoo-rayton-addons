@@ -45,13 +45,10 @@ class RaytonLeadTransferWizard(models.TransientModel):
         self.ensure_one()
         lead = self.lead_id
 
-        # Знаходимо команду менеджерів
-        mgr_team = self.env['crm.team'].search(
-            [('name', 'not ilike', 'Колл')], limit=1
+        # Перша стадія менеджерів (is_manager_pipeline=True)
+        first_stage = self.env['crm.stage'].search(
+            [('is_manager_pipeline', '=', True)], order='sequence', limit=1
         )
-        first_stage = self.env['crm.stage'].search([
-            ('team_id', '=', mgr_team.id if mgr_team else False)
-        ], order='sequence', limit=1)
 
         # Зберігаємо поточного оператора
         lead.last_operator_id = self.env.uid
@@ -59,7 +56,7 @@ class RaytonLeadTransferWizard(models.TransientModel):
         # Лід стає нагодою при передачі менеджеру
         lead.write({
             'type': 'opportunity',
-            'team_id': mgr_team.id if mgr_team else lead.team_id.id,
+            'team_id': first_stage.team_id.id if first_stage else lead.team_id.id,
             'stage_id': first_stage.id if first_stage else lead.stage_id.id,
             'user_id': self.manager_id.id,
         })

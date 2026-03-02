@@ -64,9 +64,8 @@ class CrmLead(models.Model):
     )
 
     def _compute_is_with_manager(self):
-        kc_team = self.env['crm.team'].search([('name', 'ilike', 'Оператор')], limit=1)
         for lead in self:
-            lead.is_with_manager = bool(kc_team) and lead.team_id.id != kc_team.id
+            lead.is_with_manager = lead.type == 'opportunity'
 
     def _compute_transfer_count(self):
         for lead in self:
@@ -89,17 +88,16 @@ class CrmLead(models.Model):
 
     def action_return_to_kc(self):
         self.ensure_one()
-        kc_team = self.env['crm.team'].search([('name', 'ilike', 'Оператор')], limit=1)
-        # Перша стадія КЦ за sequence = "Розбір"
-        kc_stage = self.env['crm.stage'].search([
-            ('team_id', '=', kc_team.id if kc_team else False),
-        ], order='sequence', limit=1)
+        # Перша стадія КЦ (is_manager_pipeline=False) = "Розбір"
+        kc_stage = self.env['crm.stage'].search(
+            [('is_manager_pipeline', '=', False)], order='sequence', limit=1
+        )
 
         operator = self.last_operator_id or self.env['res.users'].browse(self.env.uid)
 
         self.write({
             'type': 'lead',          # нагода стає лідом знову
-            'team_id': kc_team.id if kc_team else self.team_id.id,
+            'team_id': kc_stage.team_id.id if kc_stage else self.team_id.id,
             'stage_id': kc_stage.id if kc_stage else self.stage_id.id,
             'user_id': operator.id,
         })
