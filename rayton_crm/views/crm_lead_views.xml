@@ -78,6 +78,18 @@
         </field>
     </record>
 
+    <!-- Поле "Воронка менеджера" на списку стадій CRM -->
+    <record id="view_crm_stage_list_rayton" model="ir.ui.view">
+        <field name="name">crm.stage.list.rayton</field>
+        <field name="model">crm.stage</field>
+        <field name="inherit_id" ref="crm.crm_stage_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//tree" position="inside">
+                <field name="is_manager_pipeline" string="Воронка менеджера" optional="show"/>
+            </xpath>
+        </field>
+    </record>
+
     <!-- Кредитний спеціаліст угоди -->
     <record id="view_crm_opportunity_form_credit" model="ir.ui.view">
         <field name="name">crm.lead.form.credit.hint</field>
