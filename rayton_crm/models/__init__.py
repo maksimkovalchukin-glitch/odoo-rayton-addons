@@ -7,3 +7,4 @@ from . import crm_stage
 from . import crm_lead
 from . import rayton_manager_kpi
 from . import rayton_ringostat_call
+from . import rayton_ringostat_excluded_phone

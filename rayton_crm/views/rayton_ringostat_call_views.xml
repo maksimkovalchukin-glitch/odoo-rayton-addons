@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <!--  Дзвінки Ringostat                                                  -->
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+
     <!-- Tree view дзвінків Ringostat -->
     <record id="view_ringostat_call_tree" model="ir.ui.view">
         <field name="name">rayton.ringostat.call.tree</field>
@@ -40,8 +44,6 @@
                         domain="[('call_status', 'not in', ['ANSWERED', 'BUSY'])]"/>
                 <filter name="filter_managers" string="Менеджери"
                         domain="[('department', 'ilike', 'Менеджер')]"/>
-                <filter name="filter_this_month" string="Цей місяць"
-                        domain="[('call_date', '&gt;=', (context_today() + relativedelta(day=1)).strftime('%Y-%m-%d'))]"/>
                 <separator/>
                 <filter name="group_employee" string="По співробітнику"
                         context="{'group_by': 'user_id'}"/>
@@ -65,6 +67,35 @@
                 Немає записів дзвінків Ringostat.
             </p>
             <p>Дзвінки зберігаються автоматично через webhook <code>/ringostat/webhook</code>.</p>
+        </field>
+    </record>
+
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <!--  Виключені телефони (внутрішні номери співробітників)               -->
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+
+    <record id="view_ringostat_excluded_phone_tree" model="ir.ui.view">
+        <field name="name">rayton.ringostat.excluded.phone.tree</field>
+        <field name="model">rayton.ringostat.excluded.phone</field>
+        <field name="arch" type="xml">
+            <tree string="Виключені телефони" editable="top">
+                <field name="phone" string="Номер телефону"/>
+                <field name="employee_name" string="ПІБ / Примітка"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="action_ringostat_excluded_phones" model="ir.actions.act_window">
+        <field name="name">Виключені телефони</field>
+        <field name="res_model">rayton.ringostat.excluded.phone</field>
+        <field name="view_mode">tree</field>
+        <field name="view_id" ref="view_ringostat_excluded_phone_tree"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Список порожній.
+            </p>
+            <p>Додайте внутрішні номери співробітників.
+               Дзвінки де зовнішня сторона має такий номер — не зберігатимуться в CRM.</p>
         </field>
     </record>
 </odoo>

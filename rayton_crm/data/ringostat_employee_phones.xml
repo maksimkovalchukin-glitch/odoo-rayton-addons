@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- noupdate=1: ці записи не перезаписуються при оновленні модуля -->
+<odoo noupdate="1">
+
+    <!-- Мобільні / основні номери -->
+    <record id="ep_krytchenko"    model="rayton.ringostat.excluded.phone"><field name="phone">380672474030</field><field name="employee_name">Крутченко Дем'ян Ігорович</field></record>
+    <record id="ep_lesko"         model="rayton.ringostat.excluded.phone"><field name="phone">380986421580</field><field name="employee_name">Лесько Ольга Юріївна</field></record>
+    <record id="ep_bakumenko_m"   model="rayton.ringostat.excluded.phone"><field name="phone">380506230092</field><field name="employee_name">Бакуменко Ірина Юріївна</field></record>
+    <record id="ep_lysenko_m"     model="rayton.ringostat.excluded.phone"><field name="phone">380673060808</field><field name="employee_name">Лисенко Юрій Олександрович</field></record>
+    <record id="ep_umnov"         model="rayton.ringostat.excluded.phone"><field name="phone">380673133286</field><field name="employee_name">Умнов Олександр Сергійович</field></record>
+    <record id="ep_tubish_m"      model="rayton.ringostat.excluded.phone"><field name="phone">380671975723</field><field name="employee_name">Тубіш Микола Миколайович</field></record>
+    <record id="ep_sydorov_m"     model="rayton.ringostat.excluded.phone"><field name="phone">380673708224</field><field name="employee_name">Сидоров Максим Сергійович</field></record>
+    <record id="ep_pokotylo"      model="rayton.ringostat.excluded.phone"><field name="phone">380672008097</field><field name="employee_name">Покотило Олександр Васильович</field></record>
+    <record id="ep_dostovalov_m"  model="rayton.ringostat.excluded.phone"><field name="phone">380951279025</field><field name="employee_name">Достовалов Олександр Олександрович</field></record>
+    <record id="ep_stotsky_m"     model="rayton.ringostat.excluded.phone"><field name="phone">380673497933</field><field name="employee_name">Стоцький Віталій Юрійович</field></record>
+    <record id="ep_pavlov_m"      model="rayton.ringostat.excluded.phone"><field name="phone">380960907070</field><field name="employee_name">Павлов Дмитро Сергійович</field></record>
+    <record id="ep_sushchenko_m"  model="rayton.ringostat.excluded.phone"><field name="phone">380636566561</field><field name="employee_name">Сущенко Оксана Миколаївна</field></record>
+    <record id="ep_korostil_m"    model="rayton.ringostat.excluded.phone"><field name="phone">380504114446</field><field name="employee_name">Коростіль Олександр Іванович</field></record>
+    <record id="ep_radionenko_m"  model="rayton.ringostat.excluded.phone"><field name="phone">380961365570</field><field name="employee_name">Радіоненко Леся Сергіївна</field></record>
+    <record id="ep_kurnaeva_m"    model="rayton.ringostat.excluded.phone"><field name="phone">380971873631</field><field name="employee_name">Курнаєва Яна Віталіївна</field></record>
+    <record id="ep_gadaychuk_m"   model="rayton.ringostat.excluded.phone"><field name="phone">380971746208</field><field name="employee_name">Гадайчук Наталія Петрівна</field></record>
+    <record id="ep_khodakivsky_m" model="rayton.ringostat.excluded.phone"><field name="phone">380964914540</field><field name="employee_name">Ходаківський Юрій Васильович</field></record>
+    <record id="ep_belik_m"       model="rayton.ringostat.excluded.phone"><field name="phone">380638781488</field><field name="employee_name">Бєлік Ігор Олександрович</field></record>
+    <record id="ep_tolochko_m"    model="rayton.ringostat.excluded.phone"><field name="phone">380676624562</field><field name="employee_name">Толочко Сергій Олександрович</field></record>
+    <record id="ep_seleznov_m"    model="rayton.ringostat.excluded.phone"><field name="phone">380501629309</field><field name="employee_name">Селезньов Андрій Леонідович</field></record>
+    <record id="ep_tsvihun"       model="rayton.ringostat.excluded.phone"><field name="phone">380984894588</field><field name="employee_name">Цвігун Віктор Сергійович</field></record>
+    <record id="ep_zakernichnyi"  model="rayton.ringostat.excluded.phone"><field name="phone">380678645415</field><field name="employee_name">Закерничний Олександр Леонідович</field></record>
+    <record id="ep_torgonsky"     model="rayton.ringostat.excluded.phone"><field name="phone">380673513297</field><field name="employee_name">Торгонський Андрій Миколайович</field></record>
+    <record id="ep_nykyforova"    model="rayton.ringostat.excluded.phone"><field name="phone">380935171920</field><field name="employee_name">Никифорова Ольга Олегівна</field></record>
+    <record id="ep_antonenko"     model="rayton.ringostat.excluded.phone"><field name="phone">380504225004</field><field name="employee_name">Антоненко Роман Вікторович</field></record>
+    <record id="ep_koval"         model="rayton.ringostat.excluded.phone"><field name="phone">380770707977</field><field name="employee_name">Коваль Василь Олександрович</field></record>
+    <record id="ep_buchkovsky"    model="rayton.ringostat.excluded.phone"><field name="phone">380634324081</field><field name="employee_name">Бучковський Ігор Романович</field></record>
+    <record id="ep_holovko"       model="rayton.ringostat.excluded.phone"><field name="phone">380675443319</field><field name="employee_name">Головко Артем Вікторович</field></record>
+    <record id="ep_chobanu"       model="rayton.ringostat.excluded.phone"><field name="phone">380992352516</field><field name="employee_name">Чобану Сергій Дмитрович</field></record>
+    <record id="ep_tkachuk"       model="rayton.ringostat.excluded.phone"><field name="phone">380673632898</field><field name="employee_name">Ткачук Володимир Віталійович</field></record>
+    <record id="ep_romanovych"    model="rayton.ringostat.excluded.phone"><field name="phone">380688844230</field><field name="employee_name">Романович Андрій Іванович</field></record>
+    <record id="ep_rud"           model="rayton.ringostat.excluded.phone"><field name="phone">380678831064</field><field name="employee_name">Рудь Дмитро Романович</field></record>
+    <record id="ep_novik"         model="rayton.ringostat.excluded.phone"><field name="phone">380678302267</field><field name="employee_name">Новік Олексій Миколайович</field></record>
+    <record id="ep_vershylo"      model="rayton.ringostat.excluded.phone"><field name="phone">380673654506</field><field name="employee_name">Вершило Ярослав Сергійович</field></record>
+    <record id="ep_smahliuk"      model="rayton.ringostat.excluded.phone"><field name="phone">380669255049</field><field name="employee_name">Смаглюк Андрій Олександрович</field></record>
+    <record id="ep_movenko"       model="rayton.ringostat.excluded.phone"><field name="phone">380689594304</field><field name="employee_name">Мовенко Юлія Володимирівна</field></record>
+    <record id="ep_burlaka"       model="rayton.ringostat.excluded.phone"><field name="phone">380675943663</field><field name="employee_name">Бурлака Дмитро Вячеславович</field></record>
+    <record id="ep_shepetiuk"     model="rayton.ringostat.excluded.phone"><field name="phone">380949068812</field><field name="employee_name">Шепетюк Гліб Олександрович</field></record>
+    <record id="ep_furman"        model="rayton.ringostat.excluded.phone"><field name="phone">380966571744</field><field name="employee_name">Фурман Владислав Павлович</field></record>
+    <record id="ep_spidchuk"      model="rayton.ringostat.excluded.phone"><field name="phone">380976142367</field><field name="employee_name">Спідчук Микола Володимирович</field></record>
+    <record id="ep_boyko"         model="rayton.ringostat.excluded.phone"><field name="phone">380966080842</field><field name="employee_name">Бойко Роман Олегович</field></record>
+    <record id="ep_khomenko"      model="rayton.ringostat.excluded.phone"><field name="phone">380684536483</field><field name="employee_name">Хоменко Денис Олегович</field></record>
+    <record id="ep_bilynskyy"     model="rayton.ringostat.excluded.phone"><field name="phone">380962542676</field><field name="employee_name">Білинський Роман Олегович</field></record>
+    <record id="ep_yalovenko"     model="rayton.ringostat.excluded.phone"><field name="phone">380986677708</field><field name="employee_name">Яловенко Дмитро Олександрович</field></record>
+    <record id="ep_kurchenko"     model="rayton.ringostat.excluded.phone"><field name="phone">380988915689</field><field name="employee_name">Курченко Алла В'ячеславівна</field></record>
+    <record id="ep_trunova"       model="rayton.ringostat.excluded.phone"><field name="phone">380677689910</field><field name="employee_name">Трунова Марина Сергіївна</field></record>
+    <record id="ep_viflyanceva"   model="rayton.ringostat.excluded.phone"><field name="phone">380967972550</field><field name="employee_name">Віфлянцева Алла Миколаївна</field></record>
+    <record id="ep_marchenko"     model="rayton.ringostat.excluded.phone"><field name="phone">380504004029</field><field name="employee_name">Марченко Тетяна Олександрівна</field></record>
+    <record id="ep_kochetkova"    model="rayton.ringostat.excluded.phone"><field name="phone">380677160605</field><field name="employee_name">Кочеткова Ольга Володимирівна</field></record>
+    <record id="ep_havurska"      model="rayton.ringostat.excluded.phone"><field name="phone">380684767013</field><field name="employee_name">Гавурська Оксана Олександрівна</field></record>
+    <record id="ep_filinowych"    model="rayton.ringostat.excluded.phone"><field name="phone">380681626240</field><field name="employee_name">Філінович Олена Олександрівна</field></record>
+    <record id="ep_shevchenko_k"  model="rayton.ringostat.excluded.phone"><field name="phone">380505200260</field><field name="employee_name">Шевченко Катерина Сергіївна</field></record>
+    <record id="ep_osatiuk"       model="rayton.ringostat.excluded.phone"><field name="phone">380975110557</field><field name="employee_name">Осатюк Марина Олександрівна</field></record>
+    <record id="ep_parkhomenko"   model="rayton.ringostat.excluded.phone"><field name="phone">380679065203</field><field name="employee_name">Пархоменко Ірина Віталіївна</field></record>
+    <record id="ep_demydovska"    model="rayton.ringostat.excluded.phone"><field name="phone">380970014879</field><field name="employee_name">Демидовська Віта Михайлівна</field></record>
+    <record id="ep_standret"      model="rayton.ringostat.excluded.phone"><field name="phone">380976101723</field><field name="employee_name">Стандрет Ольга Сергіївна</field></record>
+    <record id="ep_valchuk"       model="rayton.ringostat.excluded.phone"><field name="phone">380970629228</field><field name="employee_name">Вальчук Альона Олегівна</field></record>
+
+    <!-- Офісні номери (Ringostat SIP) -->
+    <record id="ep_gadaychuk_o"    model="rayton.ringostat.excluded.phone"><field name="phone">380632343872</field><field name="employee_name">Гадайчук Наталія Петрівна (офісний)</field></record>
+    <record id="ep_khodakivsky_o"  model="rayton.ringostat.excluded.phone"><field name="phone">380632343460</field><field name="employee_name">Ходаківський Юрій Васильович (офісний)</field></record>
+    <record id="ep_belik_o"        model="rayton.ringostat.excluded.phone"><field name="phone">380632343431</field><field name="employee_name">Бєлік Ігор Олександрович (офісний)</field></record>
+    <record id="ep_tolochko_o"     model="rayton.ringostat.excluded.phone"><field name="phone">380632343448</field><field name="employee_name">Толочко Сергій Олександрович (офісний)</field></record>
+    <record id="ep_seleznov_o"     model="rayton.ringostat.excluded.phone"><field name="phone">380632343452</field><field name="employee_name">Селезньов Андрій Леонідович (офісний)</field></record>
+    <record id="ep_sydorov_o"      model="rayton.ringostat.excluded.phone"><field name="phone">380638474976</field><field name="employee_name">Сидоров Максим Сергійович (офісний)</field></record>
+    <record id="ep_dostovalov_o"   model="rayton.ringostat.excluded.phone"><field name="phone">380638474977</field><field name="employee_name">Достовалов Олександр Олександрович (офісний)</field></record>
+    <record id="ep_pavlov_o"       model="rayton.ringostat.excluded.phone"><field name="phone">380638474981</field><field name="employee_name">Павлов Дмитро Сергійович (офісний)</field></record>
+    <record id="ep_sushchenko_o"   model="rayton.ringostat.excluded.phone"><field name="phone">380638474985</field><field name="employee_name">Сущенко Оксана Миколаївна (офісний)</field></record>
+    <record id="ep_korostil_o"     model="rayton.ringostat.excluded.phone"><field name="phone">380638474987</field><field name="employee_name">Коростіль Олександр Іванович (офісний)</field></record>
+    <record id="ep_radionenko_o"   model="rayton.ringostat.excluded.phone"><field name="phone">380638474978</field><field name="employee_name">Радіоненко Леся Сергіївна (офісний)</field></record>
+    <record id="ep_kurnaeva_o"     model="rayton.ringostat.excluded.phone"><field name="phone">380638474979</field><field name="employee_name">Курнаєва Яна Віталіївна (офісний)</field></record>
+    <record id="ep_lysenko_o"      model="rayton.ringostat.excluded.phone"><field name="phone">380638474982</field><field name="employee_name">Лисенко Юрій Олександрович (офісний)</field></record>
+    <record id="ep_petrov_o"       model="rayton.ringostat.excluded.phone"><field name="phone">380638474983</field><field name="employee_name">Петров Дмитро Миколайович (офісний)</field></record>
+    <record id="ep_bobrovytsky_o"  model="rayton.ringostat.excluded.phone"><field name="phone">380638474984</field><field name="employee_name">Бобровицький Станіслав Вікторович (офісний)</field></record>
+    <record id="ep_spare_sim_1"    model="rayton.ringostat.excluded.phone"><field name="phone">380638474988</field><field name="employee_name">Запасні сім лайфсел</field></record>
+    <record id="ep_spare_sim_2"    model="rayton.ringostat.excluded.phone"><field name="phone">380638474989</field><field name="employee_name">Запасні сім лайфсел</field></record>
+
+    <!-- Додаткові номери -->
+    <record id="ep_tolochko_alt"   model="rayton.ringostat.excluded.phone"><field name="phone">380500407293</field><field name="employee_name">Толочко Сергій Олександрович (додатковий)</field></record>
+    <record id="ep_belik_alt"      model="rayton.ringostat.excluded.phone"><field name="phone">380663774144</field><field name="employee_name">Бєлік Ігор Олександрович (додатковий)</field></record>
+    <record id="ep_sydorov_excl"   model="rayton.ringostat.excluded.phone"><field name="phone">380955767976</field><field name="employee_name">Сидоров Максим Сергійович (виключення)</field></record>
+    <record id="ep_unknown_1"      model="rayton.ringostat.excluded.phone"><field name="phone">380675973398</field><field name="employee_name">Невідомий співробітник</field></record>
+
+    <!-- Контакти Яни Курнаєвої на виключення -->
+    <record id="ep_kurnaeva_ex1"   model="rayton.ringostat.excluded.phone"><field name="phone">380672460976</field><field name="employee_name">Курнаєва Яна (виключення 1)</field></record>
+    <record id="ep_kurnaeva_ex2"   model="rayton.ringostat.excluded.phone"><field name="phone">380968210452</field><field name="employee_name">Курнаєва Яна (виключення 2)</field></record>
+    <record id="ep_kurnaeva_ex3"   model="rayton.ringostat.excluded.phone"><field name="phone">380965469218</field><field name="employee_name">Курнаєва Яна (виключення 3)</field></record>
+    <record id="ep_kurnaeva_ex4"   model="rayton.ringostat.excluded.phone"><field name="phone">380679512848</field><field name="employee_name">Курнаєва Яна (виключення 4)</field></record>
+    <record id="ep_kurnaeva_ex5"   model="rayton.ringostat.excluded.phone"><field name="phone">380664923310</field><field name="employee_name">Курнаєва Яна (виключення 5)</field></record>
+    <record id="ep_kurnaeva_ex6"   model="rayton.ringostat.excluded.phone"><field name="phone">380672661164</field><field name="employee_name">Курнаєва Яна (виключення 6)</field></record>
+    <record id="ep_kurnaeva_ex7"   model="rayton.ringostat.excluded.phone"><field name="phone">380632430887</field><field name="employee_name">Курнаєва Яна (виключення 7)</field></record>
+
+</odoo>

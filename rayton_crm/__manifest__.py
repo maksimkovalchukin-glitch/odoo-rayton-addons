@@ -8,6 +8,7 @@
     'data': [
         'security/groups.xml',
         'data/mail_activity_types.xml',
+        'data/ringostat_employee_phones.xml',
         'security/ir.model.access.csv',
         'views/res_partner_views.xml',
         'views/crm_lead_views.xml',

@@ -14,3 +14,5 @@ access_kpi_period_wizard,rayton.kpi.period.wizard,model_rayton_kpi_period_wizard
 access_ringostat_call_admin,rayton.ringostat.call admin,model_rayton_ringostat_call,base.group_erp_manager,1,1,1,1
 access_ringostat_call_kc_head,rayton.ringostat.call kc_head,model_rayton_ringostat_call,rayton_crm.group_kc_head,1,0,0,0
 access_ringostat_call_manager,rayton.ringostat.call manager,model_rayton_ringostat_call,rayton_crm.group_manager,1,0,0,0
+access_ringostat_excl_admin,rayton.ringostat.excluded.phone admin,model_rayton_ringostat_excluded_phone,base.group_erp_manager,1,1,1,1
+access_ringostat_excl_kc_head,rayton.ringostat.excluded.phone kc_head,model_rayton_ringostat_excluded_phone,rayton_crm.group_kc_head,1,0,0,0

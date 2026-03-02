@@ -79,9 +79,29 @@ class RaytonRingostatCall(models.Model):
 
     @api.model
     def create_from_webhook(self, payload):
-        """Create a call record from a Ringostat webhook payload dict."""
+        """Create a call record from a Ringostat webhook payload dict.
+
+        Returns the created record, or None if the call is between internal
+        employees (external phone found in rayton.ringostat.excluded.phone).
+        """
         call_type_raw = payload.get('call_type', '')
         call_type = call_type_raw if call_type_raw in ('transitin', 'transitout') else 'transitin'
+
+        # Determine the external party phone:
+        #   transitin  → caller_number is external (client calling employee)
+        #   transitout → call_destination is external (employee calling client)
+        if call_type == 'transitin':
+            ext_phone = payload.get('caller_number', '')
+        else:
+            ext_phone = payload.get('call_destination', '')
+
+        # Skip internal (employee-to-employee) calls
+        if self.env['rayton.ringostat.excluded.phone'].is_internal(ext_phone):
+            _logger.info(
+                'Ringostat call skipped (internal): type=%s ext_phone=%s employee=%s',
+                call_type, ext_phone, payload.get('employee', ''),
+            )
+            return None
 
         call_date_str = payload.get('call_date', '')
         try:
@@ -97,13 +117,6 @@ class RaytonRingostatCall(models.Model):
         has_recording = str(payload.get('has_recording', '0')) == '1'
         employee_name = payload.get('employee', '')
         user = self._match_user(employee_name)
-
-        # For lead matching: use the external party's number
-        ext_phone = (
-            payload.get('caller_number', '')
-            if call_type == 'transitin'
-            else payload.get('call_destination', '')
-        )
         lead = self._match_lead(ext_phone)
 
         vals = {
