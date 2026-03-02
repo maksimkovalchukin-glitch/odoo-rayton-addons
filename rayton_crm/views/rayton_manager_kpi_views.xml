@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Tree view КПІ менеджерів -->
+    <record id="view_rayton_manager_kpi_tree" model="ir.ui.view">
+        <field name="name">rayton.manager.kpi.tree</field>
+        <field name="model">rayton.manager.kpi</field>
+        <field name="arch" type="xml">
+            <tree string="КПІ Менеджерів"
+                  create="false" delete="false">
+
+                <field name="user_id" string="Менеджер" optional="show"/>
+                <field name="period_label" string="Місяць" optional="show"/>
+
+                <!-- KPI 1: воронка -->
+                <field name="lead_count" string="Клієнтів"
+                       decoration-success="lead_count &gt;= 50"
+                       decoration-danger="lead_count &lt; 50"
+                       optional="show"/>
+
+                <!-- KPI 2: комунікація -->
+                <field name="leads_with_comm" string="Дзвінки (шт)" optional="show"/>
+                <field name="comm_pct" string="Дзвінки (%)"
+                       decoration-success="comm_pct &gt;= 100"
+                       decoration-danger="comm_pct &lt; 100"
+                       optional="show"/>
+                <field name="leads_with_planned" string="Заплановано (шт)" optional="show"/>
+                <field name="planned_pct" string="Заплановано (%)"
+                       decoration-success="planned_pct &gt;= 100"
+                       decoration-danger="planned_pct &lt; 100"
+                       optional="show"/>
+                <field name="overdue_count" string="Прострочені"
+                       decoration-success="overdue_count == 0"
+                       decoration-danger="overdue_count &gt; 0"
+                       optional="show"/>
+
+                <!-- KPI 3: заповнення картки -->
+                <field name="lpr_pct" string="ЛПР/ЛВР (%)"
+                       decoration-success="lpr_pct &gt;= 80"
+                       decoration-danger="lpr_pct &lt; 80"
+                       optional="show"/>
+                <field name="project_num_pct" string="№ проекту (%)" optional="show"/>
+                <field name="advance_pct" string="Аванс (%)"
+                       decoration-success="advance_pct &gt;= 80"
+                       decoration-danger="advance_pct &lt; 80"
+                       optional="show"/>
+                <field name="product_pct" string="Продукт (%)"
+                       decoration-success="product_pct &gt;= 80"
+                       decoration-danger="product_pct &lt; 80"
+                       optional="show"/>
+                <field name="power_pct" string="Потужність (%)"
+                       decoration-success="power_pct &gt;= 80"
+                       decoration-danger="power_pct &lt; 80"
+                       optional="show"/>
+
+                <!-- KPI 4: зустрічі -->
+                <field name="meeting_count" string="Зустрічей"
+                       decoration-success="meeting_count &gt;= 19"
+                       decoration-danger="meeting_count &lt; 19"
+                       optional="show"/>
+                <field name="meeting_pct" string="Зустрічі (%)"
+                       decoration-success="meeting_pct &gt;= 95"
+                       decoration-danger="meeting_pct &lt; 95"
+                       optional="show"/>
+
+                <field name="computed_at" string="Оновлено" optional="show"/>
+
+                <button name="action_refresh_all" string="🔄 Оновити КПІ"
+                        type="object" class="btn-primary"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="action_rayton_manager_kpi" model="ir.actions.act_window">
+        <field name="name">КПІ Менеджерів</field>
+        <field name="res_model">rayton.manager.kpi</field>
+        <field name="view_mode">tree</field>
+        <field name="view_id" ref="view_rayton_manager_kpi_tree"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Немає даних КПІ.
+            </p>
+            <p>Натисніть <strong>🔄 Оновити КПІ</strong> щоб розрахувати показники за поточний місяць.</p>
+        </field>
+    </record>
+</odoo>

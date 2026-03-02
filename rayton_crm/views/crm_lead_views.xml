@@ -66,6 +66,7 @@
                         <field name="advance_actual_date" string="Фактична дата авансу"/>
                     </group>
                     <group string="Технічна інформація">
+                        <field name="project_number" string="Номер проекту"/>
                         <field name="loss_reason_text" string="Причина програшу"
                                invisible="not loss_reason_text"/>
                         <field name="pipedrive_deal_id" string="Pipedrive ID"

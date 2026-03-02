@@ -55,6 +55,7 @@ class CrmLead(models.Model):
     advance_actual_date = fields.Date(string='Фактична дата авансу')
     loss_reason_text = fields.Char(string='Причина програшу')
     pipedrive_deal_id = fields.Integer(string='Pipedrive Deal ID', index=True)
+    project_number = fields.Char(string='Номер проекту')
 
     # Кредитний спеціаліст угоди (заповнюється з імпорту або вручну)
     credit_specialist_id = fields.Many2one(

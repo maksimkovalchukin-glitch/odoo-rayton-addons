@@ -6,3 +6,5 @@ access_lead_transfer_user,rayton.lead.transfer user,model_rayton_lead_transfer,b
 access_lead_transfer_kc_head,rayton.lead.transfer kc_head,model_rayton_lead_transfer,rayton_crm.group_kc_head,1,1,1,1
 access_lead_transfer_wizard,rayton.lead.transfer.wizard,model_rayton_lead_transfer_wizard,base.group_user,1,1,1,1
 access_lead_generate_wizard,rayton.lead.generate.wizard,model_rayton_lead_generate_wizard,rayton_crm.group_kc_head,1,1,1,1
+access_manager_kpi_admin,rayton.manager.kpi admin,model_rayton_manager_kpi,base.group_erp_manager,1,1,1,1
+access_manager_kpi_read,rayton.manager.kpi read,model_rayton_manager_kpi,base.group_user,1,0,0,0
