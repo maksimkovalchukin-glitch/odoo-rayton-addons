@@ -70,6 +70,30 @@ CREDIT_SPECIALIST_MAP = {
     'Олександр Коростіль': 'коростіль',
 }
 
+# Pipedrive option IDs для custom fields (отримані через API /dealFields)
+# label (set) → project_type
+LABEL_OPTION_MAP = {
+    137: 'uze',
+    138: 'ses',
+    139: 'ses_uze',
+}
+
+# financing_type (enum) → financing_type
+FINANCING_OPTION_MAP = {
+    227: 'own',
+    228: 'credit',
+    229: 'mixed',
+}
+
+# credit_specialist (enum) → surname для пошуку в res.users
+CREDIT_SPECIALIST_OPTION_MAP = {
+    230: 'сущенко',    # Оксана Коваленко
+    231: 'коростіль',
+    232: 'радіоненко',
+    233: 'курнаєва',
+    265: None,         # Владислав Карась — не в Odoo
+}
+
 # Pipedrive activity type → mail.activity.type name в Odoo
 ACTIVITY_TYPE_MAP = {
     'Телефонний дзвінок Клієнту':                         'Телефонний дзвінок Клієнту',
@@ -282,27 +306,47 @@ class PipedriveWebhook(http.Controller):
         # Custom fields (ключі з ir.config_parameter)
         cfg = env['ir.config_parameter'].sudo()
 
-        label_key = cfg.get_param('pipedrive.field.label', '')
-        if label_key and label_key in current:
+        # label (set) → project_type; Pipedrive надсилає список option ID [138] або текст
+        label_key = cfg.get_param('pipedrive.field.label', 'label')
+        if label_key in current:
             label_val = current[label_key]
+            ptype = False
             if isinstance(label_val, list):
-                label_val = label_val[0] if label_val else ''
-            ptype = PROJECT_TYPE_MAP.get(str(label_val), False)
+                first = label_val[0] if label_val else None
+                if isinstance(first, int):
+                    ptype = LABEL_OPTION_MAP.get(first)
+                elif first:
+                    ptype = PROJECT_TYPE_MAP.get(str(first))
+            elif isinstance(label_val, int):
+                ptype = LABEL_OPTION_MAP.get(label_val)
+            elif label_val:
+                ptype = PROJECT_TYPE_MAP.get(str(label_val))
             if ptype:
                 vals['project_type'] = ptype
 
+        # financing_type (enum) → Pipedrive надсилає int option ID або текст
         financing_key = cfg.get_param('pipedrive.field.financing_type', '')
         if financing_key and financing_key in current:
             fin_val = current[financing_key]
-            ftype = FINANCING_MAP.get(str(fin_val), False)
+            if isinstance(fin_val, int):
+                ftype = FINANCING_OPTION_MAP.get(fin_val)
+            else:
+                ftype = FINANCING_MAP.get(str(fin_val), False)
             if ftype:
                 vals['financing_type'] = ftype
 
+        # credit_specialist (enum) → int option ID або текст
         credit_key = cfg.get_param('pipedrive.field.credit_specialist', '')
         if credit_key and credit_key in current:
-            cs_name = current.get(credit_key)
-            if cs_name:
-                uid = self._find_credit_specialist(env, str(cs_name))
+            cs_val = current.get(credit_key)
+            if isinstance(cs_val, int):
+                surname = CREDIT_SPECIALIST_OPTION_MAP.get(cs_val)
+                if surname:
+                    user = env['res.users'].search([('name', 'ilike', surname)], limit=1)
+                    if user:
+                        vals['credit_specialist_id'] = user.id
+            elif cs_val:
+                uid = self._find_credit_specialist(env, str(cs_val))
                 if uid:
                     vals['credit_specialist_id'] = uid
 
