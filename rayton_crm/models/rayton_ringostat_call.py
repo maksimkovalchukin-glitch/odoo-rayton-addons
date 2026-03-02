@@ -10,11 +10,11 @@ ANSWERED_STATUSES = {'ANSWERED', 'PROPER'}
 
 # Текстові підписи статусів Ringostat
 STATUS_LABELS = {
-    'ANSWERED': 'Відповіли',
-    'PROPER':   'Відповіли',
-    'BUSY':     'Зайнято',
+    'ANSWERED':  'Відповіли',
+    'PROPER':    'Відповіли',
+    'BUSY':      'Зайнято',
     'NO_ANSWER': 'Не відповіли',
-    'FAILED':   'Помилка з\'єднання',
+    'FAILED':    "Помилка з'єднання",
 }
 
 
@@ -45,8 +45,8 @@ class RaytonRingostatCall(models.Model):
         help='Автоматично зіставлено з employee по прізвищу',
     )
     lead_id = fields.Many2one(
-        'crm.lead', 'Нагода CRM',
-        help='Перша знайдена нагода по номеру телефону',
+        'crm.lead', 'Нагода / Лід CRM',
+        help='Перший знайдений або щойно створений лід',
     )
 
     # ── Пошук ────────────────────────────────────────────────────────────── #
@@ -81,7 +81,6 @@ class RaytonRingostatCall(models.Model):
         if not partners:
             return self.env['crm.lead']
         partner_ids = partners.ids
-        # Also include parent companies
         company_ids = partners.filtered('parent_id').mapped('parent_id').ids
         all_ids = list(set(partner_ids + company_ids))
         return self.env['crm.lead'].search([
@@ -114,6 +113,25 @@ class RaytonRingostatCall(models.Model):
         return body
 
     @api.model
+    def _get_activity_type(self, call_type):
+        at_name = 'Вхідний дзвінок' if call_type == 'transitin' else 'Вихідний дзвінок'
+        return self.env['mail.activity.type'].search([('name', '=', at_name)], limit=1)
+
+    @api.model
+    def _make_message_vals(self, model, res_id, body, author_id,
+                           activity_type, call_date, subtype_id):
+        return {
+            'model':                 model,
+            'res_id':                res_id,
+            'message_type':          'comment',
+            'subtype_id':            subtype_id,
+            'author_id':             author_id,
+            'body':                  body,
+            'mail_activity_type_id': activity_type.id if activity_type else False,
+            'date':                  call_date,
+        }
+
+    @api.model
     def _post_to_chatter(self, call_type, call_status, ext_phone, duration,
                          recording_url, call_date, user, partners, leads):
         """Post a call message to all relevant partner and lead chatters.
@@ -122,31 +140,15 @@ class RaytonRingostatCall(models.Model):
         the company card, and every linked open opportunity.
         """
         body = self._build_call_body(call_type, call_status, ext_phone, duration, recording_url)
-
-        # Activity type: Вхідний дзвінок (id=17) / Вихідний дзвінок (id=16)
-        at_name = 'Вхідний дзвінок' if call_type == 'transitin' else 'Вихідний дзвінок'
-        activity_type = self.env['mail.activity.type'].search(
-            [('name', '=', at_name)], limit=1,
-        )
-
+        at = self._get_activity_type(call_type)
         author_id = (
             user.partner_id.id if user
             else self.env.ref('base.partner_root').id
         )
         subtype_id = self.env.ref('mail.mt_note').id
-
-        base_vals = {
-            'message_type':         'comment',
-            'subtype_id':           subtype_id,
-            'author_id':            author_id,
-            'body':                 body,
-            'mail_activity_type_id': activity_type.id if activity_type else False,
-            'date':                 call_date,
-        }
-
         Msg = self.env['mail.message']
 
-        # Post to each contact / company (deduplicated)
+        # Post to each contact + their company (deduplicated)
         posted_partner_ids = set()
         for partner in partners:
             targets = [partner]
@@ -156,7 +158,9 @@ class RaytonRingostatCall(models.Model):
                 if p.id in posted_partner_ids:
                     continue
                 posted_partner_ids.add(p.id)
-                Msg.create(dict(base_vals, model='res.partner', res_id=p.id))
+                Msg.create(self._make_message_vals(
+                    'res.partner', p.id, body, author_id, at, call_date, subtype_id,
+                ))
 
         # Post to each open opportunity (deduplicated)
         posted_lead_ids = set()
@@ -164,12 +168,68 @@ class RaytonRingostatCall(models.Model):
             if lead.id in posted_lead_ids:
                 continue
             posted_lead_ids.add(lead.id)
-            Msg.create(dict(base_vals, model='crm.lead', res_id=lead.id))
+            Msg.create(self._make_message_vals(
+                'crm.lead', lead.id, body, author_id, at, call_date, subtype_id,
+            ))
 
         _logger.info(
-            'Ringostat: posted call message to %d partner(s) and %d lead(s)',
+            'Ringostat: posted call to %d partner(s) and %d lead(s)',
             len(posted_partner_ids), len(posted_lead_ids),
         )
+
+    # ── Новий лід для невідомого номера ──────────────────────────────────── #
+
+    @api.model
+    def _create_lead_for_unknown_phone(self, call_type, call_status, ext_phone,
+                                       duration, recording_url, call_date, user):
+        """Handle a call from/to an unknown phone: create contact + unprocessed lead.
+
+        Creates a minimal res.partner with the phone number and a crm.lead
+        (type='lead') assigned to the employee who handled the call, so the
+        operator can qualify or discard it.
+        """
+        # Мінімальний контакт — номер телефону як ім'я (оператор уточнить пізніше)
+        partner = self.env['res.partner'].sudo().create({
+            'name': ext_phone or _('Невідомий контакт'),
+            'company_type': 'person',
+        })
+        self.env['res.partner.phone'].sudo().create({
+            'partner_id': partner.id,
+            'phone': ext_phone,
+        })
+
+        # Команда КЦ (Оператор) — для первинної обробки
+        kc_team = self.env['crm.team'].search([('name', 'ilike', 'Оператор')], limit=1)
+
+        type_label = 'Вхідний дзвінок' if call_type == 'transitin' else 'Вихідний дзвінок'
+
+        lead = self.env['crm.lead'].sudo().create({
+            'name': f'{type_label} {ext_phone}',
+            'partner_id': partner.id,
+            'type': 'lead',
+            'user_id': user.id if user else False,
+            'team_id': kc_team.id if kc_team else False,
+        })
+
+        # Повідомлення в чаттері ліда
+        body = self._build_call_body(call_type, call_status, ext_phone, duration, recording_url)
+        body += '<p><em>⚠️ Невідомий номер — потребує кваліфікації</em></p>'
+
+        at = self._get_activity_type(call_type)
+        author_id = (
+            user.partner_id.id if user
+            else self.env.ref('base.partner_root').id
+        )
+        self.env['mail.message'].create(self._make_message_vals(
+            'crm.lead', lead.id, body, author_id, at, call_date,
+            self.env.ref('mail.mt_note').id,
+        ))
+
+        _logger.info(
+            'Ringostat: created new lead id=%s for unknown phone %s, assigned to %s',
+            lead.id, ext_phone, user.name if user else '—',
+        )
+        return lead
 
     # ── Основний метод ───────────────────────────────────────────────────── #
 
@@ -177,11 +237,11 @@ class RaytonRingostatCall(models.Model):
     def create_from_webhook(self, payload):
         """Create a call record from a Ringostat webhook payload.
 
-        Also posts the call to chatters of matched partners and opportunities,
-        mirroring Pipedrive activity display behavior.
-
-        Returns the created record, or None if the call is between internal
-        employees (external phone in rayton.ringostat.excluded.phone).
+        Flow:
+        1. Skip internal (employee-to-employee) calls.
+        2. If external phone is known → post to partner/company/lead chatters.
+        3. If external phone is UNKNOWN → create new contact + unprocessed lead
+           assigned to the employee who handled the call.
         """
         call_type_raw = payload.get('call_type', '')
         call_type = call_type_raw if call_type_raw in ('transitin', 'transitout') else 'transitin'
@@ -218,13 +278,26 @@ class RaytonRingostatCall(models.Model):
         recording_url = payload.get('recording', '') or ''
         employee_name = payload.get('employee', '')
 
-        # Match user and CRM objects
         user = self._match_user(employee_name)
         partners = self._find_partners_by_phone(ext_phone)
-        leads = self._find_leads_for_partners(partners)
-        first_lead = leads[:1]
 
-        # Save raw call record
+        if partners:
+            # ── Відомий номер: публікуємо в чаттері ──
+            leads = self._find_leads_for_partners(partners)
+            first_lead = leads[:1]
+            self._post_to_chatter(
+                call_type, call_status, ext_phone, duration, recording_url,
+                call_date, user, partners, leads,
+            )
+        else:
+            # ── Невідомий номер: створюємо контакт + неопрацьований лід ──
+            new_lead = self._create_lead_for_unknown_phone(
+                call_type, call_status, ext_phone, duration,
+                recording_url, call_date, user,
+            )
+            first_lead = new_lead
+
+        # Зберігаємо сирий запис дзвінка
         vals = {
             'call_type':        call_type,
             'call_date':        call_date,
@@ -242,18 +315,11 @@ class RaytonRingostatCall(models.Model):
             'lead_id':          first_lead.id if first_lead else False,
         }
         record = self.create(vals)
-
-        # Post to chatters (partner + company + leads)
-        self._post_to_chatter(
-            call_type, call_status, ext_phone, duration, recording_url,
-            call_date, user, partners, leads,
-        )
-
         _logger.info(
-            'Ringostat call saved: id=%s type=%s employee=%s status=%s '
-            'user=%s partners=%s leads=%s',
+            'Ringostat call saved: id=%s type=%s employee=%s status=%s user=%s '
+            'known_partner=%s lead=%s',
             record.id, call_type, employee_name, call_status,
             user.name if user else '—',
-            partners.mapped('name'), leads.ids,
+            bool(partners), first_lead.id if first_lead else '—',
         )
         return record
