@@ -5,3 +5,4 @@ access_rayton_telegram_chat_manager,rayton.telegram.chat.manager,model_rayton_te
 access_rayton_telegram_member_user,rayton.telegram.member.user,model_rayton_telegram_member,base.group_user,1,0,0,0
 access_rayton_telegram_member_manager,rayton.telegram.member.manager,model_rayton_telegram_member,base.group_system,1,1,1,1
 access_rayton_telegram_create_wizard,rayton.telegram.create.wizard,model_rayton_telegram_create_wizard,base.group_user,1,1,1,1
+access_rayton_tg_user_mapping_admin,rayton.tg.user.mapping.admin,model_rayton_tg_user_mapping,base.group_system,1,1,1,1

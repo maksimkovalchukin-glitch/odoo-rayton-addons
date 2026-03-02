@@ -5,3 +5,4 @@ from . import telegram_member
 from . import discuss_channel
 from . import res_config_settings
 from . import res_users
+from . import tg_user_mapping

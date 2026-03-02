@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- List view -->
+    <record id="rayton_tg_user_mapping_view_list" model="ir.ui.view">
+        <field name="name">rayton.tg.user.mapping.list</field>
+        <field name="model">rayton.tg.user.mapping</field>
+        <field name="arch" type="xml">
+            <tree string="Маппінг TG ↔ Odoo" editable="bottom">
+                <field name="telegram_username" placeholder="irynabakumenko"/>
+                <field name="odoo_user_id"/>
+                <field name="api_token" placeholder="Odoo API токен"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Form view -->
+    <record id="rayton_tg_user_mapping_view_form" model="ir.ui.view">
+        <field name="name">rayton.tg.user.mapping.form</field>
+        <field name="model">rayton.tg.user.mapping</field>
+        <field name="arch" type="xml">
+            <form string="Маппінг TG ↔ Odoo">
+                <sheet>
+                    <group>
+                        <field name="telegram_username" placeholder="irynabakumenko (без @)"/>
+                        <field name="odoo_user_id"/>
+                        <field name="api_token" placeholder="Токен Odoo API"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="rayton_tg_user_mapping_action" model="ir.actions.act_window">
+        <field name="name">Маппінг TG ↔ Odoo</field>
+        <field name="res_model">rayton.tg.user.mapping</field>
+        <field name="view_mode">tree,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Додайте запис маппінгу
+            </p>
+            <p>
+                Таблиця зіставляє Telegram @username з Odoo-користувачем та його API-токеном.
+                Використовується n8n для синхронізації TG повідомлень у Odoo Discuss.
+            </p>
+        </field>
+    </record>
+
+    <!-- Menu under Project > Configuration (admin only) -->
+    <menuitem
+        id="rayton_tg_user_mapping_menu"
+        name="Маппінг TG ↔ Odoo"
+        parent="project.menu_project_config"
+        action="rayton_tg_user_mapping_action"
+        sequence="103"
+        groups="base.group_system"
+    />
+
+</odoo>

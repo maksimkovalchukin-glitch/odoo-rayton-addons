@@ -19,6 +19,7 @@
         'data/cron.xml',
         'views/telegram_chat_views.xml',
         'views/telegram_member_views.xml',
+        'views/tg_user_mapping_views.xml',
         'views/res_users_views.xml',
         'views/crm_lead_views.xml',
         'views/project_views.xml',
