@@ -4,22 +4,22 @@
          Actions для ЛІДИ і НАГОДИ
     ══════════════════════════════════════════════════════════════════ -->
 
-    <!-- ЛІДИ — канбан воронки Оператори (team_id=5) для розбору/кваліфікації -->
+    <!-- ЛІДИ — канбан для розбору/кваліфікації (type='lead') -->
     <record id="action_leads_qualify_kanban" model="ir.actions.act_window">
         <field name="name">Ліди</field>
         <field name="res_model">crm.lead</field>
         <field name="view_mode">kanban,list,form,activity</field>
-        <field name="domain">[('team_id', '=', 5)]</field>
-        <field name="context">{'default_team_id': 5}</field>
+        <field name="domain">['|', ('type', '=', 'lead'), ('type', '=', False)]</field>
+        <field name="context">{'default_type': 'lead', 'default_team_id': 5}</field>
     </record>
 
-    <!-- НАГОДИ — канбан воронки Менеджери (team_id=1) -->
+    <!-- НАГОДИ — канбан кваліфікованих нагод (type='opportunity') -->
     <record id="action_opportunities_kanban" model="ir.actions.act_window">
         <field name="name">Нагоди</field>
         <field name="res_model">crm.lead</field>
         <field name="view_mode">kanban,list,form,calendar,activity</field>
-        <field name="domain">[('team_id', '=', 1)]</field>
-        <field name="context">{'default_team_id': 1, 'default_type': 'opportunity'}</field>
+        <field name="domain">[('type', '=', 'opportunity')]</field>
+        <field name="context">{'default_type': 'opportunity', 'default_team_id': 1}</field>
     </record>
 
     <!-- ══════════════════════════════════════════════════════════════

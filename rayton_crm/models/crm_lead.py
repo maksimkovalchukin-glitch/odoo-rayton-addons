@@ -90,13 +90,15 @@ class CrmLead(models.Model):
     def action_return_to_kc(self):
         self.ensure_one()
         kc_team = self.env['crm.team'].search([('name', 'ilike', 'Оператор')], limit=1)
+        # Перша стадія КЦ за sequence = "Розбір"
         kc_stage = self.env['crm.stage'].search([
-            ('name', 'ilike', 'паузі'),
-        ], limit=1)
+            ('team_id', '=', kc_team.id if kc_team else False),
+        ], order='sequence', limit=1)
 
         operator = self.last_operator_id or self.env['res.users'].browse(self.env.uid)
 
         self.write({
+            'type': 'lead',          # нагода стає лідом знову
             'team_id': kc_team.id if kc_team else self.team_id.id,
             'stage_id': kc_stage.id if kc_stage else self.stage_id.id,
             'user_id': operator.id,

@@ -53,14 +53,12 @@ class RaytonLeadTransferWizard(models.TransientModel):
             ('team_id', '=', mgr_team.id if mgr_team else False)
         ], order='sequence', limit=1)
 
-        # Конвертуємо лід в нагоду якщо потрібно
-        if lead.type == 'lead':
-            lead.convert_opportunity(lead.partner_id.id)
-
         # Зберігаємо поточного оператора
         lead.last_operator_id = self.env.uid
 
+        # Лід стає нагодою при передачі менеджеру
         lead.write({
+            'type': 'opportunity',
             'team_id': mgr_team.id if mgr_team else lead.team_id.id,
             'stage_id': first_stage.id if first_stage else lead.stage_id.id,
             'user_id': self.manager_id.id,
