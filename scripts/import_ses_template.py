@@ -115,13 +115,14 @@ for seq, (stage_name, task_names) in enumerate(STAGES_TASKS, start=10):
     # Прив'язати стадію до шаблону (M2M)
     template.write({'type_ids': [(4, stage.id)]})
 
-    # Створити завдання
+    # Створити завдання (user_ids=[] щоб не проставляти системного юзера)
     for task_seq, task_name in enumerate(task_names, start=1):
         env['project.task'].create({
             'name': task_name,
             'project_id': template.id,
             'stage_id': stage.id,
             'sequence': task_seq * 10,
+            'user_ids': [(5, 0, 0)],  # явно очищаємо виконавців
             'description': False,
         })
         total_tasks += 1
