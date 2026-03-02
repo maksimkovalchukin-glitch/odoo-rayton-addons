@@ -17,6 +17,7 @@
         'wizard/lead_generate_wizard_views.xml',
         'wizard/kpi_period_wizard_views.xml',
         'views/rayton_manager_kpi_views.xml',
+        'views/rayton_ringostat_call_views.xml',
         'views/menus.xml',
     ],
     'installable': True,

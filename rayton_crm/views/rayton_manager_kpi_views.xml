@@ -17,9 +17,19 @@
                        decoration-danger="lead_count &lt; 50"
                        optional="show"/>
 
-                <!-- KPI 2: комунікація -->
-                <field name="leads_with_comm" string="Дзвінки (шт)" optional="show"/>
-                <field name="comm_pct" string="Дзвінки (%)"
+                <!-- RS: Ringostat дзвінки -->
+                <field name="rs_total"    string="RS: всього"   optional="show"/>
+                <field name="rs_answered" string="RS: успішних"
+                       decoration-success="rs_answered &gt;= 50"
+                       decoration-danger="rs_answered &lt; 50"
+                       optional="show"/>
+                <field name="rs_missed"   string="RS: б/відп"   optional="show"/>
+                <field name="rs_busy"     string="RS: зайнято"  optional="show"/>
+                <field name="rs_minutes"  string="RS: хвилин"   optional="show"/>
+
+                <!-- KPI 2: комунікація (CRM активності) -->
+                <field name="leads_with_comm" string="Дзвінки CRM (шт)" optional="show"/>
+                <field name="comm_pct" string="Дзвінки CRM (%)"
                        decoration-success="comm_pct &gt;= 100"
                        decoration-danger="comm_pct &lt; 100"
                        optional="show"/>

@@ -3,5 +3,7 @@ from . import res_partner
 from . import res_country_state
 from . import manager_queue
 from . import lead_transfer
+from . import crm_stage
 from . import crm_lead
 from . import rayton_manager_kpi
+from . import rayton_ringostat_call

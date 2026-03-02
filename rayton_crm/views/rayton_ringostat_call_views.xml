@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Tree view дзвінків Ringostat -->
+    <record id="view_ringostat_call_tree" model="ir.ui.view">
+        <field name="name">rayton.ringostat.call.tree</field>
+        <field name="model">rayton.ringostat.call</field>
+        <field name="arch" type="xml">
+            <tree string="Дзвінки Ringostat" create="false" edit="false"
+                  decoration-success="call_status == 'ANSWERED'"
+                  decoration-muted="call_status == 'BUSY'"
+                  decoration-danger="call_status not in ('ANSWERED', 'BUSY')">
+                <field name="call_date" string="Дата"/>
+                <field name="call_type" string="Тип"/>
+                <field name="department" string="Відділ" optional="show"/>
+                <field name="employee" string="Співробітник"/>
+                <field name="user_id" string="Odoo юзер" optional="show"/>
+                <field name="call_status" string="Статус"/>
+                <field name="call_duration" string="Тривалість, сек" optional="show"/>
+                <field name="caller_number" string="Від кого" optional="show"/>
+                <field name="call_destination" string="Кому" optional="show"/>
+                <field name="lead_id" string="Нагода CRM" optional="show"/>
+                <field name="has_recording" string="Запис" optional="show"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Search view -->
+    <record id="view_ringostat_call_search" model="ir.ui.view">
+        <field name="name">rayton.ringostat.call.search</field>
+        <field name="model">rayton.ringostat.call</field>
+        <field name="arch" type="xml">
+            <search string="Пошук дзвінків">
+                <field name="employee" string="Співробітник"/>
+                <field name="user_id" string="Odoo юзер"/>
+                <field name="department" string="Відділ"/>
+                <field name="call_status" string="Статус"/>
+                <filter name="filter_answered" string="Відповіли"
+                        domain="[('call_status', '=', 'ANSWERED')]"/>
+                <filter name="filter_missed" string="Не відповіли"
+                        domain="[('call_status', 'not in', ['ANSWERED', 'BUSY'])]"/>
+                <filter name="filter_managers" string="Менеджери"
+                        domain="[('department', 'ilike', 'Менеджер')]"/>
+                <filter name="filter_this_month" string="Цей місяць"
+                        domain="[('call_date', '&gt;=', (context_today() + relativedelta(day=1)).strftime('%Y-%m-%d'))]"/>
+                <separator/>
+                <filter name="group_employee" string="По співробітнику"
+                        context="{'group_by': 'user_id'}"/>
+                <filter name="group_date" string="По даті"
+                        context="{'group_by': 'call_date:month'}"/>
+                <filter name="group_status" string="По статусу"
+                        context="{'group_by': 'call_status'}"/>
+            </search>
+        </field>
+    </record>
+
+    <!-- Window action -->
+    <record id="action_ringostat_calls" model="ir.actions.act_window">
+        <field name="name">Дзвінки Ringostat</field>
+        <field name="res_model">rayton.ringostat.call</field>
+        <field name="view_mode">tree</field>
+        <field name="search_view_id" ref="view_ringostat_call_search"/>
+        <field name="context">{'search_default_filter_managers': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Немає записів дзвінків Ringostat.
+            </p>
+            <p>Дзвінки зберігаються автоматично через webhook <code>/ringostat/webhook</code>.</p>
+        </field>
+    </record>
+</odoo>
