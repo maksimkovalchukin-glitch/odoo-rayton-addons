@@ -193,8 +193,9 @@ const nodes = [
       authentication: 'predefinedCredentialType',
       nodeCredentialType: 'googleDocsOAuth2Api',
       sendBody: true,
-      specifyBody: 'string',
-      body: '={{ JSON.stringify({ requests: $json.requests }) }}',
+      contentType: 'json',
+      specifyBody: 'json',
+      jsonBody: '={{ { requests: $json.requests } }}',
       options: {}
     },
     id: 'n13', name: 'HTTP: Docs batchUpdate',
