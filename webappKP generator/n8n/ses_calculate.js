@@ -246,8 +246,10 @@ function calculateAll() {
   }
 
   // ─── Панелі ───
+  // module_type = "Фотоелектричні модулі Тrina 575W" — прибираємо категорію для відображення в PDF
+  const _panelDisplayName = (p.module_type || '').replace(/^Фотоелектричні модулі\s*/i, '').replace(/\n/g, ' ').trim();
   addLine('Фотоелектричні модулі', p.module_type, panelQty, 'шт.',
-    `Фотогальванічний модуль ${(p.module_type || '').replace(/\n/g, ' ')}`);
+    `Фотогальванічний модуль ${_panelDisplayName}`);
 
   // ─── Інвертори ───
   inverters.forEach(inv =>

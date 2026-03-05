@@ -28,17 +28,19 @@ const MOUNT_TYPES = [
   "наземка схід-захід",
 ];
 
-// label — відображення в UI, name — точна назва з таблиці "Довідкові дані" (для матчингу)
+// label — відображення в UI
+// name  — точна назва колонки B таблиці (з категорією-префіксом → унікальний матчинг)
+const _CP = 'Фотоелектричні модулі';
 const PANELS = [
-  { label: "Trina 575W",                    name: "Тrina 575W",                                     watt: 575 },
-  { label: "Trina 580W",                    name: "Тrina 580W",                                     watt: 580 },
-  { label: "Trina 610W",                    name: "Тrina 610W",                                     watt: 610 },
-  { label: "Trina 710W",                    name: "Тrina 710W",                                     watt: 710 },
-  { label: "JA 625W",                       name: "JA 625W",                                        watt: 625 },
-  { label: "Longi 580W",                    name: "Longi 580W",                                     watt: 580 },
-  { label: "Longi 620W",                    name: "Longi 620W",                                     watt: 620 },
-  { label: "Tier-1 Trina 625TSM-NE19R",    name: "Tier-1 Trina 625TSM-NE19R, потужністю 625W",    watt: 625 },
-  { label: "Tier-1 Trina 620TSM-NE19R",    name: "Tier-1 Trina 620TSM-NE19R, потужністю 620W",    watt: 620 },
+  { label: "Тrina 575W",  name: `${_CP} Тrina 575W`,  watt: 575 },
+  { label: "Тrina 580W",  name: `${_CP} Тrina 580W`,  watt: 580 },
+  { label: "Тrina 610W",  name: `${_CP} Тrina 610W`,  watt: 610 },
+  { label: "Тrina 710W",  name: `${_CP} Тrina 710W`,  watt: 710 },
+  { label: "JA 625W",     name: `${_CP} JA 625W`,     watt: 625 },
+  { label: "Longi 580W",  name: `${_CP} Longi 580W`,  watt: 580 },
+  { label: "Longi 610W",  name: `${_CP} Longi 610W`,  watt: 610 },
+  { label: "Trina 625W",  name: `${_CP} Trina 625W`,  watt: 625 },
+  { label: "Trina 620W",  name: `${_CP} Trina 620W`,  watt: 620 },
 ];
 
 // Інвертори: roof — без 115кВт, ground — повний список
