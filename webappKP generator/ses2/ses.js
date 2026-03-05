@@ -28,17 +28,17 @@ const MOUNT_TYPES = [
   "наземка схід-захід",
 ];
 
+// label — відображення в UI, name — точна назва з таблиці "Довідкові дані" (для матчингу)
 const PANELS = [
-  { label: "Trina 575W",                        watt: 575 },
-  { label: "Trina 580W",                        watt: 580 },
-  { label: "Trina 610W",                        watt: 610 },
-  { label: "Trina 710W",                        watt: 710 },
-  { label: "JA 625W",                           watt: 625 },
-  { label: "Longi 580W",                        watt: 580 },
-  { label: "Longi 610W",                        watt: 610 },
-  { label: "Longi 620W",                        watt: 620 },
-  { label: "Tier-1 Trina 625TSM-NE19R 625W",   watt: 625 },
-  { label: "Tier-1 Trina 620TSM-NE19R 620W",   watt: 620 },
+  { label: "Trina 575W",                    name: "Тrina 575W",                                     watt: 575 },
+  { label: "Trina 580W",                    name: "Тrina 580W",                                     watt: 580 },
+  { label: "Trina 610W",                    name: "Тrina 610W",                                     watt: 610 },
+  { label: "Trina 710W",                    name: "Тrina 710W",                                     watt: 710 },
+  { label: "JA 625W",                       name: "JA 625W",                                        watt: 625 },
+  { label: "Longi 580W",                    name: "Longi 580W",                                     watt: 580 },
+  { label: "Longi 620W",                    name: "Longi 620W",                                     watt: 620 },
+  { label: "Tier-1 Trina 625TSM-NE19R",    name: "Tier-1\nTrina 625TSM-NE19R, потужністю 625W",    watt: 625 },
+  { label: "Tier-1 Trina 620TSM-NE19R",    name: "Tier-1\nTrina 620TSM-NE19R, потужністю 620W",    watt: 620 },
 ];
 
 // Інвертори: roof — без 115кВт, ground — повний список
@@ -98,8 +98,8 @@ function fillPanelSelects() {
     if (!sel) return;
     PANELS.forEach(p => {
       const opt = document.createElement("option");
-      opt.value = p.watt;
-      opt.textContent = p.label;
+      opt.value = p.name;       // name — точна назва з таблиці (для матчингу в n8n)
+      opt.textContent = p.label; // label — коротке читабельне ім'я для UI
       sel.appendChild(opt);
     });
   });
@@ -486,7 +486,7 @@ function getTargetDC() {
     return calcRoofDC(num("roof_area"), val("roof_type"));
   }
   if (state.mode === "manual") {
-    const watt = num("manual_module");
+    const watt = PANELS.find(p => p.name === val("manual_module"))?.watt || 0;
     if (state.manualInputMode === "power") {
       return num("manual_dc_power") || 0;
     }
@@ -618,10 +618,9 @@ function renderAutoSuggestion(targetDC) {
 
 function getPanelWatt() {
   if (state.mode === "manual") {
-    return num("manual_module") || 0;
+    return PANELS.find(p => p.name === val("manual_module"))?.watt || 0;
   }
-  const sel = document.getElementById("module_type");
-  return sel ? (num("module_type") || 0) : 0;
+  return PANELS.find(p => p.name === val("module_type"))?.watt || 0;
 }
 
 function renderRatioBar(ratio, el) {
@@ -771,8 +770,8 @@ function buildSummary() {
   };
 
   const panelLabel = state.mode === "manual"
-    ? PANELS.find(p => p.watt == val("manual_module"))?.label || "—"
-    : PANELS.find(p => p.watt == val("module_type"))?.label || "—";
+    ? PANELS.find(p => p.name === val("manual_module"))?.label || "—"
+    : PANELS.find(p => p.name === val("module_type"))?.label || "—";
 
   const currSign = state.currency === "EUR" ? "€" : "$";
 
@@ -849,8 +848,8 @@ async function submitKP() {
   const chatId = tg?.initDataUnsafe?.chat?.id || tg?.initDataUnsafe?.user?.id || null;
 
   const panelLabel = state.mode === "manual"
-    ? PANELS.find(p => p.watt == num("manual_module"))?.label || ""
-    : PANELS.find(p => p.watt == num("module_type"))?.label || "";
+    ? PANELS.find(p => p.name === val("manual_module"))?.label || ""
+    : PANELS.find(p => p.name === val("module_type"))?.label || "";
 
   const payload = {
     calculation_mode:   state.mode,
@@ -865,7 +864,8 @@ async function submitKP() {
     roof_type:           state.mode === "roof"        ? val("roof_type")           : null,
 
     // Обладнання
-    module_type:        panelLabel,
+    // module_type = p.name — точна назва з таблиці (для матчингу в n8n)
+    module_type:        state.mode === "manual" ? val("manual_module") : val("module_type"),
     module_watt:        panelWatt,
     panel_qty:          panelQty,
     real_dc:            +dc.toFixed(2),

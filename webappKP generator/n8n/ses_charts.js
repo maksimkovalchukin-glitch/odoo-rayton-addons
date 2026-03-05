@@ -248,13 +248,27 @@ return [{
     yearly_economy: yearlyEconomyUAH,
     peak_month:     MONTHS_UK[peakIdx],
 
-    // Перезаписуємо template_vars з точною генерацією по регіону
-    template_vars: {
-      ...calc.template_vars,
-      '{{yearly_gen}}':   `${yearlyMWh} МВт·год/рік (${region})`,
-      '{{payback}}':      calc.payback_str || '—',
-      '{{tariff_now}}':   tariffNow ? `${tariffNow.toFixed(2)} грн/кВт·год` : calc.template_vars?.['{{tariff_now}}'] || '',
-      '{{total_profit}}': `${Math.round(yearlyEconomyUAH / 1000)} тис. грн/рік`,
-    },
+    // Перерахунок окупності з регіональними даними
+    // (точніше ніж fallback 1100 год/рік у ses_calculate)
+    ...(() => {
+      const totalUAH = (parseFloat(calc.total_usd) || 0) * (parseFloat(calc.rate_usd) || 41.2);
+      let paybackStr = '—';
+      if (yearlyEconomyUAH > 0 && totalUAH > 0) {
+        const py    = totalUAH / yearlyEconomyUAH;
+        const pyInt = Math.floor(py);
+        const pyMon = Math.round((py - pyInt) * 12);
+        paybackStr  = pyMon > 0 ? `${pyInt} р. ${pyMon} міс.` : `${pyInt} р.`;
+      }
+      return {
+        payback_str_regional: paybackStr,
+        template_vars: {
+          ...calc.template_vars,
+          '{{yearly_gen}}':   `${yearlyMWh} МВт·год`,
+          '{{payback}}':      paybackStr,
+          '{{tariff_now}}':   tariffNow ? `${tariffNow.toFixed(2)} грн/кВт·год` : calc.template_vars?.['{{tariff_now}}'] || '',
+          '{{total_profit}}': `${Math.round(yearlyEconomyUAH / 1000)} тис. грн/рік`,
+        },
+      };
+    })(),
   }
 }];

@@ -36,29 +36,53 @@
 const _wh = $('Webhook').first().json;
 const p = _wh.body ?? _wh; // webhook v2 вкладає body в json.body
 
-// Перетворюємо рядки аркуша в масиви [A, B, C, D, E, F, G, H, I]
-// Google Sheets node повертає об'єкт з ключами = першому рядку (заголовки)
-// Тому беремо значення за позицією через Object.values()
-// Одна нода SheetsData читає A1:O200 (всі потрібні дані + курси в колонці O)
-const rawRows = $('SheetsData').all().map(item => Object.values(item.json));
+// n8n Google Sheets v4 (firstRowIsColumnNames: false) використовує рядок 1 як заголовки
+// і додає поле row_number → ключі: row_number, col_1(A), col_2(B), col_3(C),
+// "К-сть"(D), col_5(E=Ціна USD), col_6(F), col_7(G=Коефіцієнт), ...
+// Остання колонка O: її ключ = значення O1 (курс EUR), значення для рядка = курс USD
+const rawItems = $('SheetsData').all();
 
 const parseFlt = v => {
   if (v === null || v === undefined || v === '') return 0;
   return parseFloat(String(v).replace(/\s/g, '').replace(',', '.')) || 0;
 };
 
-// Курси валют з колонки O (індекс 14): рядок 0 = EUR, рядок 1 = USD
-const rateEUR = parseFlt(rawRows[0]?.[14]) || 43.5;
-const rateUSD = parseFlt(rawRows[1]?.[14]) || 41.2;
+// Курси валют: col O header = EUR rate (key name), col O row1 value = USD rate
+const _firstJson  = rawItems[0]?.json || {};
+const _allKeys    = Object.keys(_firstJson);
+const _rateColKey = _allKeys[_allKeys.length - 1];        // ключ колонки O
+const rateEUR     = parseFlt(_rateColKey) || 43.5;        // значення O1 = EUR курс
+const rateUSD     = parseFlt(_firstJson[_rateColKey]) || 41.2;  // значення O2 = USD курс
+
+// Нормалізація кирилиця→латиниця для візуальних омогліфів у назвах обладнання
+// (наприклад, кирилична Т = U+0422 та латинська T = U+0054 виглядають однаково,
+//  але це різні символи → порівняння провалюється без нормалізації)
+function normName(s) {
+  return s
+    .replace(/А/g,'A').replace(/а/g,'a')
+    .replace(/В/g,'B').replace(/в/g,'b')
+    .replace(/Е/g,'E').replace(/е/g,'e')
+    .replace(/К/g,'K').replace(/к/g,'k')
+    .replace(/М/g,'M').replace(/м/g,'m')
+    .replace(/Н/g,'H').replace(/н/g,'h')
+    .replace(/О/g,'O').replace(/о/g,'o')
+    .replace(/Р/g,'P').replace(/р/g,'p')
+    .replace(/С/g,'C').replace(/с/g,'c')
+    .replace(/Т/g,'T').replace(/т/g,'t')
+    .replace(/У/g,'Y').replace(/у/g,'y')
+    .replace(/Х/g,'X').replace(/х/g,'x');
+}
 
 // Будуємо зручний масив рядків довідника (тільки ті що мають категорію + ціну)
-const refData = rawRows
-  .map(vals => ({
-    category: String(vals[0] || '').trim(),
-    name:     String(vals[1] || '').trim(),
-    unit:     String(vals[2] || '').trim(),
-    price:    parseFlt(vals[4]),   // col E
-    markup:   parseFlt(vals[6]) || 1,  // col G
+// Доступ по стабільних ключах n8n: col_1=A, col_2=B, col_3=C, col_5=E, col_7=G
+// Назви (col_2) нормалізуємо — у таблиці можуть бути кириличні омогліфи в назвах брендів
+const refData = rawItems
+  .map(item => ({
+    category: String(item.json['col_1'] || '').trim(),           // A = Категорія (завжди кирилиця)
+    name:     normName(String(item.json['col_2'] || '').trim()), // B = Назва (нормалізована)
+    unit:     String(item.json['col_3'] || '').trim(),           // C = Одиниця
+    price:    parseFlt(item.json['col_5']),                      // E = Ціна USD
+    markup:   parseFlt(item.json['col_7']) || 1,                 // G = Коефіцієнт
   }))
   .filter(r => r.category && r.name && r.price > 0);
 
@@ -127,22 +151,24 @@ const MARKUP_LIMITS = {
 // Зберігаємо як Map: "категорія|назва" → markup
 const markupMap = new Map();
 refData.forEach(r => {
+  // r.name вже нормалізована (normName при побудові refData)
   markupMap.set(`${r.category.toLowerCase()}|${r.name.toLowerCase()}`, r.markup);
 });
 
 function getMarkup(category, name) {
-  return markupMap.get(`${category.toLowerCase()}|${name.toLowerCase()}`) || 1;
+  return markupMap.get(`${category.toLowerCase()}|${normName(name).toLowerCase()}`) || 1;
 }
 
 function setMarkup(category, name, val) {
-  markupMap.set(`${category.toLowerCase()}|${name.toLowerCase()}`, val);
+  markupMap.set(`${category.toLowerCase()}|${normName(name).toLowerCase()}`, val);
 }
 
 function findRow(category, name) {
+  const normN = normName(name).toLowerCase();
   return refData.find(r =>
     r.category.toLowerCase() === category.toLowerCase() &&
-    r.name.toLowerCase() === name.toLowerCase()
-  );
+    r.name.toLowerCase() === normN
+  ) || null;
 }
 
 // ────────────────────────────────────────────────────────────────
@@ -221,7 +247,7 @@ function calculateAll() {
 
   // ─── Панелі ───
   addLine('Фотоелектричні модулі', p.module_type, panelQty, 'шт.',
-    `Фотогальванічний модуль ${p.module_type}`);
+    `Фотогальванічний модуль ${(p.module_type || '').replace(/\n/g, ' ')}`);
 
   // ─── Інвертори ───
   inverters.forEach(inv =>
@@ -354,15 +380,27 @@ if (currency === 'EUR') {
 }
 
 if (dcKW > 0) {
-  for (let iter = 0; iter < 10; iter++) {
-    const { sumSale } = calculateAll();
+  for (let iter = 0; iter < 30; iter++) {
+    const { sumSale, sumPurchase } = calculateAll();
     if (sumSale === 0) break;
 
-    const actualPricePerKWinUSD = sumSale / dcKW;
+    // Оцінюємо finalTotal так само як секція 8:
+    // finalTotal = (sumSale + taxValue_last) * currencyRate
+    // taxValue_last — значення після 2-ї ітерації ЄП (не кумулятивне)
+    let _ss = sumSale, _sp = sumPurchase, _tv = 0;
+    if (vatMode === 'with') {
+      for (let i = 0; i < 2; i++) {
+        _tv = ((_ss - _sp) / 1.025 * 0.24) + (_ss * 0.013);
+        _ss += _tv; _sp += _tv;
+      }
+    }
+    // estimatedFinalUSD = sumSale + taxValue_last (без currencyRate, оскільки target вже в USD)
+    const estimatedFinalUSD    = sumSale + (vatMode === 'with' ? _tv : 0);
+    const actualPricePerKWinUSD = estimatedFinalUSD / dcKW;
     const scaleFactor = targetPricePerKWinUSD / actualPricePerKWinUSD;
 
-    // Якщо достатньо точно — виходимо
-    if (Math.abs(scaleFactor - 1) < 0.001) break;
+    // Якщо достатньо точно — виходимо (0.00005% → похибка <$1 навіть для 5 МВт)
+    if (Math.abs(scaleFactor - 1) < 0.000001) break;
 
     // Масштабуємо некеровані категорії
     markupMap.forEach((markup, key) => {
@@ -446,33 +484,34 @@ const equipItems = lineItemsConverted;   // всі lineItems — без окре
 const serviceTotal = +(servicesSale * currencyRate).toFixed(2);
 
 // Заповнюємо 9 рядків обладнання + 1 рядок послуг
+// Ключі з {{ }} — щоб replaceAllText точно матчив {{r1_num}} а не лише r1_num
 const tableRows = {};
 for (let i = 1; i <= 9; i++) {
   const item = equipItems[i - 1];
   if (item) {
-    tableRows[`r${i}_num`]   = `1.${i}`;
-    tableRows[`r${i}_name`]  = item.name;
-    tableRows[`r${i}_unit`]  = item.unit;
-    tableRows[`r${i}_qty`]   = item.qty;
-    tableRows[`r${i}_price`] = fmtNum(item.unitPrice);
-    tableRows[`r${i}_total`] = fmtNum(item.total);
+    tableRows[`{{r${i}_num}}`]   = `1.${i}`;
+    tableRows[`{{r${i}_name}}`]  = item.name;
+    tableRows[`{{r${i}_unit}}`]  = item.unit;
+    tableRows[`{{r${i}_qty}}`]   = String(item.qty);
+    tableRows[`{{r${i}_price}}`] = fmtNum(item.unitPrice);
+    tableRows[`{{r${i}_total}}`] = fmtNum(item.total);
   } else {
-    tableRows[`r${i}_num`]   = '';
-    tableRows[`r${i}_name`]  = '';
-    tableRows[`r${i}_unit`]  = '';
-    tableRows[`r${i}_qty`]   = '';
-    tableRows[`r${i}_price`] = '';
-    tableRows[`r${i}_total`] = '';
+    tableRows[`{{r${i}_num}}`]   = '';
+    tableRows[`{{r${i}_name}}`]  = '';
+    tableRows[`{{r${i}_unit}}`]  = '';
+    tableRows[`{{r${i}_qty}}`]   = '';
+    tableRows[`{{r${i}_price}}`] = '';
+    tableRows[`{{r${i}_total}}`] = '';
   }
 }
 
 // Рядок послуг (r10)
-tableRows['r10_num']   = '2.1';
-tableRows['r10_name']  = 'Розробка робочого проекту\nДоставка обладнання та матеріалів\nМонтаж конструкцій\nВстановлення панелей\nСпецтехніка та механізми\nЕлектротехнічні роботи\nАвторський нагляд\nПусконаладка';
-tableRows['r10_unit']  = 'послуга';
-tableRows['r10_qty']   = 1;
-tableRows['r10_price'] = '';
-tableRows['r10_total'] = fmtNum(serviceTotal);
+tableRows['{{r10_num}}']   = '2.1';
+tableRows['{{r10_name}}']  = 'Розробка робочого проекту\nДоставка обладнання та матеріалів\nМонтаж конструкцій\nВстановлення панелей\nСпецтехніка та механізми\nЕлектротехнічні роботи\nАвторський нагляд\nПусконаладка';
+tableRows['{{r10_unit}}']  = 'послуга';
+tableRows['{{r10_qty}}']   = '1';
+tableRows['{{r10_price}}'] = '';
+tableRows['{{r10_total}}'] = fmtNum(serviceTotal);
 
 // ────────────────────────────────────────────────────────────────
 // 10. ЕКОНОМІЧНИЙ РОЗРАХУНОК (окупність, кредит, деградація)
@@ -639,7 +678,7 @@ const templateVars = {
   '{{project_address}}': '',
   '{{gps_coords}}':      '',
   '{{placement_type}}':  sesType,
-  '{{cost_build}}':      fmtNum(finalTotal),
+  '{{cost_build}}':      fmtNum(dcKW > 0 ? finalTotal / dcKW : 0),
   '{{power1}}':          powerLabel,
   '{{payback}}':         paybackStr,
   '{{yearly_gen}}':      `${Math.round(yearlyKWhBase / 1000)} тис. кВт·год`,
@@ -680,6 +719,26 @@ const DRIVE_PARENT_FOLDER_ID = '1QSNGUZ9e7CAyeZNMJ3EpEUuyXTaSfTky';
 // ────────────────────────────────────────────────────────────────
 // 12. ВИХІД
 // ────────────────────────────────────────────────────────────────
+
+// ────────────────────────────────────────────────────────────────
+// DEBUG — видалити після діагностики
+// ────────────────────────────────────────────────────────────────
+// Пошук панелей у refData для діагностики
+const _panelRow = refData.find(r => r.category.toLowerCase() === 'фотоелектричні модулі');
+const _panelExact = findRow('Фотоелектричні модулі', p.module_type || '');
+const _debug = {
+  refData_count:      refData.length,
+  panel_categories:   [...new Set(refData.map(r => r.category))].slice(0, 8),
+  panel_names_solar:  refData.filter(r => r.category.toLowerCase() === 'фотоелектричні модулі').map(r => r.name),
+  p_module_type:      p.module_type,
+  p_panel_qty:        panelQty,
+  panel_row_found:    !!_panelExact,
+  panel_row_sample:   _panelRow,
+  line_items_count:   lineItems.length,
+  sumSale_debug:      sumSale,
+  rateEUR,
+  rateUSD,
+};
 
 return [{
   json: {
@@ -745,5 +804,8 @@ return [{
     // ─── Назва файлу ───
     file_name: `КП_Рейтон_${p.project_name || 'Проект'}_${powerStr.replace(' ', '_')}_${today.replace(/\./g, '-')}.pdf`,
     doc_copy_name: `Пропозиція_${p.project_name || 'Проект'}_${powerStr}_${Date.now()}`,
+
+    // ─── DEBUG ───
+    _debug,
   }
 }];

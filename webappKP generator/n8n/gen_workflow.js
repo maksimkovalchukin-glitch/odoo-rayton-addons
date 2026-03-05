@@ -33,6 +33,82 @@ return [{
 }];
 `.trim();
 
+const findEmptyRowsCode = `
+// Після replaceAllText порожні рядки таблиці містять лише пусті рядки.
+// Видаляємо їх знизу вверх, щоб уникнути зміщення індексів.
+const docData = $json;
+const calc    = $('Code: Підготовка Docs').first().json;
+const docId   = calc.docId;
+
+const content = docData.tabs?.[0]?.documentTab?.body?.content || docData.body?.content || [];
+
+const requests = [];
+
+for (const el of content) {
+  if (!el.table) continue;
+
+  // Обробляємо лише таблицю специфікації — ту що містить "ОБЛАДНАННЯ ТА МАТЕРІАЛИ"
+  // (в документі є декілька таблиць з пустими рядками — структурні, видаляти не треба)
+  const isCostTable = el.table.tableRows.some(row => {
+    const firstCell = (row.tableCells[0]?.content || [])
+      .flatMap(p => (p.paragraph?.elements || []))
+      .map(e => e.textRun?.content || '')
+      .join('')
+      .trim();
+    return firstCell.includes('ОБЛАДНАННЯ');
+  });
+  if (!isCostTable) continue;
+
+  const tableStartIndex = el.startIndex;
+  const emptyRowIndices = [];
+
+  el.table.tableRows.forEach((row, rowIndex) => {
+    const allEmpty = row.tableCells.every(cell => {
+      const cellText = (cell.content || [])
+        .flatMap(p => (p.paragraph?.elements || []))
+        .map(e => e.textRun?.content || '')
+        .join('')
+        .trim();
+      return cellText === '';
+    });
+    if (allEmpty) emptyRowIndices.push(rowIndex);
+  });
+
+  // Видаляємо з кінця, щоб не зміщувати індекси попередніх рядків
+  for (let i = emptyRowIndices.length - 1; i >= 0; i--) {
+    requests.push({
+      deleteTableRow: {
+        tableCellLocation: {
+          tableStartLocation: { index: tableStartIndex },
+          rowIndex: emptyRowIndices[i],
+          columnIndex: 0,
+        },
+      },
+    });
+  }
+}
+
+// DEBUG — видалити після перевірки
+const _tables = content.filter(el => el.table);
+const _debugRows = _tables.map((el, ti) => ({
+  tableIndex: ti,
+  tableStartIndex: el.startIndex,
+  rowCount: el.table.tableRows.length,
+  rows: el.table.tableRows.map((row, ri) => ({
+    rowIndex: ri,
+    cells: row.tableCells.map(cell =>
+      (cell.content || [])
+        .flatMap(p => (p.paragraph?.elements || []))
+        .map(e => e.textRun?.content || '')
+        .join('')
+        .trim()
+    ),
+  })),
+}));
+
+return [{ json: { docId, ...calc, requests, _debug_empty_rows: { tables_count: _tables.length, requests_count: requests.length, tables: _debugRows } } }];
+`.trim();
+
 const buildDocsCode = `
 const calc  = $('Code: Після гілки зображення').first().json;
 const docId = $('Drive: Копіювати шаблон').first().json.id;
@@ -276,6 +352,42 @@ const nodes = [
   {
     parameters: {
       method: 'GET',
+      url: "={{ 'https://docs.googleapis.com/v1/documents/' + $('Code: Підготовка Docs').first().json.docId }}",
+      authentication: 'predefinedCredentialType',
+      nodeCredentialType: 'googleDocsOAuth2Api',
+      options: {}
+    },
+    id: 'n13a', name: 'HTTP: Отримати Doc після замін',
+    type: 'n8n-nodes-base.httpRequest', typeVersion: 4.2,
+    position: [3840, 300],
+    credentials: { googleDocsOAuth2Api: { id: 'CRED3', name: OAUTH_CRED } }
+  },
+  {
+    parameters: { mode: 'runOnceForAllItems', jsCode: findEmptyRowsCode },
+    id: 'n13b', name: 'Code: Знайти порожні рядки',
+    type: 'n8n-nodes-base.code', typeVersion: 2,
+    position: [4080, 300]
+  },
+  {
+    parameters: {
+      method: 'POST',
+      url: "={{ 'https://docs.googleapis.com/v1/documents/' + $json.docId + ':batchUpdate' }}",
+      authentication: 'predefinedCredentialType',
+      nodeCredentialType: 'googleDocsOAuth2Api',
+      sendBody: true,
+      contentType: 'json',
+      specifyBody: 'json',
+      jsonBody: '={{ { requests: $json.requests } }}',
+      options: { response: { response: { neverError: true } } }
+    },
+    id: 'n13c', name: 'HTTP: Видалити порожні рядки',
+    type: 'n8n-nodes-base.httpRequest', typeVersion: 4.2,
+    position: [4320, 300],
+    credentials: { googleDocsOAuth2Api: { id: 'CRED3', name: OAUTH_CRED } }
+  },
+  {
+    parameters: {
+      method: 'GET',
       url: "={{ 'https://docs.google.com/document/d/' + $('Code: Підготовка Docs').first().json.docId + '/export?format=pdf&tab=t.0' }}",
       authentication: 'predefinedCredentialType',
       nodeCredentialType: 'googleOAuth2Api',
@@ -285,7 +397,7 @@ const nodes = [
     },
     id: 'n14', name: 'HTTP: Експорт PDF',
     type: 'n8n-nodes-base.httpRequest', typeVersion: 4.2,
-    position: [3840, 300],
+    position: [4560, 300],
     credentials: { googleOAuth2Api: { id: 'CRED3', name: OAUTH_CRED } }
   },
   {
@@ -300,7 +412,7 @@ const nodes = [
     },
     id: 'n15', name: 'Drive: Зберегти PDF',
     type: 'n8n-nodes-base.googleDrive', typeVersion: 3,
-    position: [4080, 460],
+    position: [4800, 460],
     credentials: { googleDriveOAuth2Api: { id: 'CRED2', name: DRIVE_CRED } }
   },
   {
@@ -316,7 +428,7 @@ const nodes = [
     },
     id: 'n16', name: 'Telegram: Надіслати PDF',
     type: 'n8n-nodes-base.telegram', typeVersion: 1.2,
-    position: [4080, 300],
+    position: [4800, 300],
     credentials: { telegramApi: { id: 'CRED4', name: TG_CRED } }
   }
 ];
@@ -340,7 +452,10 @@ const connections = {
   'Code: Видалити Вкладку 1':     { main: [[{ node: 'HTTP: Видалити Вкладку 1',    type: 'main', index: 0 }]] },
   'HTTP: Видалити Вкладку 1':     { main: [[{ node: 'Code: Підготовка Docs',        type: 'main', index: 0 }]] },
   'Code: Підготовка Docs':        { main: [[{ node: 'HTTP: Docs batchUpdate',        type: 'main', index: 0 }]] },
-  'HTTP: Docs batchUpdate':       { main: [[{ node: 'HTTP: Експорт PDF',           type: 'main', index: 0 }]] },
+  'HTTP: Docs batchUpdate':           { main: [[{ node: 'HTTP: Отримати Doc після замін', type: 'main', index: 0 }]] },
+  'HTTP: Отримати Doc після замін':   { main: [[{ node: 'Code: Знайти порожні рядки',    type: 'main', index: 0 }]] },
+  'Code: Знайти порожні рядки':       { main: [[{ node: 'HTTP: Видалити порожні рядки',  type: 'main', index: 0 }]] },
+  'HTTP: Видалити порожні рядки':     { main: [[{ node: 'HTTP: Експорт PDF',              type: 'main', index: 0 }]] },
   'HTTP: Експорт PDF': { main: [[
     { node: 'Telegram: Надіслати PDF', type: 'main', index: 0 },
     { node: 'Drive: Зберегти PDF',     type: 'main', index: 0 }
