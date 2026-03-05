@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <title>СЕС — Генератор КП</title>
+
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <link rel="stylesheet" href="../css/telegram.css" />
+  <link rel="stylesheet" href="ses.css" />
+</head>
+
+<body>
+<div class="app">
+
+  <!-- LOGO -->
+  <div class="logo-wrap">
+    <img src="../logo.png" class="logo" alt="Rayton">
+  </div>
+
+  <!-- PROGRESS BAR -->
+  <div class="progress-wrap">
+    <div class="progress-bar" id="progressBar"></div>
+  </div>
+  <div class="step-label" id="stepLabel"></div>
+
+  <!-- ==================== STEP 1: ПРОЕКТ ==================== -->
+  <div class="step" id="step1">
+    <div class="card">
+      <div class="step-title">Проект</div>
+
+      <div class="field">
+        <label>Назва проєкту</label>
+        <input id="project_name" type="text" placeholder="ТОВ ЕНЕРГОБУД" autocomplete="off" />
+      </div>
+
+      <div class="field">
+        <label>Менеджер</label>
+        <select id="manager">
+          <option value="">Оберіть менеджера</option>
+          <option>Петров Дмитро</option>
+          <option>Тубіш Микола</option>
+          <option>Сидоров Максим</option>
+          <option>Достовалов Олександр</option>
+          <option>Стоцький Віталій</option>
+          <option>Павлов Дмитро</option>
+          <option>Лисенко Юрій</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>Регіон</label>
+        <select id="region">
+          <option value="">Оберіть регіон</option>
+          <option>Вінницька область</option>
+          <option>Волинська область</option>
+          <option>Дніпропетровська область</option>
+          <option>Донецька область</option>
+          <option>Житомирська область</option>
+          <option>Закарпатська область</option>
+          <option>Запорізька область</option>
+          <option>Івано-Франківська область</option>
+          <option>м. Київ</option>
+          <option>Київська область</option>
+          <option>Кіровоградська область</option>
+          <option>Львівська область</option>
+          <option>Миколаївська область</option>
+          <option>Одеська область</option>
+          <option>Полтавська область</option>
+          <option>Рівненська область</option>
+          <option>Сумська область</option>
+          <option>Тернопільська область</option>
+          <option>Харківська область</option>
+          <option>Херсонська область</option>
+          <option>Хмельницька область</option>
+          <option>Черкаська область</option>
+          <option>Чернівецька область</option>
+          <option>Чернігівська область</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== STEP 2: РЕЖИМ ==================== -->
+  <div class="step" id="step2" style="display:none">
+    <div class="card">
+      <div class="step-title">Режим розрахунку</div>
+      <div class="subtitle">За яким критерієм формуємо КП?</div>
+
+      <div class="mode-grid">
+        <div class="mode-card" data-mode="consumption">
+          <div class="mode-icon">📊</div>
+          <div class="mode-name">За споживанням</div>
+          <div class="mode-hint">МВт·год/місяць</div>
+        </div>
+        <div class="mode-card" data-mode="power">
+          <div class="mode-icon">⚡</div>
+          <div class="mode-name">Планова потужність</div>
+          <div class="mode-hint">кВт DC</div>
+        </div>
+        <div class="mode-card" data-mode="roof">
+          <div class="mode-icon">🏠</div>
+          <div class="mode-name">За площею</div>
+          <div class="mode-hint">м² даху</div>
+        </div>
+        <div class="mode-card" data-mode="manual">
+          <div class="mode-icon">✍️</div>
+          <div class="mode-name">Вручну</div>
+          <div class="mode-hint">панелі + інвертори</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== STEP 3: ПАРАМЕТРИ ==================== -->
+  <div class="step" id="step3" style="display:none">
+    <div class="card">
+      <div class="step-title" id="step3Title">Параметри</div>
+
+      <!-- consumption -->
+      <div id="param_consumption" class="param-block" style="display:none">
+        <div class="field">
+          <label>Місячне споживання клієнта (МВт·год/місяць)</label>
+          <input id="monthly_consumption" type="number" min="10" step="0.5" placeholder="Наприклад: 12" />
+          <div class="field-hint">Мінімум 10 МВт·год</div>
+        </div>
+      </div>
+
+      <!-- power -->
+      <div id="param_power" class="param-block" style="display:none">
+        <div class="field">
+          <label>Планова потужність СЕС (кВт DC)</label>
+          <input id="planned_power" type="number" min="50" step="10" placeholder="Наприклад: 500" />
+        </div>
+      </div>
+
+      <!-- roof -->
+      <div id="param_roof" class="param-block" style="display:none">
+        <div class="field">
+          <label>Площа (м²)</label>
+          <input id="roof_area" type="number" min="100" step="10" placeholder="Наприклад: 1200" />
+        </div>
+        <div class="field">
+          <label>Тип даху</label>
+          <select id="roof_type">
+            <option value="">Оберіть тип</option>
+            <option value="tilted">Під нахилом</option>
+            <option value="flat">Без нахилу (плоский)</option>
+          </select>
+        </div>
+        <div class="info-box" id="roofCalcHint" style="display:none"></div>
+      </div>
+
+      <!-- manual -->
+      <div id="param_manual" class="param-block" style="display:none">
+
+        <div class="field">
+          <label>Тип панелей</label>
+          <select id="manual_module">
+            <option value="">Оберіть панель</option>
+          </select>
+        </div>
+
+        <!-- Перемикач режиму введення -->
+        <div class="input-mode-toggle">
+          <button class="input-mode-btn active" data-input-mode="qty">За кількістю панелей</button>
+          <button class="input-mode-btn" data-input-mode="power">За потужністю кВт</button>
+        </div>
+
+        <!-- Введення к-сті панелей -->
+        <div id="inputByQty" class="field">
+          <label>Кількість панелей</label>
+          <input id="manual_panel_qty" type="number" min="1" placeholder="Наприклад: 400" />
+        </div>
+
+        <!-- Введення потужності -->
+        <div id="inputByPower" class="field" style="display:none">
+          <label>Потужність СЕС (кВт DC)</label>
+          <input id="manual_dc_power" type="number" min="50" step="10" placeholder="Наприклад: 250" />
+        </div>
+
+        <div class="info-box" id="manualDCBox" style="display:none"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== STEP 4: ОБЛАДНАННЯ ==================== -->
+  <div class="step" id="step4" style="display:none">
+    <div class="card">
+      <div class="step-title">Обладнання</div>
+
+      <!-- Панелі (тільки для не-manual режимів) -->
+      <div id="moduleField" class="field">
+        <label>Тип фотомодулів</label>
+        <select id="module_type">
+          <option value="">Оберіть панель</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>Тип СЕС</label>
+        <select id="ses_type">
+          <option value="roof">Дахова</option>
+          <option value="ground">Наземна</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>Матеріали</label>
+        <select id="material_type">
+          <option value="dc_ac">DC та AC</option>
+          <option value="dc">Тільки DC</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>Система регулювання потужності</label>
+        <select id="power_regulation">
+          <option>Лічильник + Трансформатори струму (3шт)</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>Пристрій моніторингу</label>
+        <select id="monitoring_device">
+          <option>Huawei Smart Dongle</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== STEP 5: ІНВЕРТОРИ ==================== -->
+  <div class="step" id="step5" style="display:none">
+    <div class="card">
+      <div class="step-title">Інвертори</div>
+
+      <!-- Авто-підбір результат -->
+      <div class="inverter-suggestion" id="inverterSuggestion">
+        <div class="suggestion-header">
+          <span class="suggestion-icon">⚡</span>
+          <span>Підібрано автоматично</span>
+        </div>
+        <div id="inverterCards" class="inverter-cards"></div>
+        <div class="inverter-summary" id="inverterSummary"></div>
+        <div class="ratio-bar" id="ratioBar"></div>
+
+        <div class="suggestion-actions">
+          <button class="btn-accept" id="btnAccept">Прийняти</button>
+          <button class="btn-override" id="btnOverride">Змінити вручну</button>
+        </div>
+      </div>
+
+      <!-- Ручний вибір (прихований за замовчуванням) -->
+      <div id="inverterManual" style="display:none">
+        <div class="manual-header">
+          <button class="btn-back-auto" id="btnBackAuto">← Повернути авто</button>
+        </div>
+
+        <div class="inverter-row-wrap" id="inv1Wrap">
+          <div class="field inverter-row">
+            <select id="inv1_model" class="inv-model">
+              <option value="">— не вибрано —</option>
+            </select>
+            <input id="inv1_qty" type="number" min="0" max="20" placeholder="К-сть" class="inv-qty" />
+          </div>
+        </div>
+        <div class="inverter-row-wrap" id="inv2Wrap">
+          <div class="field inverter-row">
+            <select id="inv2_model" class="inv-model">
+              <option value="">— не вибрано —</option>
+            </select>
+            <input id="inv2_qty" type="number" min="0" max="20" placeholder="К-сть" class="inv-qty" />
+          </div>
+        </div>
+        <div class="inverter-row-wrap" id="inv3Wrap">
+          <div class="field inverter-row">
+            <select id="inv3_model" class="inv-model">
+              <option value="">— не вибрано —</option>
+            </select>
+            <input id="inv3_qty" type="number" min="0" max="20" placeholder="К-сть" class="inv-qty" />
+          </div>
+        </div>
+
+        <div class="inverter-summary manual-summary" id="manualSummary"></div>
+        <div class="ratio-bar" id="manualRatioBar"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== STEP 6: КРІПЛЕННЯ ==================== -->
+  <div class="step" id="step6" style="display:none">
+    <div class="card">
+      <div class="step-title">Кріплення</div>
+
+      <!-- Підказка: скільки панелей підібрано -->
+      <div class="info-box" id="mountPanelHint"></div>
+
+      <div class="field" style="margin-top:12px">
+        <label>Типи кріплення та розподіл панелей</label>
+
+        <div id="mountList"></div>
+
+        <button type="button" class="btn-add-mount" id="btnAddMount">+ Додати тип кріплення</button>
+
+        <div class="mount-summary" id="mountSummary" style="display:none"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== STEP 7: ЦІНА ==================== -->
+  <div class="step" id="step7" style="display:none">
+    <div class="card">
+      <div class="step-title">Ціна</div>
+
+      <div class="field">
+        <label>Валюта</label>
+        <div class="currency-toggle">
+          <button class="currency-btn active" data-currency="USD">$ USD</button>
+          <button class="currency-btn" data-currency="EUR">€ EUR</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>ПДВ</label>
+        <div class="currency-toggle">
+          <button class="vat-btn active" data-vat="with">з ПДВ</button>
+          <button class="vat-btn" data-vat="without">без ПДВ</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label id="priceLabel">Ціна за кВт ($ з ПДВ)</label>
+        <input id="price_per_kw" type="number" min="200" max="600" step="10" placeholder="Наприклад: 380" />
+        <div class="field-hint">Цільова вартість 1 кВт потужності СЕС</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== STEP 8: ЕКОНОМІКА ==================== -->
+  <div class="step" id="step8" style="display:none">
+    <div class="card">
+      <div class="step-title">Економіка</div>
+      <div class="subtitle">Дані для розрахунку окупності в КП</div>
+
+      <div class="field">
+        <label>Поточний тариф клієнта (грн/кВт·год)</label>
+        <input id="tariff_now" type="number" min="1" max="30" step="0.1" placeholder="Наприклад: 10" />
+        <div class="field-hint">Скільки зараз платить клієнт за електроенергію</div>
+      </div>
+
+      <div class="field">
+        <label>Включити кредитування в КП?</label>
+        <div class="currency-toggle">
+          <button class="credit-btn active" data-credit="no">Без кредиту</button>
+          <button class="credit-btn" data-credit="yes">З кредитом</button>
+        </div>
+      </div>
+
+      <div id="creditFields" style="display:none">
+        <div class="field">
+          <label>Відсоткова ставка (%/рік)</label>
+          <input id="credit_rate" type="number" min="1" max="40" step="0.5" value="9" placeholder="9" />
+          <div class="field-hint">Річна ставка по кредиту (за замовчуванням 9%)</div>
+        </div>
+        <div class="field">
+          <label>Термін кредиту (місяців)</label>
+          <input id="credit_months" type="number" min="6" max="120" step="6" value="60" placeholder="60" />
+          <div class="field-hint">Зазвичай 24–84 місяці</div>
+        </div>
+      </div>
+
+      <div class="info-box" id="economyHint" style="display:none"></div>
+
+      <!-- Візуалізація СЕС -->
+      <div class="field" style="margin-top:4px">
+        <label>Візуалізація СЕС (необов'язково)</label>
+        <div class="img-upload-wrap" id="imgUploadWrap">
+          <input type="file" id="custom_image" accept="image/*" class="img-file-input" />
+          <label for="custom_image" class="img-upload-btn" id="imgUploadBtn">
+            <span class="img-upload-icon">📷</span>
+            <span id="imgUploadLabel">Додати картинку від техвідділу</span>
+          </label>
+          <div class="img-preview-wrap" id="imgPreviewWrap" style="display:none">
+            <img id="imgPreview" class="img-preview" alt="Візуалізація" />
+            <button type="button" class="img-remove-btn" id="imgRemoveBtn">✕ Видалити</button>
+          </div>
+        </div>
+        <div class="field-hint">Буде вставлена в КП замість placeholder {{custom_image}}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== STEP 9: ПІДТВЕРДЖЕННЯ ==================== -->
+  <div class="step" id="step9" style="display:none">
+    <div class="card">
+      <div class="step-title">Підтвердження</div>
+      <div class="summary-block" id="summaryBlock"></div>
+    </div>
+  </div>
+
+  <!-- НАВІГАЦІЯ -->
+  <div class="nav-wrap">
+    <button class="nav-btn back-btn" id="btnBack" style="display:none">← Назад</button>
+    <button class="nav-btn next-btn" id="btnNext">Далі →</button>
+  </div>
+
+</div>
+
+<script src="ses.js"></script>
+</body>
+</html>

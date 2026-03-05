@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <title>Rayton — Генератор КП</title>
+
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <link rel="stylesheet" href="css/telegram.css" />
+  <script src="js/app.js" defer></script>
+</head>
+
+<body>
+
+<div class="app">
+
+  <!-- Logo -->
+  <div class="logo-wrap">
+    <img src="logo.png" class="logo" alt="Rayton">
+  </div>
+
+  <!-- Yellow banner -->
+  <div class="banner">
+    Генерація первиної комерційної пропозиції<br>
+    <strong>Rayton</strong>
+  </div>
+
+  <!-- Main card -->
+  <div class="card">
+
+    <h1 class="title">Генератор КП</h1>
+
+    <div class="subtitle">
+      Тип КП
+    </div>
+
+    <div class="type-grid">
+
+      <button
+        class="type-card"
+        id="ses"
+        type="button"
+        onclick="selectType('ses')"
+      >
+        <span class="type-icon">☀️</span>
+        <span class="type-name">СЕС</span>
+      </button>
+
+      <button
+        class="type-card active"
+        id="uze"
+        type="button"
+        onclick="selectType('uze')"
+      >
+        <span class="type-icon">🔋</span>
+        <span class="type-name">УЗЕ</span>
+      </button>
+
+    </div>
+
+    <p class="hint">
+      Виберіть тип об'єкта, для якого створюється комерційна пропозиція.
+    </p>
+
+  </div>
+
+  <!-- Button -->
+  <button class="primary-btn" onclick="goNext()">
+    Продовжити
+  </button>
+
+</div>
+
+</body>
+</html>
