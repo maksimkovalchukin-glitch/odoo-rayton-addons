@@ -286,7 +286,7 @@
     {
       "parameters": {
         "method": "GET",
-        "url": "=https://docs.google.com/document/d/{{ $json.docId }}/export?format=pdf",
+        "url": "={{ 'https://docs.google.com/document/d/' + $('Code: Підготовка Docs').first().json.docId + '/export?format=pdf' }}",
         "authentication": "predefinedCredentialType",
         "nodeCredentialType": "googleOAuth2Api",
         "options": {
