@@ -23,7 +23,7 @@
         "operation": "read",
         "documentId": {
           "__rl": true,
-          "value": "ПОСТАВТЕ_ID_ТАБЛИЦІ_ТУТ",
+          "value": "1IgaI0_eE0xY7ljfNh138CA-aYIiFzGJpmu9s2hLV04g",
           "mode": "id"
         },
         "sheetName": {
@@ -55,7 +55,7 @@
         "operation": "read",
         "documentId": {
           "__rl": true,
-          "value": "ПОСТАВТЕ_ID_ТАБЛИЦІ_ТУТ",
+          "value": "1IgaI0_eE0xY7ljfNh138CA-aYIiFzGJpmu9s2hLV04g",
           "mode": "id"
         },
         "sheetName": {

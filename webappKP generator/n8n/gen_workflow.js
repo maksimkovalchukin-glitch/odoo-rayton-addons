@@ -57,7 +57,7 @@ return [{
 `.trim();
 
 // ── Налаштування (змінити після імпорту) ──────────────────────────
-const SPREADSHEET_ID = 'ПОСТАВТЕ_ID_ТАБЛИЦІ_ТУТ';
+const SPREADSHEET_ID = '1IgaI0_eE0xY7ljfNh138CA-aYIiFzGJpmu9s2hLV04g';
 const SHEETS_CRED    = 'Google Sheets account';
 const DRIVE_CRED     = 'Google Drive account';
 const OAUTH_CRED     = 'Google OAuth2 account';
