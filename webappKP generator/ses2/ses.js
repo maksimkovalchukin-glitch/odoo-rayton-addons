@@ -4,7 +4,7 @@
           4-Обладнання, 5-Інвертори, 6-Ціна, 7-Preview
 ====================================================== */
 
-const WEBHOOK_URL = "REPLACE_WITH_N8N_WEBHOOK_URL";
+const WEBHOOK_URL = "https://n8n.rayton.net/webhook/ses-kp";
 
 const tg = window.Telegram?.WebApp || null;
 if (tg) { tg.expand(); tg.ready(); }
