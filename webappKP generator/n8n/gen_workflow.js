@@ -11,13 +11,17 @@ const afterBranchCode = `
 // Об'єднання гілок: з custom image або без
 const calc = $('Code: Charts').first().json;
 
-const imageItems = $('Drive: Upload Custom Image').all();
 let customImageDriveId  = null;
 let customImageDriveUrl = null;
 
-if (imageItems.length > 0) {
-  customImageDriveId  = imageItems[0].json.id;
-  customImageDriveUrl = \`https://drive.google.com/uc?export=view&id=\${customImageDriveId}\`;
+try {
+  const imageItems = $('Drive: Upload Custom Image').all();
+  if (imageItems.length > 0) {
+    customImageDriveId  = imageItems[0].json.id;
+    customImageDriveUrl = \`https://drive.google.com/uc?export=view&id=\${customImageDriveId}\`;
+  }
+} catch (e) {
+  // Вузол не виконувався (гілка без зображення) — залишаємо null
 }
 
 return [{

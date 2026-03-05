@@ -194,7 +194,7 @@
     {
       "parameters": {
         "mode": "runOnceForAllItems",
-        "jsCode": "// Об'єднання гілок: з custom image або без\nconst calc = $('Code: Charts').first().json;\n\nconst imageItems = $('Drive: Upload Custom Image').all();\nlet customImageDriveId  = null;\nlet customImageDriveUrl = null;\n\nif (imageItems.length > 0) {\n  customImageDriveId  = imageItems[0].json.id;\n  customImageDriveUrl = `https://drive.google.com/uc?export=view&id=${customImageDriveId}`;\n}\n\nreturn [{\n  json: {\n    ...calc,\n    custom_image_drive_id:  customImageDriveId,\n    custom_image_drive_url: customImageDriveUrl,\n  }\n}];"
+        "jsCode": "// Об'єднання гілок: з custom image або без\nconst calc = $('Code: Charts').first().json;\n\nlet customImageDriveId  = null;\nlet customImageDriveUrl = null;\n\ntry {\n  const imageItems = $('Drive: Upload Custom Image').all();\n  if (imageItems.length > 0) {\n    customImageDriveId  = imageItems[0].json.id;\n    customImageDriveUrl = `https://drive.google.com/uc?export=view&id=${customImageDriveId}`;\n  }\n} catch (e) {\n  // Вузол не виконувався (гілка без зображення) — залишаємо null\n}\n\nreturn [{\n  json: {\n    ...calc,\n    custom_image_drive_id:  customImageDriveId,\n    custom_image_drive_url: customImageDriveUrl,\n  }\n}];"
       },
       "id": "n10",
       "name": "Code: Після гілки зображення",
