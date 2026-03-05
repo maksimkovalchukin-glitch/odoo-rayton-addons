@@ -37,8 +37,8 @@ const PANELS = [
   { label: "JA 625W",                       name: "JA 625W",                                        watt: 625 },
   { label: "Longi 580W",                    name: "Longi 580W",                                     watt: 580 },
   { label: "Longi 620W",                    name: "Longi 620W",                                     watt: 620 },
-  { label: "Tier-1 Trina 625TSM-NE19R",    name: "Tier-1\nTrina 625TSM-NE19R, потужністю 625W",    watt: 625 },
-  { label: "Tier-1 Trina 620TSM-NE19R",    name: "Tier-1\nTrina 620TSM-NE19R, потужністю 620W",    watt: 620 },
+  { label: "Tier-1 Trina 625TSM-NE19R",    name: "Tier-1 Trina 625TSM-NE19R, потужністю 625W",    watt: 625 },
+  { label: "Tier-1 Trina 620TSM-NE19R",    name: "Tier-1 Trina 620TSM-NE19R, потужністю 620W",    watt: 620 },
 ];
 
 // Інвертори: roof — без 115кВт, ground — повний список

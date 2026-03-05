@@ -79,7 +79,7 @@ function normName(s) {
 const refData = rawItems
   .map(item => ({
     category: String(item.json['col_1'] || '').trim(),           // A = Категорія (завжди кирилиця)
-    name:     normName(String(item.json['col_2'] || '').trim()), // B = Назва (нормалізована)
+    name:     normName(String(item.json['col_2'] || '').replace(/\n/g, ' ').trim()), // B = Назва (нормалізована, \n→пробіл)
     unit:     String(item.json['col_3'] || '').trim(),           // C = Одиниця
     price:    parseFlt(item.json['col_5']),                      // E = Ціна USD
     markup:   parseFlt(item.json['col_7']) || 1,                 // G = Коефіцієнт
