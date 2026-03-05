@@ -336,7 +336,7 @@
       "type": "n8n-nodes-base.googleDrive",
       "typeVersion": 3,
       "position": [
-        3360,
+        3840,
         300
       ],
       "credentials": {
@@ -362,7 +362,7 @@
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        3600,
+        3360,
         300
       ],
       "credentials": {
@@ -517,18 +517,18 @@
       "main": [
         [
           {
-            "node": "Drive: Зберегти PDF",
+            "node": "Telegram: Надіслати PDF",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Drive: Зберегти PDF": {
+    "Telegram: Надіслати PDF": {
       "main": [
         [
           {
-            "node": "Telegram: Надіслати PDF",
+            "node": "Drive: Зберегти PDF",
             "type": "main",
             "index": 0
           }

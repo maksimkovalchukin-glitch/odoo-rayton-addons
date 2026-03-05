@@ -230,7 +230,7 @@ const nodes = [
     },
     id: 'n15', name: 'Drive: Зберегти PDF',
     type: 'n8n-nodes-base.googleDrive', typeVersion: 3,
-    position: [3360, 300],
+    position: [3840, 300],
     credentials: { googleDriveOAuth2Api: { id: 'CRED2', name: DRIVE_CRED } }
   },
   {
@@ -246,7 +246,7 @@ const nodes = [
     },
     id: 'n16', name: 'Telegram: Надіслати PDF',
     type: 'n8n-nodes-base.telegram', typeVersion: 1.2,
-    position: [3600, 300],
+    position: [3360, 300],
     credentials: { telegramApi: { id: 'CRED4', name: TG_CRED } }
   }
 ];
@@ -268,8 +268,8 @@ const connections = {
   'Drive: Копіювати шаблон':      { main: [[{ node: 'Code: Підготовка Docs',      type: 'main', index: 0 }]] },
   'Code: Підготовка Docs':        { main: [[{ node: 'HTTP: Docs batchUpdate',      type: 'main', index: 0 }]] },
   'HTTP: Docs batchUpdate':       { main: [[{ node: 'HTTP: Експорт PDF',           type: 'main', index: 0 }]] },
-  'HTTP: Експорт PDF':            { main: [[{ node: 'Drive: Зберегти PDF',         type: 'main', index: 0 }]] },
-  'Drive: Зберегти PDF':          { main: [[{ node: 'Telegram: Надіслати PDF',     type: 'main', index: 0 }]] }
+  'HTTP: Експорт PDF':            { main: [[{ node: 'Telegram: Надіслати PDF',     type: 'main', index: 0 }]] },
+  'Telegram: Надіслати PDF':      { main: [[{ node: 'Drive: Зберегти PDF',         type: 'main', index: 0 }]] }
 };
 
 const workflow = {
