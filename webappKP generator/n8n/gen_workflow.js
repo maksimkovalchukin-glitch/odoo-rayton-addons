@@ -145,8 +145,9 @@ const nodes = [
       authentication: 'predefinedCredentialType',
       nodeCredentialType: 'googleDriveOAuth2Api',
       sendBody: true,
-      specifyBody: 'string',
-      body: '{"role":"reader","type":"anyone"}',
+      contentType: 'json',
+      specifyBody: 'json',
+      jsonBody: '{"role":"reader","type":"anyone"}',
       options: { response: { response: { neverError: true } } }
     },
     id: 'n09', name: 'HTTP: Відкрити доступ',
