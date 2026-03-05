@@ -244,6 +244,76 @@
     },
     {
       "parameters": {
+        "method": "GET",
+        "url": "={{ 'https://docs.googleapis.com/v1/documents/' + $('Drive: Копіювати шаблон').first().json.id }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDocsOAuth2Api",
+        "options": {}
+      },
+      "id": "n11a",
+      "name": "HTTP: Отримати Doc",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2640,
+        300
+      ],
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "CRED3",
+          "name": "Google OAuth2 account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// Знаходимо параграф \"Вкладка 1\" і видаляємо його через deleteContentRange\nconst content = $json.body?.content || [];\nlet startIndex = null;\nlet endIndex   = null;\n\nfor (let i = 0; i < content.length; i++) {\n  const el = content[i];\n  if (!el.paragraph || !el.paragraph.elements) continue;\n  const text = el.paragraph.elements\n    .map(e => (e.textRun?.content || '').trim().toLowerCase())\n    .join('');\n  if (text === 'вкладка 1') {\n    startIndex = el.startIndex;\n  } else if (startIndex !== null && text !== '') {\n    endIndex = el.startIndex;\n    break;\n  }\n}\n\nconst calc  = $('Code: Після гілки зображення').first().json;\nconst docId = $('Drive: Копіювати шаблон').first().json.id;\n\nconst deleteRequests = (startIndex !== null && endIndex !== null)\n  ? [{ deleteContentRange: { range: { startIndex, endIndex: endIndex - 1 } } }]\n  : [];\n\nreturn [{ json: { docId, deleteRequests, ...calc } }];"
+      },
+      "id": "n11b",
+      "name": "Code: Видалити Вкладку 1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2880,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ 'https://docs.googleapis.com/v1/documents/' + $json.docId + ':batchUpdate' }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDocsOAuth2Api",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ { requests: $json.deleteRequests } }}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "n11c",
+      "name": "HTTP: Видалити Вкладку 1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3120,
+        300
+      ],
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "CRED3",
+          "name": "Google OAuth2 account"
+        }
+      }
+    },
+    {
+      "parameters": {
         "mode": "runOnceForAllItems",
         "jsCode": "const calc  = $('Code: Після гілки зображення').first().json;\nconst docId = $('Drive: Копіювати шаблон').first().json.id;\nconst vars  = calc.template_vars;\n\nconst requests = Object.entries(vars).map(([tag, value]) => ({\n  replaceAllText: {\n    containsText: { text: tag, matchCase: true },\n    replaceText:  String(value ?? ''),\n  }\n}));\n\nreturn [{\n  json: {\n    docId,\n    requests,\n    chat_id:       calc.chat_id,\n    file_name:     calc.file_name,\n    project_name:  calc.project_name,\n    power_label:   calc.power_label,\n    total_display: calc.total_display,\n    currency_sign: calc.currency_sign,\n    driveFolderId: calc.driveFolderId,\n  }\n}];"
       },
@@ -252,7 +322,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2640,
+        3360,
         300
       ]
     },
@@ -273,7 +343,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        2880,
+        3600,
         300
       ],
       "credentials": {
@@ -303,7 +373,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        3120,
+        3840,
         300
       ],
       "credentials": {
@@ -336,8 +406,8 @@
       "type": "n8n-nodes-base.googleDrive",
       "typeVersion": 3,
       "position": [
-        3840,
-        300
+        4080,
+        460
       ],
       "credentials": {
         "googleDriveOAuth2Api": {
@@ -362,7 +432,7 @@
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        3360,
+        4080,
         300
       ],
       "credentials": {
@@ -481,6 +551,39 @@
       ]
     },
     "Drive: Копіювати шаблон": {
+      "main": [
+        [
+          {
+            "node": "HTTP: Отримати Doc",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP: Отримати Doc": {
+      "main": [
+        [
+          {
+            "node": "Code: Видалити Вкладку 1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Видалити Вкладку 1": {
+      "main": [
+        [
+          {
+            "node": "HTTP: Видалити Вкладку 1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP: Видалити Вкладку 1": {
       "main": [
         [
           {

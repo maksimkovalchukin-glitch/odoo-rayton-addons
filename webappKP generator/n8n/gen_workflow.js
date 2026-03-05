@@ -60,6 +60,36 @@ return [{
 }];
 `.trim();
 
+const removeTab1Code = `
+// Знаходимо параграф "Вкладка 1" і видаляємо його через deleteContentRange
+const content = $json.body?.content || [];
+let startIndex = null;
+let endIndex   = null;
+
+for (let i = 0; i < content.length; i++) {
+  const el = content[i];
+  if (!el.paragraph || !el.paragraph.elements) continue;
+  const text = el.paragraph.elements
+    .map(e => (e.textRun?.content || '').trim().toLowerCase())
+    .join('');
+  if (text === 'вкладка 1') {
+    startIndex = el.startIndex;
+  } else if (startIndex !== null && text !== '') {
+    endIndex = el.startIndex;
+    break;
+  }
+}
+
+const calc  = $('Code: Після гілки зображення').first().json;
+const docId = $('Drive: Копіювати шаблон').first().json.id;
+
+const deleteRequests = (startIndex !== null && endIndex !== null)
+  ? [{ deleteContentRange: { range: { startIndex, endIndex: endIndex - 1 } } }]
+  : [];
+
+return [{ json: { docId, deleteRequests, ...calc } }];
+`.trim();
+
 // ── Налаштування (змінити після імпорту) ──────────────────────────
 const SPREADSHEET_ID = '1IgaI0_eE0xY7ljfNh138CA-aYIiFzGJpmu9s2hLV04g';
 const SHEETS_CRED    = 'Google Sheets account';
@@ -181,10 +211,46 @@ const nodes = [
     credentials: { googleDriveOAuth2Api: { id: 'CRED2', name: DRIVE_CRED } }
   },
   {
+    parameters: {
+      method: 'GET',
+      url: "={{ 'https://docs.googleapis.com/v1/documents/' + $('Drive: Копіювати шаблон').first().json.id }}",
+      authentication: 'predefinedCredentialType',
+      nodeCredentialType: 'googleDocsOAuth2Api',
+      options: {}
+    },
+    id: 'n11a', name: 'HTTP: Отримати Doc',
+    type: 'n8n-nodes-base.httpRequest', typeVersion: 4.2,
+    position: [2640, 300],
+    credentials: { googleDocsOAuth2Api: { id: 'CRED3', name: OAUTH_CRED } }
+  },
+  {
+    parameters: { mode: 'runOnceForAllItems', jsCode: removeTab1Code },
+    id: 'n11b', name: 'Code: Видалити Вкладку 1',
+    type: 'n8n-nodes-base.code', typeVersion: 2,
+    position: [2880, 300]
+  },
+  {
+    parameters: {
+      method: 'POST',
+      url: "={{ 'https://docs.googleapis.com/v1/documents/' + $json.docId + ':batchUpdate' }}",
+      authentication: 'predefinedCredentialType',
+      nodeCredentialType: 'googleDocsOAuth2Api',
+      sendBody: true,
+      contentType: 'json',
+      specifyBody: 'json',
+      jsonBody: '={{ { requests: $json.deleteRequests } }}',
+      options: { response: { response: { neverError: true } } }
+    },
+    id: 'n11c', name: 'HTTP: Видалити Вкладку 1',
+    type: 'n8n-nodes-base.httpRequest', typeVersion: 4.2,
+    position: [3120, 300],
+    credentials: { googleDocsOAuth2Api: { id: 'CRED3', name: OAUTH_CRED } }
+  },
+  {
     parameters: { mode: 'runOnceForAllItems', jsCode: buildDocsCode },
     id: 'n12', name: 'Code: Підготовка Docs',
     type: 'n8n-nodes-base.code', typeVersion: 2,
-    position: [2640, 300]
+    position: [3360, 300]
   },
   {
     parameters: {
@@ -200,7 +266,7 @@ const nodes = [
     },
     id: 'n13', name: 'HTTP: Docs batchUpdate',
     type: 'n8n-nodes-base.httpRequest', typeVersion: 4.2,
-    position: [2880, 300],
+    position: [3600, 300],
     credentials: { googleDocsOAuth2Api: { id: 'CRED3', name: OAUTH_CRED } }
   },
   {
@@ -215,7 +281,7 @@ const nodes = [
     },
     id: 'n14', name: 'HTTP: Експорт PDF',
     type: 'n8n-nodes-base.httpRequest', typeVersion: 4.2,
-    position: [3120, 300],
+    position: [3840, 300],
     credentials: { googleOAuth2Api: { id: 'CRED3', name: OAUTH_CRED } }
   },
   {
@@ -230,7 +296,7 @@ const nodes = [
     },
     id: 'n15', name: 'Drive: Зберегти PDF',
     type: 'n8n-nodes-base.googleDrive', typeVersion: 3,
-    position: [3840, 300],
+    position: [4080, 460],
     credentials: { googleDriveOAuth2Api: { id: 'CRED2', name: DRIVE_CRED } }
   },
   {
@@ -246,7 +312,7 @@ const nodes = [
     },
     id: 'n16', name: 'Telegram: Надіслати PDF',
     type: 'n8n-nodes-base.telegram', typeVersion: 1.2,
-    position: [3360, 300],
+    position: [4080, 300],
     credentials: { telegramApi: { id: 'CRED4', name: TG_CRED } }
   }
 ];
@@ -265,8 +331,11 @@ const connections = {
   'Drive: Upload Custom Image':   { main: [[{ node: 'HTTP: Відкрити доступ',      type: 'main', index: 0 }]] },
   'HTTP: Відкрити доступ':        { main: [[{ node: 'Code: Після гілки зображення', type: 'main', index: 0 }]] },
   'Code: Після гілки зображення': { main: [[{ node: 'Drive: Копіювати шаблон',   type: 'main', index: 0 }]] },
-  'Drive: Копіювати шаблон':      { main: [[{ node: 'Code: Підготовка Docs',      type: 'main', index: 0 }]] },
-  'Code: Підготовка Docs':        { main: [[{ node: 'HTTP: Docs batchUpdate',      type: 'main', index: 0 }]] },
+  'Drive: Копіювати шаблон':      { main: [[{ node: 'HTTP: Отримати Doc',           type: 'main', index: 0 }]] },
+  'HTTP: Отримати Doc':           { main: [[{ node: 'Code: Видалити Вкладку 1',    type: 'main', index: 0 }]] },
+  'Code: Видалити Вкладку 1':     { main: [[{ node: 'HTTP: Видалити Вкладку 1',    type: 'main', index: 0 }]] },
+  'HTTP: Видалити Вкладку 1':     { main: [[{ node: 'Code: Підготовка Docs',        type: 'main', index: 0 }]] },
+  'Code: Підготовка Docs':        { main: [[{ node: 'HTTP: Docs batchUpdate',        type: 'main', index: 0 }]] },
   'HTTP: Docs batchUpdate':       { main: [[{ node: 'HTTP: Експорт PDF',           type: 'main', index: 0 }]] },
   'HTTP: Експорт PDF': { main: [[
     { node: 'Telegram: Надіслати PDF', type: 'main', index: 0 },
