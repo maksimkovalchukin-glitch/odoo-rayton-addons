@@ -81,23 +81,11 @@ const nodes = [
       operation: 'read',
       documentId: { __rl: true, value: SPREADSHEET_ID, mode: 'id' },
       sheetName:  { __rl: true, value: 'Довідкові дані', mode: 'name' },
-      options: { range: 'A1:I200' }
+      options: { range: 'A1:O200', firstRowIsColumnNames: false }
     },
     id: 'n02', name: 'SheetsData',
     type: 'n8n-nodes-base.googleSheets', typeVersion: 4,
-    position: [460, 180],
-    credentials: { googleSheetsOAuth2Api: { id: 'CRED1', name: SHEETS_CRED } }
-  },
-  {
-    parameters: {
-      operation: 'read',
-      documentId: { __rl: true, value: SPREADSHEET_ID, mode: 'id' },
-      sheetName:  { __rl: true, value: 'Довідкові дані', mode: 'name' },
-      options: { range: 'O1:O2', firstRowIsColumnNames: false }
-    },
-    id: 'n03', name: 'SheetsRates',
-    type: 'n8n-nodes-base.googleSheets', typeVersion: 4,
-    position: [460, 420],
+    position: [460, 300],
     credentials: { googleSheetsOAuth2Api: { id: 'CRED1', name: SHEETS_CRED } }
   },
   {
@@ -259,9 +247,8 @@ const nodes = [
 
 // ── З'єднання ─────────────────────────────────────────────────────
 const connections = {
-  'Webhook':     { main: [[{ node: 'SheetsData',       type: 'main', index: 0 }]] },
-  'SheetsData':  { main: [[{ node: 'SheetsRates',      type: 'main', index: 0 }]] },
-  'SheetsRates': { main: [[{ node: 'Code: Calculate',  type: 'main', index: 0 }]] },
+  'Webhook':    { main: [[{ node: 'SheetsData',      type: 'main', index: 0 }]] },
+  'SheetsData': { main: [[{ node: 'Code: Calculate', type: 'main', index: 0 }]] },
   'Code: Calculate': { main: [[{ node: 'Code: Charts', type: 'main', index: 0 }]] },
   'Code: Charts':    { main: [[{ node: 'IF: Є зображення', type: 'main', index: 0 }]] },
   'IF: Є зображення': { main: [

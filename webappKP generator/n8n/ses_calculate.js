@@ -38,6 +38,7 @@ const p = $('Webhook').first().json;
 // Перетворюємо рядки аркуша в масиви [A, B, C, D, E, F, G, H, I]
 // Google Sheets node повертає об'єкт з ключами = першому рядку (заголовки)
 // Тому беремо значення за позицією через Object.values()
+// Одна нода SheetsData читає A1:O200 (всі потрібні дані + курси в колонці O)
 const rawRows = $('SheetsData').all().map(item => Object.values(item.json));
 
 const parseFlt = v => {
@@ -45,23 +46,20 @@ const parseFlt = v => {
   return parseFloat(String(v).replace(/\s/g, '').replace(',', '.')) || 0;
 };
 
-// Будуємо зручний масив рядків довідника
+// Курси валют з колонки O (індекс 14): рядок 0 = EUR, рядок 1 = USD
+const rateEUR = parseFlt(rawRows[0]?.[14]) || 43.5;
+const rateUSD = parseFlt(rawRows[1]?.[14]) || 41.2;
+
+// Будуємо зручний масив рядків довідника (тільки ті що мають категорію + ціну)
 const refData = rawRows
   .map(vals => ({
     category: String(vals[0] || '').trim(),
     name:     String(vals[1] || '').trim(),
     unit:     String(vals[2] || '').trim(),
-    // vals[3] = D (qty) — ігноруємо
     price:    parseFlt(vals[4]),   // col E
-    // vals[5] = F — ігноруємо
     markup:   parseFlt(vals[6]) || 1,  // col G
   }))
   .filter(r => r.category && r.name && r.price > 0);
-
-// Курси валют (O1 = EUR, O2 = USD — в UAH)
-const ratesRaw = $('SheetsRates').all();
-const rateEUR  = parseFlt(Object.values(ratesRaw[0]?.json || {})[0]) || 43.5;
-const rateUSD  = parseFlt(Object.values(ratesRaw[1]?.json || {})[0]) || 41.2;
 
 // currencyRate: скільки EUR за 1 USD (для конвертації)
 // Внутрішні ціни в довіднику = USD.
