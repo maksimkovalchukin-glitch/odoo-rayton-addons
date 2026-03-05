@@ -61,8 +61,12 @@ return [{
 `.trim();
 
 const removeTab1Code = `
-// Знаходимо параграф "Вкладка 1" і видаляємо його через deleteContentRange
-const content = $json.body?.content || [];
+// Google Docs з вкладками: контент у tabs[0].documentTab.body.content
+// Або у body.content для старих документів
+const tab0Content = $json.tabs?.[0]?.documentTab?.body?.content || [];
+const bodyContent = $json.body?.content || [];
+const content = tab0Content.length > 0 ? tab0Content : bodyContent;
+
 let startIndex = null;
 let endIndex   = null;
 
@@ -272,7 +276,7 @@ const nodes = [
   {
     parameters: {
       method: 'GET',
-      url: "={{ 'https://docs.google.com/document/d/' + $('Code: Підготовка Docs').first().json.docId + '/export?format=pdf' }}",
+      url: "={{ 'https://docs.google.com/document/d/' + $('Code: Підготовка Docs').first().json.docId + '/export?format=pdf&tab=t.0' }}",
       authentication: 'predefinedCredentialType',
       nodeCredentialType: 'googleOAuth2Api',
       options: {

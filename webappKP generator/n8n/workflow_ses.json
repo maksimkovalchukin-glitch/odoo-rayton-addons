@@ -268,7 +268,7 @@
     {
       "parameters": {
         "mode": "runOnceForAllItems",
-        "jsCode": "// Знаходимо параграф \"Вкладка 1\" і видаляємо його через deleteContentRange\nconst content = $json.body?.content || [];\nlet startIndex = null;\nlet endIndex   = null;\n\nfor (let i = 0; i < content.length; i++) {\n  const el = content[i];\n  if (!el.paragraph || !el.paragraph.elements) continue;\n  const text = el.paragraph.elements\n    .map(e => (e.textRun?.content || '').trim().toLowerCase())\n    .join('');\n  if (text === 'вкладка 1') {\n    startIndex = el.startIndex;\n  } else if (startIndex !== null && text !== '') {\n    endIndex = el.startIndex;\n    break;\n  }\n}\n\nconst calc  = $('Code: Після гілки зображення').first().json;\nconst docId = $('Drive: Копіювати шаблон').first().json.id;\n\nconst deleteRequests = (startIndex !== null && endIndex !== null)\n  ? [{ deleteContentRange: { range: { startIndex, endIndex: endIndex - 1 } } }]\n  : [];\n\nreturn [{ json: { docId, deleteRequests, ...calc } }];"
+        "jsCode": "// Google Docs з вкладками: контент у tabs[0].documentTab.body.content\n// Або у body.content для старих документів\nconst tab0Content = $json.tabs?.[0]?.documentTab?.body?.content || [];\nconst bodyContent = $json.body?.content || [];\nconst content = tab0Content.length > 0 ? tab0Content : bodyContent;\n\nlet startIndex = null;\nlet endIndex   = null;\n\nfor (let i = 0; i < content.length; i++) {\n  const el = content[i];\n  if (!el.paragraph || !el.paragraph.elements) continue;\n  const text = el.paragraph.elements\n    .map(e => (e.textRun?.content || '').trim().toLowerCase())\n    .join('');\n  if (text === 'вкладка 1') {\n    startIndex = el.startIndex;\n  } else if (startIndex !== null && text !== '') {\n    endIndex = el.startIndex;\n    break;\n  }\n}\n\nconst calc  = $('Code: Після гілки зображення').first().json;\nconst docId = $('Drive: Копіювати шаблон').first().json.id;\n\nconst deleteRequests = (startIndex !== null && endIndex !== null)\n  ? [{ deleteContentRange: { range: { startIndex, endIndex: endIndex - 1 } } }]\n  : [];\n\nreturn [{ json: { docId, deleteRequests, ...calc } }];"
       },
       "id": "n11b",
       "name": "Code: Видалити Вкладку 1",
@@ -356,7 +356,7 @@
     {
       "parameters": {
         "method": "GET",
-        "url": "={{ 'https://docs.google.com/document/d/' + $('Code: Підготовка Docs').first().json.docId + '/export?format=pdf' }}",
+        "url": "={{ 'https://docs.google.com/document/d/' + $('Code: Підготовка Docs').first().json.docId + '/export?format=pdf&tab=t.0' }}",
         "authentication": "predefinedCredentialType",
         "nodeCredentialType": "googleOAuth2Api",
         "options": {
