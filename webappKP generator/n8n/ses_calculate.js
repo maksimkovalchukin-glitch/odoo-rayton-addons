@@ -33,7 +33,8 @@
 // 1. ВХІДНІ ДАНІ
 // ────────────────────────────────────────────────────────────────
 
-const p = $('Webhook').first().json;
+const _wh = $('Webhook').first().json;
+const p = _wh.body ?? _wh; // webhook v2 вкладає body в json.body
 
 // Перетворюємо рядки аркуша в масиви [A, B, C, D, E, F, G, H, I]
 // Google Sheets node повертає об'єкт з ключами = першому рядку (заголовки)
