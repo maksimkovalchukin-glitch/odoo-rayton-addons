@@ -259,12 +259,9 @@ const nodes = [
 
 // ── З'єднання ─────────────────────────────────────────────────────
 const connections = {
-  'Webhook': { main: [[
-    { node: 'SheetsData',  type: 'main', index: 0 },
-    { node: 'SheetsRates', type: 'main', index: 0 }
-  ]]},
-  'SheetsData':  { main: [[{ node: 'Code: Calculate', type: 'main', index: 0 }]] },
-  'SheetsRates': { main: [[{ node: 'Code: Calculate', type: 'main', index: 0 }]] },
+  'Webhook':     { main: [[{ node: 'SheetsData',       type: 'main', index: 0 }]] },
+  'SheetsData':  { main: [[{ node: 'SheetsRates',      type: 'main', index: 0 }]] },
+  'SheetsRates': { main: [[{ node: 'Code: Calculate',  type: 'main', index: 0 }]] },
   'Code: Calculate': { main: [[{ node: 'Code: Charts', type: 'main', index: 0 }]] },
   'Code: Charts':    { main: [[{ node: 'IF: Є зображення', type: 'main', index: 0 }]] },
   'IF: Є зображення': { main: [
