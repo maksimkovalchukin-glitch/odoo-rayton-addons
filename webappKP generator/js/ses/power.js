@@ -105,7 +105,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function getSelectedModulePowerKW() {
     const moduleSelect = document.getElementById("module_type");
-    const powerW = Number(moduleSelect.value);
+    const powerW = Number(moduleSelect.selectedOptions[0]?.dataset?.watt);
     if (!powerW) return 0;
     return powerW / 1000;
   }
@@ -149,7 +149,16 @@ document.addEventListener("DOMContentLoaded", () => {
       tg?.initDataUnsafe?.user?.id ||
       null;
 
+    const moduleSelect = document.getElementById("module_type");
+
     const payload = {
+
+      project_name: document.getElementById("project_name").value,
+      manager: document.getElementById("manager").value,
+      region: document.getElementById("region").value,
+
+      module_type: moduleSelect.value,
+      panel_qty: panelQty,
 
       real_dc: realDC.toFixed(2),
       real_ac: realAC.toFixed(2),
@@ -161,7 +170,16 @@ document.addEventListener("DOMContentLoaded", () => {
       inverter_3_model: inverterResult.list[2].name,
       inverter_3_qty: inverterResult.list[2].qty,
 
-      panel_qty: panelQty,
+      mount_type: document.getElementById("mount_type").value,
+      material_type: document.getElementById("material_type").value,
+      ses_type: document.getElementById("ses_type").value,
+      power_regulation: document.getElementById("power_regulation").value,
+      monitoring_device: document.getElementById("monitoring_device").value,
+
+      currency: document.getElementById("currency").value,
+      price_vat_type: document.getElementById("price_vat_type").value,
+      price_per_kw: document.getElementById("price_per_kw").value,
+
       planned_dc: plannedDC,
       calculation_mode: "power",
 

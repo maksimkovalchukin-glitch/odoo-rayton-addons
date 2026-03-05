@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <title>СЕС — Первинна КП</title>
+
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <link rel="stylesheet" href="../css/telegram.css" />
+
+  <!-- Global logic -->
+  <script src="../js/app.js" defer></script>
+
+  <!-- Page specific logic -->
+  <script src="../js/ses/index.js" defer></script>
+</head>
+
+<body>
+
+<div class="app">
+
+  <!-- Header -->
+  <div class="page-header">
+    <span class="page-icon">☀️</span>
+    <h1 class="page-title">СЕС · Первинна КП</h1>
+  </div>
+
+  <!-- Router card -->
+  <div class="card">
+
+    <div class="title">
+      Оберіть параметр формування КП
+    </div>
+
+    <div class="subtitle">
+      За яким критерієм сформувати первинну комерційну пропозицію?
+    </div>
+
+    <div class="type-grid">
+
+      <div class="type-card" data-target="consumption.html" role="button">
+        <div class="type-icon">📊</div>
+        <div class="type-name">За споживанням клієнта</div>
+      </div>
+
+      <div class="type-card" data-target="power.html" role="button">
+        <div class="type-icon">⚡</div>
+        <div class="type-name">Планова потужність СЕС</div>
+      </div>
+
+      <div class="type-card" data-target="roof.html" role="button">
+        <div class="type-icon">🏠</div>
+        <div class="type-name">За площею М²</div>
+      </div>
+
+      <!-- 🔥 Новий режим -->
+      <div class="type-card" data-target="manual.html" role="button">
+        <div class="type-icon">✍️</div>
+        <div class="type-name">Внести дані вручну</div>
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+</body>
+</html>

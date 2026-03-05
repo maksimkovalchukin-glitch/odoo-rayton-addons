@@ -70,7 +70,7 @@ document.addEventListener("DOMContentLoaded", () => {
   ====================================================== */
 
   function calculateDC() {
-    const panelPowerW = Number(panelSelect.value);
+    const panelPowerW = Number(panelSelect.selectedOptions[0]?.dataset?.watt);
     const panelQty = Number(panelInput.value);
     if (!panelPowerW || !panelQty) return 0;
     return (panelPowerW * panelQty) / 1000;
@@ -197,7 +197,7 @@ document.addEventListener("DOMContentLoaded", () => {
       price_vat_type: document.getElementById("price_vat_type").value,
       price_per_kw: priceInput?.value || "",
 
-      module_type: panelSelect.selectedOptions[0]?.text || "",
+      module_type: panelSelect.value,
       panel_qty: panelInput.value,
 
       real_dc: realDCInput.value,

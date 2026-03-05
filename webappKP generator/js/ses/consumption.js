@@ -69,7 +69,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function getSelectedModulePowerKW() {
     const moduleSelect = document.getElementById("module_type");
-    const powerW = Number(moduleSelect.value);
+    const powerW = Number(moduleSelect.selectedOptions[0]?.dataset?.watt);
     if (!powerW) return 0;
     return powerW / 1000;
   }
@@ -226,8 +226,7 @@ document.addEventListener("DOMContentLoaded", () => {
       manager: document.getElementById("manager").value,
       region: document.getElementById("region").value,
 
-      module_type: document.getElementById("module_type")
-        .selectedOptions[0]?.text || "",
+      module_type: document.getElementById("module_type").value,
       panel_qty: panelQty,
 
       real_dc: realDC.toFixed(2),

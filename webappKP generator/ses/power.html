@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <title>СЕС — Планова потужність</title>
+
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <link rel="stylesheet" href="../css/telegram.css" />
+
+  <!-- Global logic -->
+  <script src="../js/app.js" defer></script>
+
+  <!-- Page specific logic -->
+  <script src="../js/ses/power.js" defer></script>
+</head>
+
+<body data-page="ses-power">
+
+<div class="app">
+
+  <div class="page-header">
+    <span class="page-icon">⚡</span>
+    <h1 class="page-title">СЕС · Планова потужність</h1>
+  </div>
+
+  <div class="card form-card">
+
+    <!-- Назва -->
+    <div class="field">
+      <label for="project_name">Назва проєкту</label>
+      <input id="project_name" type="text" placeholder="ТОВ САНТЕКО ГРУП" />
+    </div>
+
+    <!-- Менеджер -->
+    <div class="field">
+      <label for="manager">Менеджер</label>
+      <select id="manager">
+        <option value="">Оберіть менеджера</option>
+        <option>Петров Дмитро</option>
+        <option>Тубіш Микола</option>
+        <option>Сидоров Максим</option>
+        <option>Достовалов Олександр</option>
+        <option>Стоцький Віталій</option>
+        <option>Павлов Дмитро</option>
+        <option>Лисенко Юрій</option>
+      </select>
+    </div>
+
+    <!-- Регіон -->
+    <div class="field">
+      <label for="region">Регіон</label>
+      <select id="region">
+        <option value="">Оберіть регіон</option>
+        <option>Вінницька область</option>
+        <option>Волинська область</option>
+        <option>Дніпропетровська область</option>
+        <option>Житомирська область</option>
+        <option>Закарпатська область</option>
+        <option>м. Київ</option>
+        <option>Київська область</option>
+        <option>Кіровоградська область</option>
+        <option>Львівська область</option>
+        <option>Одеська область</option>
+        <option>Полтавська область</option>
+        <option>Івано-Франківська область</option>
+        <option>Рівненська область</option>
+        <option>Тернопільська область</option>
+        <option>Хмельницька область</option>
+        <option>Черкаська область</option>
+        <option>Чернівецька область</option>
+        <option>Чернігівська область</option>
+        <option>Запорізька область</option>
+        <option>Миколаївська область</option>
+        <option>Сумська область</option>
+        <option>Харківська область</option>
+        <option>Херсонська область</option>
+      </select>
+    </div>
+
+    <!-- Фотомодулі -->
+<div class="field">
+  <label for="module_type">Тип фотомодулів</label>
+  <select id="module_type">
+    <option value="">Оберіть панель</option>
+        <option value="Фотоелектричні модулі Тrina 575W" data-watt="575">Тrina 575W</option>
+        <option value="Фотоелектричні модулі Тrina 580W" data-watt="580">Тrina 580W</option>
+        <option value="Фотоелектричні модулі Тrina 610W" data-watt="610">Тrina 610W</option>
+        <option value="Фотоелектричні модулі Тrina 710W" data-watt="710">Тrina 710W</option>
+        <option value="Фотоелектричні модулі JA 625W" data-watt="625">JA 625W</option>
+        <option value="Фотоелектричні модулі Longi 580W" data-watt="580">Longi 580W</option>
+        <option value="Фотоелектричні модулі Longi 610W" data-watt="610">Longi 610W</option>
+        <option value="Фотоелектричні модулі Trina 625W" data-watt="625">Trina 625W</option>
+        <option value="Фотоелектричні модулі Trina 620W" data-watt="620" selected>Trina 620W</option>
+      </select>
+</div>
+
+
+    <!-- Регулювання -->
+    <div class="field">
+      <label for="power_regulation">Система регулювання потужності</label>
+      <select id="power_regulation">
+        <option>Лічильник + Трансформатори струму (3шт)</option>
+      </select>
+    </div>
+
+    <!-- Моніторинг -->
+    <div class="field">
+      <label for="monitoring_device">Пристрій моніторингу</label>
+      <select id="monitoring_device">
+        <option selected>Huawei Smart Dongle</option>
+      </select>
+    </div>
+
+    <!-- Кріплення -->
+    <div class="field">
+      <label for="mount_type">Тип кріплення</label>
+      <select id="mount_type">
+        <option>блочки</option>
+        <option>сітка</option>
+        <option>баластна сітка</option>
+        <option>баластна сітка з противагою</option>
+        <option>гвинт-шуруп</option>
+        <option>схід-захід</option>
+        <option>схід-захід (без баласту) деш.</option>
+        <option>схід-захід (без баласту) дор.</option>
+        <option>з підйомом</option>
+        <option>з підйомом без баласту</option>
+        <option>наземка</option>
+        <option>наземка схід-захід</option>
+      </select>
+    </div>
+
+    <!-- Матеріали -->
+    <div class="field">
+      <label for="material_type">Тип матеріалів</label>
+      <select id="material_type">
+        <option>DC та AC</option>
+        <option>DC</option>
+      </select>
+    </div>
+
+    <!-- Тип СЕС -->
+    <div class="field">
+      <label for="ses_type">Тип СЕС</label>
+      <select id="ses_type">
+        <option selected>Дахова</option>
+        <option>Наземна</option>
+      </select>
+    </div>
+
+      <!-- Валюта -->
+    <div class="field">
+      <label for="currency">Валюта</label>
+      <select id="currency">
+        <option>USD</option>
+        <option>EUR</option>
+      </select>
+    </div>
+
+    <!-- ПДВ -->
+    <div class="field">
+      <label for="price_vat_type">Вартість</label>
+      <select id="price_vat_type">
+        <option selected>з ПДВ</option>
+      </select>
+    </div>
+
+    <!-- Ціна за кВт -->
+    <div class="field">
+      <label for="price_per_kw">Вартість за кВт потужності</label>
+      <input id="price_per_kw"
+             type="number"
+             min="300"
+             max="450"
+             placeholder="300–450" />
+    </div>
+
+    <!-- Планова потужність -->
+    <div class="field">
+      <label for="planned_power">
+        Планова потужність СЕС (кВт)
+      </label>
+      <input id="planned_power"
+             type="number"
+             min="1"
+             placeholder="Наприклад: 500" />
+    </div>
+
+  </div>
+
+  <button class="primary-btn" id="submitBtn">
+    Підготувати КП
+  </button>
+
+</div>
+
+</body>
+</html>
