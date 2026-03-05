@@ -612,14 +612,29 @@ const powerStr   = `${dcKW.toFixed(0)} кВт`;
 const powerLabel = `${dcKW.toFixed(0)} кВт DC`;
 const managerName = p.manager || '';
 
+const MANAGERS = {
+  'Петров Дмитро':        { phone: '+38 (063) 847-49-83', email: 'd.petrov@rayton.com.ua' },
+  'Тубіш Микола':         { phone: '+38 (067) 197-57-23', email: 'mt@rayton.com.ua' },
+  'Сидоров Максим':       { phone: '+38 (063) 847-49-76', email: 'ms@rayton.com.ua' },
+  'Достовалов Олександр': { phone: '+38 (063) 847-49-77', email: 'od@rayton.com.ua' },
+  'Стоцький Віталій':     { phone: '+38 (067) 349-79-33', email: 'vs@rayton.com.ua' },
+  'Павлов Дмитро':        { phone: '+38 (063) 847-49-76', email: 'dp@rayton.com.ua' },
+  'Лисенко Юрій':         { phone: '+38 (063) 847-49-82', email: 'yl@rayton.com.ua' },
+};
+const mgr = MANAGERS[managerName] || { phone: '', email: '' };
+
 const templateVars = {
   '{{project_title}}':   `Проєкт: "${p.project_name}" ${powerStr}`,
   '{{today_date}}':      today,
   '{{currency}}':        currSign,
   '{{power}}':           powerStr,
   '{{manager_name}}':    managerName,
-  '{{manager_phone}}':   '',
-  '{{manager_email}}':   '',
+  '{{manager_phone}}':   mgr.phone,
+  '{{manager_email}}':   mgr.email,
+  '{{link_site_1}}':     'rayton.com.ua',
+  '{{link_site_2}}':     'rayton.com.ua',
+  '{{link_youtube}}':    'RaytonSun',
+  '{{link_email}}':      'sales@rayton.com.ua',
   '{{project}}':         p.project_name || '',
   '{{project_address}}': '',
   '{{gps_coords}}':      '',
