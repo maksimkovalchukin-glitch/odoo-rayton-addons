@@ -268,8 +268,10 @@ const connections = {
   'Drive: Копіювати шаблон':      { main: [[{ node: 'Code: Підготовка Docs',      type: 'main', index: 0 }]] },
   'Code: Підготовка Docs':        { main: [[{ node: 'HTTP: Docs batchUpdate',      type: 'main', index: 0 }]] },
   'HTTP: Docs batchUpdate':       { main: [[{ node: 'HTTP: Експорт PDF',           type: 'main', index: 0 }]] },
-  'HTTP: Експорт PDF':            { main: [[{ node: 'Telegram: Надіслати PDF',     type: 'main', index: 0 }]] },
-  'Telegram: Надіслати PDF':      { main: [[{ node: 'Drive: Зберегти PDF',         type: 'main', index: 0 }]] }
+  'HTTP: Експорт PDF': { main: [[
+    { node: 'Telegram: Надіслати PDF', type: 'main', index: 0 },
+    { node: 'Drive: Зберегти PDF',     type: 'main', index: 0 }
+  ]] }
 };
 
 const workflow = {

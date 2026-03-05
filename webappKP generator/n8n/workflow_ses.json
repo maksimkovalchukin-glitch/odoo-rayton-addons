@@ -520,13 +520,7 @@
             "node": "Telegram: Надіслати PDF",
             "type": "main",
             "index": 0
-          }
-        ]
-      ]
-    },
-    "Telegram: Надіслати PDF": {
-      "main": [
-        [
+          },
           {
             "node": "Drive: Зберегти PDF",
             "type": "main",
