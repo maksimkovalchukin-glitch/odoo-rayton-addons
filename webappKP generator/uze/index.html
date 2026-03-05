@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <title>УЗЕ — Первинна КП</title>
+
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <link rel="stylesheet" href="../css/telegram.css" />
+  <script src="../js/app.js" defer></script>
+</head>
+
+<body>
+
+<div class="app">
+
+  <!-- Header -->
+  <div class="page-header">
+    <span class="page-icon">🔋</span>
+    <h1 class="page-title">УЗЕ · Первинна КП</h1>
+  </div>
+
+  <!-- Form card -->
+  <div class="card form-card">
+
+    <!-- Назва проєкту -->
+    <div class="field">
+      <label for="project_name">Назва проєкту</label>
+      <input id="project_name" type="text" placeholder="ТОВ САНТЕКО ГРУП" />
+    </div>
+
+    <!-- Менеджер -->
+    <div class="field">
+      <label for="manager">Менеджер</label>
+      <select id="manager">
+        <option value="">Оберіть менеджера</option>
+        <option>Петров Дмитро</option>
+        <option>Тубіш Микола</option>
+        <option>Сидоров Максим</option>
+        <option>Достовалов Олександр</option>
+        <option>Стоцький Віталій</option>
+        <option>Павлов Дмитро</option>
+        <option>Лисенко Юрій</option>
+      </select>
+    </div>
+
+    <!-- Регіон -->
+    <div class="field">
+      <label for="region">Регіон</label>
+      <select id="region">
+        <option value="">Оберіть регіон</option>
+        <option>Вінницька область</option>
+        <option>Волинська область</option>
+        <option>Дніпропетровська область</option>
+        <option>Житомирська область</option>
+        <option>Закарпатська область</option>
+        <option>м. Київ</option>
+        <option>Київська область</option>
+        <option>Кіровоградська область</option>
+        <option>Львівська область</option>
+        <option>Одеська область</option>
+        <option>Полтавська область</option>
+        <option>Івано-Франківська область</option>
+        <option>Рівненська область</option>
+        <option>Тернопільська область</option>
+        <option>Хмельницька область</option>
+        <option>Черкаська область</option>
+        <option>Чернівецька область</option>
+        <option>Чернігівська область</option>
+        <option>Запорізька область</option>
+        <option>Миколаївська область</option>
+        <option>Сумська область</option>
+        <option>Харківська область</option>
+        <option>Херсонська область</option>
+      </select>
+    </div>
+
+    <!-- Модель УЗЕ -->
+    <div class="field">
+      <label for="uze_model">Модель УЗЕ</label>
+      <select id="uze_model">
+        <option>RESS-100-215 Режим off-grid (авт. шовний) з контролером</option>
+        <option>RESS-100-215 Режим off-grid (ручний) без контролера</option>
+        <option>RESS-125-241 (з контролером)</option>
+        <option>RESS-125-241 (без контролера)</option>
+        <option>RESS-1125-2170 Режим off-grid (шовний)</option>
+        <option>RESS-1125-2170 Режим off-grid (безшовний)</option>
+        <option>RESS-100-233L</option>
+        <option>RESS-80-241</option>
+        <option>RESS-2500-5015</option>
+        <option>RESS-1000-4180</option>
+        <option>RESS-1250-4180</option>
+        <option>RESS-1500-4180</option>
+        <option>RESS-1000-5015</option>
+        <option>RESS-1250-5015</option>
+        <option>RESS-1500-5015</option>
+        <option>RESS-1725-3344</option>
+      </select>
+    </div>
+
+    <!-- Кількість УЗЕ -->
+    <div class="field">
+      <label for="uze_qty">Кількість УЗЕ</label>
+      <select id="uze_qty">
+        <option value="1">1</option>
+        <option value="2">2</option>
+        <option value="3">3</option>
+        <option value="4">4</option>
+        <option value="5">5</option>
+        <option value="6">6</option>
+        <option value="7">7</option>
+        <option value="8">8</option>
+        <option value="9">9</option>
+        <option value="10">10</option>
+<option value="11">11</option>
+<option value="12">12</option>
+<option value="13">13</option>
+<option value="14">14</option>
+<option value="15">15</option>
+<option value="16">16</option>
+<option value="17">17</option>
+<option value="18">18</option>
+<option value="19">19</option>
+<option value="20">20</option>
+<option value="21">21</option>
+<option value="22">22</option>
+<option value="23">23</option>
+<option value="24">24</option>
+<option value="25">25</option>
+<option value="26">26</option>
+<option value="27">27</option>
+<option value="28">28</option>
+<option value="29">29</option>
+<option value="30">30</option>
+<option value="31">31</option>
+<option value="32">32</option>
+<option value="33">33</option>
+<option value="34">34</option>
+<option value="35">35</option>
+<option value="36">36</option>
+<option value="37">37</option>
+<option value="38">38</option>
+<option value="39">39</option>
+<option value="40">40</option>
+<option value="41">41</option>
+<option value="42">42</option>
+<option value="43">43</option>
+<option value="44">44</option>
+<option value="45">45</option>
+<option value="46">46</option>
+<option value="47">47</option>
+<option value="48">48</option>
+<option value="49">49</option>
+<option value="50">50</option>
+      </select>
+      <div id="qtyError" class="qty-error"></div>
+    </div>
+
+ <!-- Вартість УЗЕ -->
+<div class="field">
+  <label for="uze_vat">Вартість УЗЕ</label>
+  <select id="uze_vat">
+    <option value="без ПДВ" selected>без ПДВ</option>
+    <option value="з ПДВ">з ПДВ</option>
+  </select>
+</div>
+
+<!-- Обладнання та матеріали -->
+<div class="field">
+  <label for="equipment_vat">Вартість обладнання та матеріалів</label>
+  <select id="equipment_vat">
+    <option value="з ПДВ" selected>з ПДВ</option>
+    <option value="без ПДВ">без ПДВ</option>
+  </select>
+</div>
+
+
+    <!-- Валюта -->
+    <div class="field">
+      <label for="currency">Валюта</label>
+      <select id="currency">
+        <option>USD</option>
+        <option>EUR</option>
+      </select>
+    </div>
+
+   <!-- Тип використання -->
+<div class="field">
+  <label for="usage_type">Тип використання</label>
+  <select id="usage_type">
+    <option value="На власне споживання" selected>
+      На власне споживання
+    </option>
+    <option value="Арбітраж на підприємстві">
+      Арбітраж на підприємстві
+    </option>
+  </select>
+</div>
+
+
+    <!-- Термін доставки -->
+    <div class="field">
+      <label for="delivery_term">Термін доставки</label>
+      <select id="delivery_term">
+        <option>1 місяць</option>
+        <option>2 місяці</option>
+        <option>3 місяці</option>
+        <option>3–4 місяці</option>
+        <option>3,5–4 місяці</option>
+        <option>4–4,5 місяця</option>
+        <option>4–5 місяців</option>
+        <option>5 місяців</option>
+        <option>4,5–6 місяців</option>
+      </select>
+    </div>
+
+    <!-- Умови оплати -->
+    <div class="field">
+      <label for="payment_terms">Умови оплати</label>
+      <select id="payment_terms">
+        <option>100% передплата</option>
+        <option>30% аванс, 70% перед відвантаженням з заводу</option>
+      </select>
+    </div>
+
+    <!-- Умови поставки -->
+    <div class="field">
+      <label for="delivery_terms">Умови поставки</label>
+      <select id="delivery_terms">
+        <option>DAP. Доставка до об’єкту Замовника без послуг по розвантаженню</option>
+      </select>
+    </div>
+
+  </div>
+
+  <button class="primary-btn" id="submitBtn">
+    Підготувати КП
+  </button>
+
+</div>
+
+</body>
+</html>

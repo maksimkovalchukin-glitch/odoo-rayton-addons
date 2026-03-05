@@ -28,7 +28,7 @@ function selectType(type) {
 
 function goNext() {
   if (selectedType === "ses") {
-    window.location.href = "ses/index.html";
+    window.location.href = "ses2/index.html";
   } else {
     window.location.href = "uze/index.html";
   }
