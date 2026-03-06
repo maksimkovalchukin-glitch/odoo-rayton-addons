@@ -1,0 +1,213 @@
+{
+  "name": "SES — Налаштування (GET + POST)",
+  "nodes": [
+
+    {
+      "id": "s01",
+      "name": "Webhook GET Settings",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "ses-settings",
+        "responseMode": "responseNode",
+        "options": {}
+      }
+    },
+
+    {
+      "id": "s02",
+      "name": "Read Settings Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [460, 300],
+      "parameters": {
+        "operation": "read",
+        "documentId": {
+          "__rl": true,
+          "value": "1IgaI0_eE0xY7ljfNh138CA-aYIiFzGJpmu9s2hLV04g",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Налаштування",
+          "mode": "name"
+        },
+        "options": {
+          "firstRowIsColumnNames": true
+        }
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "CRED1",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+
+    {
+      "id": "s03",
+      "name": "Code: Format Settings",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [680, 300],
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst settings = {};\nitems.forEach(item => {\n  const key = item.json.key || '';\n  const val = item.json.value || '';\n  if (key) settings[key.trim()] = String(val).trim();\n});\nreturn [{ json: { settings } }];"
+      }
+    },
+
+    {
+      "id": "s04",
+      "name": "Respond GET Settings",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [900, 300],
+      "parameters": {
+        "respondWith": "json",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              { "name": "Access-Control-Allow-Origin", "value": "*" },
+              { "name": "Access-Control-Allow-Methods", "value": "GET, POST, OPTIONS" },
+              { "name": "Access-Control-Allow-Headers", "value": "Content-Type" }
+            ]
+          }
+        }
+      }
+    },
+
+    {
+      "id": "s05",
+      "name": "Webhook POST Settings",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 600],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ses-settings",
+        "responseMode": "responseNode",
+        "options": {}
+      }
+    },
+
+    {
+      "id": "s06",
+      "name": "Code: Prepare Settings Rows",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 600],
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nconst settings = input.body?.settings || input.settings || {};\n\nconst values = Object.entries(settings).map(([k, v]) => [k, String(v)]);\n\nconst SHEET_ID = '1IgaI0_eE0xY7ljfNh138CA-aYIiFzGJpmu9s2hLV04g';\nconst SHEET_ENC = encodeURIComponent('Налаштування');\n\nconst clearUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${SHEET_ENC}!A2:B200:clear`;\nconst writeUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${SHEET_ENC}!A2:B?valueInputOption=RAW`;\nconst writeBody = JSON.stringify({\n  range: 'Налаштування!A2:B',\n  majorDimension: 'ROWS',\n  values: values.length ? values : [['', '']]\n});\n\nreturn [{ json: { settings, clearUrl, writeUrl, writeBody } }];"
+      }
+    },
+
+    {
+      "id": "s07",
+      "name": "HTTP: Clear Settings Range",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [680, 600],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.clearUrl }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "string",
+        "body": "{}",
+        "options": {
+          "headers": {
+            "entries": [
+              { "name": "Content-Type", "value": "application/json" }
+            ]
+          }
+        }
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "CRED1",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+
+    {
+      "id": "s08",
+      "name": "HTTP: Write Settings Rows",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [900, 600],
+      "parameters": {
+        "method": "PUT",
+        "url": "={{ $('Code: Prepare Settings Rows').first().json.writeUrl }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "string",
+        "body": "={{ $('Code: Prepare Settings Rows').first().json.writeBody }}",
+        "options": {
+          "headers": {
+            "entries": [
+              { "name": "Content-Type", "value": "application/json" }
+            ]
+          }
+        }
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "CRED1",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+
+    {
+      "id": "s09",
+      "name": "Respond POST Settings",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1120, 600],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\"ok\":true}",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              { "name": "Access-Control-Allow-Origin", "value": "*" }
+            ]
+          }
+        }
+      }
+    }
+
+  ],
+
+  "connections": {
+    "Webhook GET Settings": {
+      "main": [[{ "node": "Read Settings Sheet", "type": "main", "index": 0 }]]
+    },
+    "Read Settings Sheet": {
+      "main": [[{ "node": "Code: Format Settings", "type": "main", "index": 0 }]]
+    },
+    "Code: Format Settings": {
+      "main": [[{ "node": "Respond GET Settings", "type": "main", "index": 0 }]]
+    },
+    "Webhook POST Settings": {
+      "main": [[{ "node": "Code: Prepare Settings Rows", "type": "main", "index": 0 }]]
+    },
+    "Code: Prepare Settings Rows": {
+      "main": [[{ "node": "HTTP: Clear Settings Range", "type": "main", "index": 0 }]]
+    },
+    "HTTP: Clear Settings Range": {
+      "main": [[{ "node": "HTTP: Write Settings Rows", "type": "main", "index": 0 }]]
+    },
+    "HTTP: Write Settings Rows": {
+      "main": [[{ "node": "Respond POST Settings", "type": "main", "index": 0 }]]
+    }
+  },
+
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

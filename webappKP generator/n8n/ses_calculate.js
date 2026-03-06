@@ -653,16 +653,11 @@ const powerStr   = `${dcKW.toFixed(0)} кВт`;
 const powerLabel = `${dcKW.toFixed(0)} кВт DC`;
 const managerName = p.manager || '';
 
-const MANAGERS = {
-  'Петров Дмитро':        { phone: '+38 (063) 847-49-83', email: 'd.petrov@rayton.com.ua' },
-  'Тубіш Микола':         { phone: '+38 (067) 197-57-23', email: 'mt@rayton.com.ua' },
-  'Сидоров Максим':       { phone: '+38 (063) 847-49-76', email: 'ms@rayton.com.ua' },
-  'Достовалов Олександр': { phone: '+38 (063) 847-49-77', email: 'od@rayton.com.ua' },
-  'Стоцький Віталій':     { phone: '+38 (067) 349-79-33', email: 'vs@rayton.com.ua' },
-  'Павлов Дмитро':        { phone: '+38 (063) 847-49-76', email: 'dp@rayton.com.ua' },
-  'Лисенко Юрій':         { phone: '+38 (063) 847-49-82', email: 'yl@rayton.com.ua' },
+// Телефон/email менеджера передаються з webapp (window.CURRENT_MANAGER)
+const mgr = {
+  phone: p.manager_phone || '',
+  email: p.manager_email || '',
 };
-const mgr = MANAGERS[managerName] || { phone: '', email: '' };
 
 const templateVars = {
   '{{project_title}}':   `Проєкт: "${p.project_name}" ${powerStr}`,
@@ -695,15 +690,27 @@ const templateVars = {
 };
 
 // ────────────────────────────────────────────────────────────────
-// 12. ВИБІР ШАБЛОНУ
+// 12. ВИБІР ШАБЛОНУ (з "Налаштування" аркуша або fallback)
 // ────────────────────────────────────────────────────────────────
 
-// Google Doc template IDs — скопіюйте з оригінального скрипту
-const TEMPLATE_NO_CREDIT_ID = '1Ytn9wssFM-Eg_Fy_CXoZ2CKfd-4uamP39tkhrhf5JMs';
-const TEMPLATE_NO_CREDIT_NO_IMG_ID = '1LGbc5siAxP6zg4B87KpInSzHGDK0hYy8bbNDvrPNcp0';
+// Читаємо налаштування з аркуша "Налаштування" (через вузол Settings)
+// Якщо вузол не підключений — використовуємо дефолтні значення
+const settingsMap = {};
+try {
+  $('Settings').all().forEach(item => {
+    const key = item.json.key || item.json.col_1 || '';
+    const val = item.json.value || item.json.col_2 || '';
+    if (key) settingsMap[key.trim()] = String(val).trim();
+  });
+} catch (e) {
+  // Settings node not connected — use defaults
+}
 
-const TEMPLATE_WITH_CREDIT_ID        = '15cW_pHFAmXfHgZ6w2Tv_NZYRDTQnE0eV4l6nnbdsfc4';
-const TEMPLATE_WITH_CREDIT_NO_IMG_ID = '1bbW_s6qWlfrjKlmuhheiFCDRusPvbRZi7wz3E0B1DkA';
+const TEMPLATE_NO_CREDIT_ID          = settingsMap['ses_template_no_credit']          || '1Ytn9wssFM-Eg_Fy_CXoZ2CKfd-4uamP39tkhrhf5JMs';
+const TEMPLATE_NO_CREDIT_NO_IMG_ID   = settingsMap['ses_template_no_credit_no_img']   || '1LGbc5siAxP6zg4B87KpInSzHGDK0hYy8bbNDvrPNcp0';
+const TEMPLATE_WITH_CREDIT_ID        = settingsMap['ses_template_with_credit']        || '15cW_pHFAmXfHgZ6w2Tv_NZYRDTQnE0eV4l6nnbdsfc4';
+const TEMPLATE_WITH_CREDIT_NO_IMG_ID = settingsMap['ses_template_with_credit_no_img'] || '1bbW_s6qWlfrjKlmuhheiFCDRusPvbRZi7wz3E0B1DkA';
+const DRIVE_PARENT_FOLDER_ID         = settingsMap['ses_drive_folder']                || '1QSNGUZ9e7CAyeZNMJ3EpEUuyXTaSfTky';
 
 // Чи є кастомне зображення від техвідділу
 const hasCustomImage = !!(p.custom_image_base64);
@@ -714,9 +721,6 @@ const selectedTemplateId =
   creditEnabled && !hasCustomImage ? TEMPLATE_WITH_CREDIT_NO_IMG_ID :
   !creditEnabled && hasCustomImage ? TEMPLATE_NO_CREDIT_ID :
                                      TEMPLATE_NO_CREDIT_NO_IMG_ID;
-
-// Папка для збереження PDF
-const DRIVE_PARENT_FOLDER_ID = '1QSNGUZ9e7CAyeZNMJ3EpEUuyXTaSfTky';
 
 // ────────────────────────────────────────────────────────────────
 // 12. ВИХІД

@@ -238,6 +238,9 @@ document.addEventListener("DOMContentLoaded", () => {
       module_type: document.getElementById("module_type").value,
       panel_qty: panelQty,
 
+      manager_phone: window.CURRENT_MANAGER?.phone || "",
+      manager_email: window.CURRENT_MANAGER?.email || "",
+
       real_dc: realDC.toFixed(2),
       real_ac: realAC.toFixed(2),
 
@@ -283,6 +286,20 @@ document.addEventListener("DOMContentLoaded", () => {
       submitBtn.disabled = false;
     }
 
+  });
+
+
+
+  // Авто-вибір менеджера в dropdown коли auth перевірив доступ
+  window.addEventListener('authReady', (e) => {
+    const managerSelect = document.getElementById('manager');
+    if (\!managerSelect || \!e.detail?.name) return;
+    Array.from(managerSelect.options).forEach(opt => {
+      if (opt.value === e.detail.name || opt.text === e.detail.name) {
+        managerSelect.value = opt.value;
+        validateForm();
+      }
+    });
   });
 
 });

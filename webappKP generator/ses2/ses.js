@@ -232,17 +232,9 @@ function updateMountSummary() {
 function getTotalPanels() {
   const watt = getPanelWatt();
   if (!watt) return 0;
-  // Якщо вже є підібрані інвертори — беремо точну DC від них
-  const inv = getSelectedInverters();
-  const ac  = inv.reduce((s, i) => s + i.power * i.qty, 0);
-  if (ac > 0) {
-    return Math.ceil((ac * CONFIG.dcAcRatio) / (watt / 1000));
-  }
-  // Інакше — орієнтовно від вхідних даних
   const dc = getTargetDC();
   if (!dc) return 0;
-  const realDC = Math.max(dc / CONFIG.dcAcRatio, CONFIG.minAC) * CONFIG.dcAcRatio;
-  return Math.ceil(realDC / (watt / 1000));
+  return Math.ceil(dc / (watt / 1000));
 }
 
 function fillInverterSelects() {
@@ -550,7 +542,7 @@ function selectBestInverters(targetAC) {
 function onEnterMountStep() {
   const inv = getSelectedInverters();
   const ac  = inv.reduce((s, i) => s + i.power * i.qty, 0);
-  const dc  = ac * CONFIG.dcAcRatio;
+  const dc  = getTargetDC(); // DC від панелей
   const watt = getPanelWatt();
   const panelQty = watt ? Math.ceil(dc / (watt / 1000)) : 0;
 
@@ -602,15 +594,14 @@ function renderAutoSuggestion(targetDC) {
     </div>
   `).join("");
 
-  // Розрахунок
+  // Розрахунок (DC — від панелей, а не від інверторів)
   const realAC = result.totalAC;
-  const realDC = realAC * CONFIG.dcAcRatio;
   const panelWatt = getPanelWatt();
-  const panelQty  = panelWatt ? Math.ceil(realDC / (panelWatt / 1000)) : "?";
-  const ratio = realDC / realAC;
+  const panelQty  = panelWatt ? Math.ceil(targetDC / (panelWatt / 1000)) : "?";
+  const ratio = targetDC / realAC;
 
   summaryEl.innerHTML = `
-    <div class="summary-row"><span>DC потужність</span><strong>${realDC.toFixed(1)} кВт</strong></div>
+    <div class="summary-row"><span>DC потужність</span><strong>${targetDC.toFixed(1)} кВт</strong></div>
     <div class="summary-row"><span>AC потужність</span><strong>${realAC.toFixed(0)} кВт</strong></div>
     <div class="summary-row"><span>Кількість панелей</span><strong>${panelQty} шт</strong></div>
   `;
@@ -843,7 +834,7 @@ async function submitKP() {
 
   const inv = getSelectedInverters();
   const ac  = inv.reduce((s, i) => s + i.power * i.qty, 0);
-  const dc  = ac * CONFIG.dcAcRatio;
+  const dc  = getTargetDC(); // DC від панелей, не від інверторів
   const panelWatt = getPanelWatt();
   const panelQty  = panelWatt ? Math.ceil(dc / (panelWatt / 1000)) : 0;
 

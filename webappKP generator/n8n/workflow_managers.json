@@ -1,0 +1,213 @@
+{
+  "name": "SES — Менеджери (GET + POST)",
+  "nodes": [
+
+    {
+      "id": "m01",
+      "name": "Webhook GET Managers",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "ses-managers",
+        "responseMode": "responseNode",
+        "options": {}
+      }
+    },
+
+    {
+      "id": "m02",
+      "name": "Read Managers Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [460, 300],
+      "parameters": {
+        "operation": "read",
+        "documentId": {
+          "__rl": true,
+          "value": "1IgaI0_eE0xY7ljfNh138CA-aYIiFzGJpmu9s2hLV04g",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Менеджери",
+          "mode": "name"
+        },
+        "options": {
+          "firstRowIsColumnNames": true
+        }
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "CRED1",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+
+    {
+      "id": "m03",
+      "name": "Code: Format Managers",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [680, 300],
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst managers = items\n  .filter(item => item.json.name)\n  .map(item => ({\n    name: item.json.name || '',\n    phone: item.json.phone || '',\n    email: item.json.email || '',\n    telegram: (item.json.telegram || '').replace(/^@/, ''),\n    active: String(item.json.active).toUpperCase() === 'TRUE'\n  }));\nreturn [{ json: { managers } }];"
+      }
+    },
+
+    {
+      "id": "m04",
+      "name": "Respond GET",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [900, 300],
+      "parameters": {
+        "respondWith": "json",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              { "name": "Access-Control-Allow-Origin", "value": "*" },
+              { "name": "Access-Control-Allow-Methods", "value": "GET, POST, OPTIONS" },
+              { "name": "Access-Control-Allow-Headers", "value": "Content-Type" }
+            ]
+          }
+        }
+      }
+    },
+
+    {
+      "id": "m05",
+      "name": "Webhook POST Managers",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 600],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ses-managers",
+        "responseMode": "responseNode",
+        "options": {}
+      }
+    },
+
+    {
+      "id": "m06",
+      "name": "Code: Prepare Rows",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 600],
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nconst managers = input.body?.managers || input.managers || [];\n\nconst values = managers.map(m => [\n  m.name || '',\n  m.phone || '',\n  m.email || '',\n  (m.telegram || '').replace(/^@/, ''),\n  m.active ? 'TRUE' : 'FALSE'\n]);\n\nconst SHEET_ID = '1IgaI0_eE0xY7ljfNh138CA-aYIiFzGJpmu9s2hLV04g';\nconst SHEET_ENC = encodeURIComponent('Менеджери');\n\nconst clearUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${SHEET_ENC}!A2:E200:clear`;\nconst writeUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${SHEET_ENC}!A2:E?valueInputOption=RAW`;\nconst writeBody = JSON.stringify({\n  range: 'Менеджери!A2:E',\n  majorDimension: 'ROWS',\n  values: values.length ? values : [['', '', '', '', '']]\n});\n\nreturn [{ json: { managers, clearUrl, writeUrl, writeBody } }];"
+      }
+    },
+
+    {
+      "id": "m07",
+      "name": "HTTP: Clear Range",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [680, 600],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.clearUrl }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "string",
+        "body": "{}",
+        "options": {
+          "headers": {
+            "entries": [
+              { "name": "Content-Type", "value": "application/json" }
+            ]
+          }
+        }
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "CRED1",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+
+    {
+      "id": "m08",
+      "name": "HTTP: Write Rows",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [900, 600],
+      "parameters": {
+        "method": "PUT",
+        "url": "={{ $('Code: Prepare Rows').first().json.writeUrl }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "string",
+        "body": "={{ $('Code: Prepare Rows').first().json.writeBody }}",
+        "options": {
+          "headers": {
+            "entries": [
+              { "name": "Content-Type", "value": "application/json" }
+            ]
+          }
+        }
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "CRED1",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+
+    {
+      "id": "m09",
+      "name": "Respond POST",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1120, 600],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\"ok\":true}",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              { "name": "Access-Control-Allow-Origin", "value": "*" }
+            ]
+          }
+        }
+      }
+    }
+
+  ],
+
+  "connections": {
+    "Webhook GET Managers": {
+      "main": [[{ "node": "Read Managers Sheet", "type": "main", "index": 0 }]]
+    },
+    "Read Managers Sheet": {
+      "main": [[{ "node": "Code: Format Managers", "type": "main", "index": 0 }]]
+    },
+    "Code: Format Managers": {
+      "main": [[{ "node": "Respond GET", "type": "main", "index": 0 }]]
+    },
+    "Webhook POST Managers": {
+      "main": [[{ "node": "Code: Prepare Rows", "type": "main", "index": 0 }]]
+    },
+    "Code: Prepare Rows": {
+      "main": [[{ "node": "HTTP: Clear Range", "type": "main", "index": 0 }]]
+    },
+    "HTTP: Clear Range": {
+      "main": [[{ "node": "HTTP: Write Rows", "type": "main", "index": 0 }]]
+    },
+    "HTTP: Write Rows": {
+      "main": [[{ "node": "Respond POST", "type": "main", "index": 0 }]]
+    }
+  },
+
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

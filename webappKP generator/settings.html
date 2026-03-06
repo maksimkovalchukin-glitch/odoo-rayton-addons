@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <title>Налаштування — Rayton KP</title>
+
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <link rel="stylesheet" href="css/telegram.css" />
+  <script src="js/settings.js" defer></script>
+</head>
+
+<body>
+<div class="app">
+
+  <!-- ── ЕКРАН ПАРОЛЯ ─────────────────────────────── -->
+
+  <div id="passwordScreen">
+
+    <div class="page-header">
+      <span class="page-icon">🔒</span>
+      <h1 class="page-title">Адмін-панель</h1>
+    </div>
+
+    <div class="card form-card">
+      <div class="field">
+        <label for="passwordInput">Пароль</label>
+        <input id="passwordInput" type="password" placeholder="Введіть пароль" autocomplete="off" />
+      </div>
+      <div id="passwordError" style="color:#e53935;font-size:13px;padding:4px 0;display:none">
+        Невірний пароль
+      </div>
+    </div>
+
+    <button class="primary-btn" id="loginBtn">Увійти</button>
+
+  </div>
+
+  <!-- ── АДМІН-ПАНЕЛЬ ─────────────────────────────── -->
+
+  <div id="adminPanel" style="display:none">
+
+    <div class="page-header">
+      <span class="page-icon">⚙️</span>
+      <h1 class="page-title">Налаштування</h1>
+    </div>
+
+    <!-- Таби -->
+    <div style="display:flex;gap:8px;margin-bottom:12px">
+      <button id="tabManagers" onclick="switchTab('managers')"
+        style="flex:1;padding:10px;border-radius:10px;border:1px solid #e0e0e0;background:#FFC400;font-weight:600;font-size:14px;cursor:pointer">
+        Менеджери
+      </button>
+      <button id="tabTemplates" onclick="switchTab('templates')"
+        style="flex:1;padding:10px;border-radius:10px;border:1px solid #e0e0e0;background:#f5f5f5;font-weight:600;font-size:14px;cursor:pointer">
+        Шаблони
+      </button>
+    </div>
+
+    <!-- ── ТАБ: МЕНЕДЖЕРИ ── -->
+    <div id="tabContentManagers">
+
+      <!-- Список менеджерів -->
+      <div id="managerList"></div>
+
+      <!-- Форма додавання -->
+      <div class="card form-card" style="margin-top:10px">
+
+        <div class="divider">Додати / редагувати менеджера</div>
+
+        <div class="field">
+          <label for="addName">Ім'я</label>
+          <input id="addName" type="text" placeholder="Петров Дмитро" />
+        </div>
+
+        <div class="field">
+          <label for="addPhone">Телефон</label>
+          <input id="addPhone" type="tel" placeholder="+380501234567" />
+        </div>
+
+        <div class="field">
+          <label for="addEmail">Email</label>
+          <input id="addEmail" type="email" placeholder="petrov@rayton.com" />
+        </div>
+
+        <div class="field">
+          <label for="addTelegram">Telegram нік (без @)</label>
+          <input id="addTelegram" type="text" placeholder="petrov_dm" autocomplete="off" />
+        </div>
+
+        <div id="addError" style="color:#e53935;font-size:13px;padding:4px 0;display:none">
+          Заповніть ім'я та Telegram нік
+        </div>
+
+        <button class="primary-btn" id="addBtn" style="margin-top:4px">Додати</button>
+
+      </div>
+
+      <!-- Зберегти менеджерів -->
+      <button class="primary-btn" id="saveBtn" style="margin-top:12px">💾 Зберегти менеджерів</button>
+      <div id="saveStatus" style="text-align:center;padding:10px;font-size:14px"></div>
+
+      <div class="hint-box" style="margin-top:4px">
+        Зміни зберігаються в Google Sheet і стають активними для всіх пристроїв одразу.
+      </div>
+
+    </div>
+
+    <!-- ── ТАБ: ШАБЛОНИ ── -->
+    <div id="tabContentTemplates" style="display:none">
+
+      <div class="card form-card">
+
+        <div class="divider">Шаблони КП СЕС (Google Doc ID)</div>
+
+        <div class="field">
+          <label for="tplNoCredit">СЕС без кредиту + фото</label>
+          <input id="tplNoCredit" type="text" placeholder="Google Doc ID" autocomplete="off" />
+        </div>
+
+        <div class="field">
+          <label for="tplNoCreditNoImg">СЕС без кредиту, без фото</label>
+          <input id="tplNoCreditNoImg" type="text" placeholder="Google Doc ID" autocomplete="off" />
+        </div>
+
+        <div class="field">
+          <label for="tplWithCredit">СЕС з кредитом + фото</label>
+          <input id="tplWithCredit" type="text" placeholder="Google Doc ID" autocomplete="off" />
+        </div>
+
+        <div class="field">
+          <label for="tplWithCreditNoImg">СЕС з кредитом, без фото</label>
+          <input id="tplWithCreditNoImg" type="text" placeholder="Google Doc ID" autocomplete="off" />
+        </div>
+
+        <div class="divider">Google Drive</div>
+
+        <div class="field">
+          <label for="tplDriveFolder">Папка для збереження PDF (Drive ID)</label>
+          <input id="tplDriveFolder" type="text" placeholder="Folder ID" autocomplete="off" />
+        </div>
+
+      </div>
+
+      <!-- Зберегти шаблони -->
+      <button class="primary-btn" id="saveTplBtn" style="margin-top:12px">💾 Зберегти шаблони</button>
+      <div id="saveTplStatus" style="text-align:center;padding:10px;font-size:14px"></div>
+
+      <div class="hint-box" style="margin-top:4px">
+        ID шаблону: відкрийте Google Doc → скопіюйте частину URL між /d/ та /edit
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+</body>
+</html>
