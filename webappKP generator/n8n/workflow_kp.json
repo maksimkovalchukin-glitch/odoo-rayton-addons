@@ -1,0 +1,1405 @@
+{
+  "name": "КП — Генератор (SES + UZE)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "kp",
+        "responseMode": "immediatelyReturn",
+        "options": {}
+      },
+      "id": "k01",
+      "name": "Webhook KP",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        240,
+        400
+      ],
+      "webhookId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "cond-type",
+              "leftValue": "={{ $json.type }}",
+              "rightValue": "uze",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "k02",
+      "name": "IF: SES чи UZE",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        480,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const _wh = $('Webhook KP').first().json;\nconst p = _wh.body ?? _wh;\n\nconst DRIVE_PARENT_FOLDER_ID         = p.ses_drive_folder                || '1QSNGUZ9e7CAyeZNMJ3EpEUuyXTaSfTky';\n\nconst rateUSD = parseFloat(p.rate_usd) || 41.2;\nconst rateEUR = parseFloat(p.rate_eur) || 44.5;\n\nconst creditEnabled  = p.credit === 'yes';\nconst creditPageNum  = parseInt(p.ses_credit_page_num) || 2;\nconst vizPageNum     = parseInt(p.ses_viz_page_num)    || 3;\nconst hasCustomImage = !!(p.custom_image_base64);\nconst hasClientLogo  = !!(p.client_logo_base64);\n\n// Вибір шаблону: спочатку по галузі, потім запасний\nconst SECTOR_TEMPLATE_MAP = {\n  'Виробничі підприємства':               p.ses_tpl_sector1 || '',\n  'Агропромисловий сектор':               p.ses_tpl_sector2 || '',\n  'Будівельна та індустріальна група':    p.ses_tpl_sector3 || '',\n  'Метал / машинобудування / обладнання': p.ses_tpl_sector4 || '',\n  'Логістика / склади / торгові центри':  p.ses_tpl_sector5 || '',\n  \"Великі промислові об'єкти 1+ МВт\":    p.ses_tpl_sector6 || '',\n};\nconst sectorTpl = SECTOR_TEMPLATE_MAP[p.client_sector || ''];\n\nlet templateDocId = sectorTpl || '';\nconst delete_credit_page = !!sectorTpl && !creditEnabled;\nconst delete_viz_page    = !!sectorTpl && !hasCustomImage;\n\nconst managerName  = p.manager || '';\nconst managerPhone = p.manager_phone || '';\nconst managerEmail = p.manager_email || '';\n\nconst dcKW     = parseFloat(p.real_dc)     || 0;\nconst acKW     = parseFloat(p.real_ac)     || 0;\nconst panelQty = parseInt(p.panel_qty)     || 0;\nconst panelWatt= parseFloat(p.module_watt) || 0;\nconst panelModel = (p.module_type || '').replace(/^Фотоелектричні модулі\\s*/i, '');\n\nfunction invLine(model, qty) { return model && qty ? `${model} — ${qty} шт.` : ''; }\nconst inv1 = invLine(p.inverter_1_model, p.inverter_1_qty);\nconst inv2 = invLine(p.inverter_2_model, p.inverter_2_qty);\nconst inv3 = invLine(p.inverter_3_model, p.inverter_3_qty);\nconst invertersText = [inv1, inv2, inv3].filter(Boolean).join('\\n');\n\nconst mountEntries = Array.isArray(p.mount_types) ? p.mount_types : [];\nconst mountText = mountEntries.map(e => `${e.type} (${e.qty} шт.)`).join(', ');\n\nconst currency   = p.currency    || 'USD';\nconst currSign   = currency === 'EUR' ? '€' : '$';\nconst rate       = currency === 'EUR' ? rateEUR : rateUSD;\nconst vatMode    = p.price_vat;\nconst vatLabel   = vatMode === 'with' ? 'з ПДВ' : 'без ПДВ';\nconst pricePerKW = parseFloat(p.price_per_kw) || 0;\nconst totalCurr  = +(dcKW * pricePerKW).toFixed(2);\nconst totalUAH   = Math.round(totalCurr * rate);\n\nconst tariffNow    = parseFloat(p.tariff_now)    || 0;\nconst creditRate   = parseFloat(p.credit_rate)   || 0;\nconst creditMonths = parseInt(p.credit_months)   || 60;\nconst yearlyKWhEst = Math.round(dcKW * 1100 * 0.80);\nconst yearlySavings = tariffNow > 0 ? yearlyKWhEst * tariffNow : 0;\nconst monthlySavingsUAH = tariffNow > 0 ? Math.round(yearlySavings / 12) : 0;\n\nlet monthlyPaymentUAH = 0;\nlet paybackStr = '—';\nif (yearlySavings > 0 && totalUAH > 0) {\n  if (creditEnabled && creditRate > 0) {\n    const r = (creditRate / 100) / 12;\n    monthlyPaymentUAH = Math.round(\n      totalUAH * (r * Math.pow(1 + r, creditMonths)) / (Math.pow(1 + r, creditMonths) - 1)\n    );\n    const totalPaid = monthlyPaymentUAH * creditMonths;\n    const py = totalPaid / yearlySavings;\n    const pyInt = Math.floor(py);\n    const pyMon = Math.round((py - pyInt) * 12);\n    paybackStr = pyMon > 0 ? `${pyInt} р. ${pyMon} міс.` : `${pyInt} р.`;\n  } else {\n    const py = totalUAH / yearlySavings;\n    const pyInt = Math.floor(py);\n    const pyMon = Math.round((py - pyInt) * 12);\n    paybackStr = pyMon > 0 ? `${pyInt} р. ${pyMon} міс.` : `${pyInt} р.`;\n  }\n}\n\nconst today = new Date().toLocaleDateString('uk-UA', { day: '2-digit', month: '2-digit', year: 'numeric' });\nconst safeName    = (p.project_name || 'Проект').replace(/\\s+/g, '_');\nconst todayFile   = today.replace(/\\./g, '-');\nconst fileName    = `КП_СЕС_${safeName}_${todayFile}.pdf`;\nconst docCopyName = `КП_СЕС_${p.project_name || 'Проект'}_${Date.now()}`;\nconst powerLabel  = `${dcKW.toFixed(0)} кВт`;\n\nconst templateVars = {\n  '{{manager_name}}':      managerName,\n  '{{manager_phone}}':     managerPhone,\n  '{{manager_email}}':     managerEmail,\n  '{{today_date}}':        today,\n  '{{project_name}}':      p.project_name  || '',\n  '{{region}}':            p.region        || '',\n  '{{client_sector}}':     p.client_sector || '',\n  '{{ses_type}}':          p.ses_type      || 'Дахова',\n  '{{panel_model}}':       panelModel,\n  '{{panel_qty}}':         String(panelQty),\n  '{{panel_watt}}':        String(Math.round(panelWatt)),\n  '{{dc_kw}}':             dcKW.toFixed(1),\n  '{{ac_kw}}':             acKW.toFixed(0),\n  '{{inverter_1}}':        inv1,\n  '{{inverter_2}}':        inv2,\n  '{{inverter_3}}':        inv3,\n  '{{inverters_text}}':    invertersText,\n  '{{mount_types}}':       mountText,\n  '{{material_type}}':     p.material_type     || '',\n  '{{power_regulation}}':  p.power_regulation  || '',\n  '{{monitoring_device}}': p.monitoring_device || '',\n  '{{currency}}':          currSign,\n  '{{vat_label}}':         vatLabel,\n  '{{price_per_kw}}':      String(pricePerKW),\n  '{{total_price}}':       Math.round(totalCurr).toLocaleString('uk-UA'),\n  '{{total_uah}}':         totalUAH.toLocaleString('uk-UA'),\n  '{{tariff_now}}':        tariffNow ? `${tariffNow.toFixed(2)} грн/кВт·год` : '—',\n  '{{yearly_gen}}':        '',\n  '{{payback}}':           paybackStr,\n  '{{total_profit}}':      yearlySavings > 0 ? `${Math.round(yearlySavings / 1000)} тис. грн/рік` : '—',\n  '{{credit_enabled}}':    creditEnabled ? 'Так' : 'Ні',\n  '{{credit_months}}':     creditEnabled ? String(creditMonths) : '',\n  '{{credit_rate}}':       creditEnabled ? `${creditRate}%` : '',\n  '{{monthly_payment}}':   creditEnabled && monthlyPaymentUAH ? `${monthlyPaymentUAH.toLocaleString('uk-UA')} грн/міс.` : '',\n  '{{year_chart_url}}':    '',\n  '{{day_chart_url}}':     '',\n  '{{custom_image}}':      '',\n  '{{client_logo}}':       '',\n};\n\nreturn [{\n  json: {\n    templateDocId,\n    driveFolderId:       DRIVE_PARENT_FOLDER_ID,\n    doc_copy_name:       docCopyName,\n    file_name:           fileName,\n    template_vars:       templateVars,\n    chat_id:             p.chat_id,\n    manager:             managerName,\n    power_label:         powerLabel,\n    project_name:        p.project_name  || '',\n    region:              p.region        || '',\n    currency_sign:       currSign,\n    total_display:       `${Math.round(totalCurr).toLocaleString('uk-UA')} ${currSign}`,\n    dc_kw:               dcKW,\n    tariff_now:          tariffNow,\n    credit_enabled:      creditEnabled,\n    credit_months:       creditMonths,\n    monthly_payment_uah: monthlyPaymentUAH,\n    monthly_savings_uah: monthlySavingsUAH,\n    total_usd:           totalCurr,\n    rate_usd:            rate,\n    has_custom_image:    hasCustomImage,\n    has_client_logo:     hasClientLogo,\n    custom_image_base64: p.custom_image_base64 || null,\n    custom_image_mime:   p.custom_image_mime   || null,\n    client_logo_base64:  p.client_logo_base64  || null,\n    client_logo_mime:    p.client_logo_mime    || null,\n    delete_credit_page:  delete_credit_page,\n    delete_viz_page:     delete_viz_page,\n    credit_page_num:     creditPageNum,\n    viz_page_num:        vizPageNum,\n  }\n}];"
+      },
+      "id": "s04",
+      "name": "SES: Calculate",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        720,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const MONTHLY_COEF = {\n  'Чернігівська область':     [22, 33, 65, 98, 118, 120, 122, 113, 85, 50, 24, 17],\n  'Сумська область':          [23, 34, 66, 99, 119, 121, 123, 114, 86, 51, 25, 18],\n  'Житомирська область':      [24, 35, 67, 100, 120, 122, 124, 115, 87, 52, 25, 18],\n  'Волинська область':        [24, 36, 67, 100, 119, 120, 122, 112, 85, 51, 25, 17],\n  'Рівненська область':       [24, 36, 68, 101, 120, 121, 123, 113, 86, 52, 25, 18],\n  'Львівська область':        [26, 38, 72, 106, 123, 124, 127, 118, 90, 56, 27, 19],\n  'Закарпатська область':     [30, 44, 80, 113, 130, 131, 135, 126, 98, 62, 31, 22],\n  'Івано-Франківська область':[27, 40, 74, 107, 124, 125, 128, 119, 91, 57, 28, 20],\n  'Тернопільська область':    [26, 38, 71, 105, 122, 123, 126, 117, 89, 55, 26, 18],\n  'Хмельницька область':      [26, 38, 71, 105, 122, 123, 126, 117, 89, 55, 26, 18],\n  'Вінницька область':        [27, 40, 74, 108, 126, 127, 130, 120, 92, 57, 27, 19],\n  'Чернівецька область':      [28, 42, 78, 112, 129, 130, 134, 125, 96, 60, 29, 21],\n  'м. Київ':                  [25, 37, 71, 105, 124, 126, 128, 118, 89, 53, 25, 18],\n  'Київська область':         [25, 37, 70, 104, 123, 125, 127, 117, 88, 52, 25, 17],\n  'Черкаська область':        [28, 42, 78, 112, 131, 133, 135, 125, 95, 58, 27, 19],\n  'Полтавська область':       [29, 43, 79, 114, 133, 135, 137, 127, 97, 60, 28, 20],\n  'Кіровоградська область':   [31, 47, 85, 119, 138, 140, 143, 133, 103, 64, 30, 22],\n  'Харківська область':       [28, 43, 80, 114, 133, 135, 138, 128, 97, 59, 27, 19],\n  'Дніпропетровська область': [32, 49, 87, 122, 141, 143, 146, 136, 105, 66, 31, 22],\n  'Донецька область':         [30, 46, 84, 118, 137, 139, 142, 132, 101, 63, 30, 21],\n  'Запорізька область':       [35, 53, 95, 131, 150, 152, 156, 145, 113, 72, 34, 25],\n  'Луганська область':        [29, 44, 81, 115, 134, 136, 139, 129, 98, 60, 28, 20],\n  'Одеська область':          [38, 57, 100, 137, 156, 158, 163, 151, 118, 76, 37, 27],\n  'Миколаївська область':     [36, 55, 98, 134, 153, 155, 160, 148, 115, 73, 35, 26],\n  'Херсонська область':       [37, 56, 100, 136, 155, 157, 162, 150, 117, 75, 36, 26],\n  'default':                  [28, 42, 77, 111, 130, 132, 134, 124, 95, 59, 28, 19]\n};\n\nconst MONTHS_UK = ['Січ', 'Лют', 'Бер', 'Квіт', 'Трав', 'Черв', 'Лип', 'Серп', 'Вер', 'Жовт', 'Лис', 'Груд'];\n\nconst DAILY_HOURLY_PROFILE = [\n  0, 0, 0, 0, 0, 0.03,\n  0.08, 0.18, 0.38, 0.58, 0.75, 0.88,\n  0.97, 1.00, 0.97, 0.88, 0.75, 0.58,\n  0.35, 0.15, 0.05, 0.01, 0, 0\n];\n\nconst calc = $('SES: Calculate').first().json;\nconst dcKW      = parseFloat(calc.dc_kw)  || 0;\nconst region    = calc.region || 'default';\nconst tariffNow = parseFloat(calc.tariff_now) || 0;\n\nconst coefs = MONTHLY_COEF[region] || MONTHLY_COEF['default'];\nconst monthlyKWh = coefs.map(c => Math.round(c * dcKW));\nconst yearlyKWh  = monthlyKWh.reduce((s, v) => s + v, 0);\nconst yearlyMWh  = Math.round(yearlyKWh / 100) / 10;\nconst peakIdx    = monthlyKWh.indexOf(Math.max(...monthlyKWh));\nconst peakKWh    = monthlyKWh[peakIdx];\n\nconst daysInPeakMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][peakIdx];\nconst dailyAvgKWh     = peakKWh / daysInPeakMonth;\nconst dailyHourlyKWh  = DAILY_HOURLY_PROFILE.map(factor => +(factor * dailyAvgKWh).toFixed(1));\nconst hourLabels = Array.from({ length: 24 }, (_, i) => `${i}:00`);\n\nconst yearChartConfig = {\n  type: 'bar',\n  data: {\n    labels: MONTHS_UK,\n    datasets: [{\n      label: 'Генерація, кВт·год',\n      data: monthlyKWh,\n      backgroundColor: monthlyKWh.map((_, i) => i === peakIdx ? '#FFC400' : '#4A90D9'),\n      borderRadius: 6\n    }]\n  },\n  options: {\n    plugins: {\n      legend: { display: false },\n      title: { display: true, text: `Річна генерація СЕС ${dcKW.toFixed(0)} кВт · ${region}`, font: { size: 14 } },\n      datalabels: { anchor: 'end', align: 'top', font: { size: 10 }, formatter: (v) => v >= 1000 ? `${(v/1000).toFixed(1)}МВт` : `${v}` }\n    },\n    scales: {\n      y: { beginAtZero: true, title: { display: true, text: 'кВт·год' }, grid: { color: '#f0f0f0' } },\n      x: { grid: { display: false } }\n    }\n  }\n};\n\nconst dayChartConfig = {\n  type: 'line',\n  data: {\n    labels: hourLabels,\n    datasets: [{\n      label: `Генерація (${MONTHS_UK[peakIdx]}, кВт·год/год)`,\n      data: dailyHourlyKWh,\n      borderColor: '#FFC400',\n      backgroundColor: 'rgba(255,196,0,0.15)',\n      borderWidth: 2.5,\n      pointRadius: 3,\n      fill: true,\n      tension: 0.4\n    }]\n  },\n  options: {\n    plugins: {\n      legend: { display: false },\n      title: { display: true, text: `Денна генерація (${MONTHS_UK[peakIdx]}, середній день) · СЕС ${dcKW.toFixed(0)} кВт`, font: { size: 14 } }\n    },\n    scales: {\n      y: { beginAtZero: true, title: { display: true, text: 'кВт·год/год' }, grid: { color: '#f0f0f0' } },\n      x: { grid: { display: false }, ticks: { maxTicksLimit: 12 } }\n    }\n  }\n};\n\nfunction toChartUrl(config, width, height) {\n  return `https://quickchart.io/chart?w=${width}&h=${height}&bkg=white&c=${encodeURIComponent(JSON.stringify(config))}`;\n}\n\nconst yearChartUrl = toChartUrl(yearChartConfig, 800, 380);\nconst dayChartUrl  = toChartUrl(dayChartConfig,  800, 380);\n\nconst selfConsumptionRatio = 0.80;\nconst yearlyEconomyUAH = tariffNow > 0\n  ? Math.round(yearlyKWh * selfConsumptionRatio * tariffNow)\n  : Math.round(calc.monthly_savings_uah * 12) || 0;\n\nconst totalUAH2 = (parseFloat(calc.total_usd) || 0) * (parseFloat(calc.rate_usd) || 41.2);\nlet paybackStr = '—';\nif (yearlyEconomyUAH > 0 && totalUAH2 > 0) {\n  const py    = totalUAH2 / yearlyEconomyUAH;\n  const pyInt = Math.floor(py);\n  const pyMon = Math.round((py - pyInt) * 12);\n  paybackStr  = pyMon > 0 ? `${pyInt} р. ${pyMon} міс.` : `${pyInt} р.`;\n}\n\nreturn [{\n  json: {\n    ...calc,\n    year_chart_url: yearChartUrl,\n    day_chart_url:  dayChartUrl,\n    monthly_kwh:    monthlyKWh,\n    yearly_kwh:     yearlyKWh,\n    yearly_mwh:     yearlyMWh,\n    peak_month:     MONTHS_UK[peakIdx],\n    yearly_economy: yearlyEconomyUAH,\n    payback_str_regional: paybackStr,\n    template_vars: {\n      ...calc.template_vars,\n      '{{yearly_gen}}':   `${yearlyMWh} МВт·год`,\n      '{{payback}}':      paybackStr,\n      '{{tariff_now}}':   tariffNow ? `${tariffNow.toFixed(2)} грн/кВт·год` : (calc.template_vars?.['{{tariff_now}}'] || ''),\n      '{{total_profit}}': `${Math.round(yearlyEconomyUAH / 1000)} тис. грн/рік`,\n      '{{year_chart_url}}': yearChartUrl,\n      '{{day_chart_url}}':  dayChartUrl\n    }\n  }\n}];"
+      },
+      "id": "s05",
+      "name": "SES: Charts",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        960,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "cond-img",
+              "leftValue": "={{ $json.has_custom_image || $json.has_client_logo }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "name": "filter.operator.true"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "s06",
+      "name": "SES: IF Зображення",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1200,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const data = $('SES: Charts').first().json;\n\nconst result = { json: { ...data }, binary: {} };\n\nif (data.custom_image_base64) {\n  const mime = data.custom_image_mime || 'image/jpeg';\n  const ext  = mime.split('/')[1] || 'jpg';\n  const fileName = `viz_${data.project_name || 'ses'}_${Date.now()}.${ext}`;\n  result.json.image_file_name = fileName;\n  result.json.image_mime      = mime;\n  result.binary.customImage   = { data: data.custom_image_base64, mimeType: mime, fileName };\n}\n\nif (data.client_logo_base64) {\n  const mime = data.client_logo_mime || 'image/png';\n  const ext  = mime.split('/')[1] || 'png';\n  const logoName = `logo_${data.project_name || 'ses'}_${Date.now()}.${ext}`;\n  result.json.logo_file_name = logoName;\n  result.json.logo_mime      = mime;\n  result.binary.clientLogo   = { data: data.client_logo_base64, mimeType: mime, fileName: logoName };\n}\n\nreturn [result];"
+      },
+      "id": "s07",
+      "name": "SES: Підготовка зображень",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1440,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "operation": "upload",
+        "name": "={{ $json.image_file_name }}",
+        "driveId": {
+          "__rl": true,
+          "value": "MyDrive",
+          "mode": "list"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "={{ $('SES: Calculate').first().json.driveFolderId }}",
+          "mode": "id"
+        },
+        "binaryPropertyName": "customImage",
+        "options": {}
+      },
+      "id": "s08",
+      "name": "SES: Upload Custom Image",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        1680,
+        80
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "CRED2",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://www.googleapis.com/drive/v3/files/{{ $json.id }}/permissions",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDriveOAuth2Api",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "{\"role\":\"reader\",\"type\":\"anyone\"}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "s09",
+      "name": "SES: Відкрити доступ",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1920,
+        80
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "CRED2",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const calc = $('SES: Charts').first().json;\n\nlet customImageDriveUrl = null;\nlet clientLogoDriveUrl  = null;\n\ntry {\n  const imageItems = $('SES: Upload Custom Image').all();\n  if (imageItems.length > 0) {\n    const id = imageItems[0].json.id;\n    customImageDriveUrl = `https://drive.google.com/uc?export=view&id=${id}`;\n  }\n} catch (e) {}\n\ntry {\n  const logoItems = $('SES: Upload Client Logo').all();\n  if (logoItems.length > 0) {\n    const id = logoItems[0].json.id;\n    clientLogoDriveUrl = `https://drive.google.com/uc?export=view&id=${id}`;\n  }\n} catch (e) {}\n\nreturn [{\n  json: {\n    ...calc,\n    custom_image_drive_url: customImageDriveUrl,\n    client_logo_drive_url:  clientLogoDriveUrl,\n    template_vars: {\n      ...calc.template_vars,\n      '{{custom_image}}': customImageDriveUrl || '',\n      '{{client_logo}}':  clientLogoDriveUrl  || ''\n    }\n  }\n}];"
+      },
+      "id": "s10",
+      "name": "SES: Після зображення",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2160,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "operation": "copy",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.templateDocId }}",
+          "mode": "id"
+        },
+        "name": "={{ $json.doc_copy_name }}",
+        "driveId": {
+          "__rl": true,
+          "value": "MyDrive",
+          "mode": "list"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "={{ $json.driveFolderId }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "id": "s11",
+      "name": "SES: Копіювати шаблон",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        2400,
+        200
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "CRED2",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ 'https://docs.googleapis.com/v1/documents/' + $('SES: Копіювати шаблон').first().json.id }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDocsOAuth2Api",
+        "options": {}
+      },
+      "id": "s11a",
+      "name": "SES: Отримати Doc",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2640,
+        200
+      ],
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "CRED3",
+          "name": "Google OAuth2 account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const tab0Content = $json.tabs?.[0]?.documentTab?.body?.content || [];\nconst bodyContent = $json.body?.content || [];\nconst content = tab0Content.length > 0 ? tab0Content : bodyContent;\n\nconst calc  = $('SES: Після зображення').first().json;\nconst docId = $('SES: Копіювати шаблон').first().json.id;\n\nconst rangesToDelete = [];\n\n// Видалити «Вкладка 1»\nlet startIndex = null;\nlet endIndex   = null;\nfor (let i = 0; i < content.length; i++) {\n  const el = content[i];\n  if (!el.paragraph || !el.paragraph.elements) continue;\n  const text = el.paragraph.elements\n    .map(e => (e.textRun?.content || '').trim().toLowerCase())\n    .join('');\n  if (text === 'вкладка 1') {\n    startIndex = el.startIndex;\n  } else if (startIndex !== null && text !== '') {\n    endIndex = el.startIndex;\n    break;\n  }\n}\nif (startIndex !== null && endIndex !== null) {\n  rangesToDelete.push({ startIndex, endIndex: endIndex - 1 });\n}\n\nconst deleteRequests = rangesToDelete.map(r => ({\n  deleteContentRange: { range: { startIndex: r.startIndex, endIndex: r.endIndex } }\n}));\n\nreturn [{ json: { docId, deleteRequests, ...calc } }];"
+      },
+      "id": "s11b",
+      "name": "SES: Видалити Вкладку 1 Code",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2880,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ 'https://docs.googleapis.com/v1/documents/' + $json.docId + ':batchUpdate' }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDocsOAuth2Api",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ { requests: $json.deleteRequests } }}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "s11c",
+      "name": "SES: Видалити Вкладку 1 HTTP",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3120,
+        200
+      ],
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "CRED3",
+          "name": "Google OAuth2 account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const calc  = $('SES: Після зображення').first().json;\nconst docId = $('SES: Копіювати шаблон').first().json.id;\nconst vars  = calc.template_vars;\n\nconst requests = Object.entries(vars).map(([tag, value]) => ({\n  replaceAllText: {\n    containsText: { text: tag, matchCase: true },\n    replaceText:  String(value ?? '')\n  }\n}));\n\nreturn [{\n  json: {\n    docId,\n    requests,\n    chat_id:       calc.chat_id,\n    file_name:     calc.file_name,\n    project_name:  calc.project_name,\n    power_label:   calc.power_label,\n    total_display: calc.total_display,\n    currency_sign: calc.currency_sign,\n    driveFolderId: calc.driveFolderId\n  }\n}];"
+      },
+      "id": "s12",
+      "name": "SES: Підготовка Docs",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3360,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://docs.googleapis.com/v1/documents/{{ $json.docId }}:batchUpdate",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDocsOAuth2Api",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ { requests: $json.requests } }}",
+        "options": {}
+      },
+      "id": "s13",
+      "name": "SES: Docs batchUpdate",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3600,
+        200
+      ],
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "CRED3",
+          "name": "Google OAuth2 account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ 'https://docs.googleapis.com/v1/documents/' + $('SES: Підготовка Docs').first().json.docId }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDocsOAuth2Api",
+        "options": {}
+      },
+      "id": "s13a",
+      "name": "SES: Отримати Doc після замін",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3840,
+        200
+      ],
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "CRED3",
+          "name": "Google OAuth2 account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const docData = $json;\nconst calc    = $('SES: Підготовка Docs').first().json;\nconst docId   = calc.docId;\n\nconst content = docData.tabs?.[0]?.documentTab?.body?.content || docData.body?.content || [];\n\nconst requests = [];\n\nfor (const el of content) {\n  if (!el.table) continue;\n\n  const isCostTable = el.table.tableRows.some(row => {\n    const firstCell = (row.tableCells[0]?.content || [])\n      .flatMap(p => (p.paragraph?.elements || []))\n      .map(e => e.textRun?.content || '')\n      .join('')\n      .trim();\n    return firstCell.includes('ОБЛАДНАННЯ');\n  });\n  if (!isCostTable) continue;\n\n  const tableStartIndex = el.startIndex;\n  const emptyRowIndices = [];\n\n  el.table.tableRows.forEach((row, rowIndex) => {\n    const allEmpty = row.tableCells.every(cell => {\n      const cellText = (cell.content || [])\n        .flatMap(p => (p.paragraph?.elements || []))\n        .map(e => e.textRun?.content || '')\n        .join('')\n        .trim();\n      return cellText === '';\n    });\n    if (allEmpty) emptyRowIndices.push(rowIndex);\n  });\n\n  for (let i = emptyRowIndices.length - 1; i >= 0; i--) {\n    requests.push({\n      deleteTableRow: {\n        tableCellLocation: {\n          tableStartLocation: { index: tableStartIndex },\n          rowIndex: emptyRowIndices[i],\n          columnIndex: 0\n        }\n      }\n    });\n  }\n}\n\nreturn [{ json: { docId, ...calc, requests } }];"
+      },
+      "id": "s13b",
+      "name": "SES: Знайти порожні рядки",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4080,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ 'https://docs.googleapis.com/v1/documents/' + $json.docId + ':batchUpdate' }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDocsOAuth2Api",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ { requests: $json.requests } }}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "s13c",
+      "name": "SES: Видалити порожні рядки",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4320,
+        200
+      ],
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "CRED3",
+          "name": "Google OAuth2 account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ 'https://docs.google.com/document/d/' + $('SES: Підготовка Docs').first().json.docId + '/export?format=pdf&tab=t.0' }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleOAuth2Api",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file",
+              "outputPropertyName": "data"
+            }
+          }
+        }
+      },
+      "id": "s14",
+      "name": "SES: Експорт PDF",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4560,
+        200
+      ],
+      "credentials": {
+        "googleOAuth2Api": {
+          "id": "CRED3",
+          "name": "Google OAuth2 account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "sendDocument",
+        "chatId": "={{ $('SES: Calculate').first().json.chat_id }}",
+        "binaryData": true,
+        "binaryPropertyName": "data",
+        "additionalFields": {
+          "caption": "=КП для {{ $('SES: Calculate').first().json.project_name }} ({{ $('SES: Calculate').first().json.power_label }}) — готово! ✅"
+        }
+      },
+      "id": "s16",
+      "name": "SES: Надіслати PDF",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        6000,
+        80
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "CRED4",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "operation": "upload",
+        "name": "={{ $('SES: Підготовка Docs').first().json.file_name }}",
+        "driveId": {
+          "__rl": true,
+          "value": "MyDrive",
+          "mode": "list"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "={{ $('SES: Підготовка Docs').first().json.driveFolderId }}",
+          "mode": "id"
+        },
+        "binaryPropertyName": "data",
+        "options": {}
+      },
+      "id": "s15",
+      "name": "SES: Зберегти PDF",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        6000,
+        320
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "CRED2",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const _wh = $('Webhook KP').first().json;\nconst p = _wh.body ?? _wh;\n\nconst DRIVE_FOLDER_ID = p.uze_drive_folder || p.ses_drive_folder || '1QSNGUZ9e7CAyeZNMJ3EpEUuyXTaSfTky';\n\nif (!p.template_id) {\n  throw new Error(`UZE webhook: відсутній template_id. Отримано: ${JSON.stringify(Object.keys(p))}`);\n}\n\nif (!p.template_vars || typeof p.template_vars !== 'object') {\n  throw new Error('UZE webhook: відсутній або некоректний template_vars');\n}\n\nreturn [{\n  json: {\n    templateDocId:  p.template_id,\n    driveFolderId:  DRIVE_FOLDER_ID,\n    doc_copy_name:  p.doc_copy_name || `КП_УЗЕ_${p.project_name || 'Проект'}_${Date.now()}`,\n    file_name:      p.file_name     || `КП_УЗЕ_${(p.project_name || 'Проект').replace(/\\s+/g, '_')}.pdf`,\n    template_vars:  p.template_vars,\n    tail_pages:     parseInt(p.tail_pages) || 5,\n    chat_id:        p.chat_id,\n    project_name:   p.project_name  || '',\n    manager:        p.manager       || '',\n    uze_model:      p.uze_model     || '',\n    uze_qty:        p.uze_qty       || 1,\n    currency_sign:  p.currency === 'EUR' ? '€' : '$'\n  }\n}];"
+      },
+      "id": "u03",
+      "name": "UZE: Підготовка",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        720,
+        700
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "operation": "copy",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.templateDocId }}",
+          "mode": "id"
+        },
+        "name": "={{ $json.doc_copy_name }}",
+        "driveId": {
+          "__rl": true,
+          "value": "MyDrive",
+          "mode": "list"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "={{ $json.driveFolderId }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "id": "u04",
+      "name": "UZE: Копіювати шаблон",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        960,
+        700
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "CRED2",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ 'https://docs.googleapis.com/v1/documents/' + $json.id }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDocsOAuth2Api",
+        "options": {}
+      },
+      "id": "u05",
+      "name": "UZE: Отримати Doc",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1200,
+        700
+      ],
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "CRED3",
+          "name": "Google OAuth2 account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const tab0Content = $json.tabs?.[0]?.documentTab?.body?.content || [];\nconst bodyContent = $json.body?.content || [];\nconst content = tab0Content.length > 0 ? tab0Content : bodyContent;\n\nconst prep  = $('UZE: Підготовка').first().json;\nconst docId = $('UZE: Копіювати шаблон').first().json.id;\n\nlet startIndex = null;\nlet endIndex   = null;\n\nfor (let i = 0; i < content.length; i++) {\n  const el = content[i];\n  if (!el.paragraph || !el.paragraph.elements) continue;\n  const text = el.paragraph.elements\n    .map(e => (e.textRun?.content || '').trim().toLowerCase())\n    .join('');\n  if (text === 'вкладка 1') {\n    startIndex = el.startIndex;\n  } else if (startIndex !== null && text !== '') {\n    endIndex = el.startIndex;\n    break;\n  }\n}\n\nconst deleteRequests = (startIndex !== null && endIndex !== null)\n  ? [{ deleteContentRange: { range: { startIndex, endIndex: endIndex - 1 } } }]\n  : [];\n\nreturn [{ json: { docId, deleteRequests, ...prep } }];"
+      },
+      "id": "u06",
+      "name": "UZE: Видалити Вкладку 1 Code",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1440,
+        700
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ 'https://docs.googleapis.com/v1/documents/' + $json.docId + ':batchUpdate' }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDocsOAuth2Api",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ { requests: $json.deleteRequests } }}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "u07",
+      "name": "UZE: Видалити Вкладку 1 HTTP",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1680,
+        700
+      ],
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "CRED3",
+          "name": "Google OAuth2 account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const prep  = $('UZE: Підготовка').first().json;\nconst docId = $('UZE: Копіювати шаблон').first().json.id;\nconst vars  = prep.template_vars;\n\nconst requests = Object.entries(vars).map(([tag, value]) => ({\n  replaceAllText: {\n    containsText: { text: tag, matchCase: true },\n    replaceText:  String(value ?? '')\n  }\n}));\n\nreturn [{\n  json: {\n    docId,\n    requests,\n    chat_id:       prep.chat_id,\n    file_name:     prep.file_name,\n    project_name:  prep.project_name,\n    uze_model:     prep.uze_model,\n    uze_qty:       prep.uze_qty,\n    driveFolderId: prep.driveFolderId,\n    currency_sign: prep.currency_sign\n  }\n}];"
+      },
+      "id": "u08",
+      "name": "UZE: Підготовка Docs",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1920,
+        700
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://docs.googleapis.com/v1/documents/{{ $json.docId }}:batchUpdate",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDocsOAuth2Api",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ { requests: $json.requests } }}",
+        "options": {}
+      },
+      "id": "u09",
+      "name": "UZE: Docs batchUpdate",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2160,
+        700
+      ],
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "CRED3",
+          "name": "Google OAuth2 account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ 'https://docs.googleapis.com/v1/documents/' + $('UZE: Підготовка Docs').first().json.docId }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDocsOAuth2Api",
+        "options": {}
+      },
+      "id": "u10",
+      "name": "UZE: Отримати Doc після замін",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2400,
+        700
+      ],
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "CRED3",
+          "name": "Google OAuth2 account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const docData = $json;\nconst prep    = $('UZE: Підготовка Docs').first().json;\nconst docId   = prep.docId;\n\nconst content = docData.tabs?.[0]?.documentTab?.body?.content || docData.body?.content || [];\n\nconst requests = [];\n\nfor (const el of content) {\n  if (!el.table) continue;\n\n  const isCostTable = el.table.tableRows.some(row => {\n    const firstCell = (row.tableCells[0]?.content || [])\n      .flatMap(p => (p.paragraph?.elements || []))\n      .map(e => e.textRun?.content || '')\n      .join('')\n      .trim();\n    return firstCell.match(/обладнання|ОБЛАДНАННЯ|специфікація|СПЕЦИФІКАЦІЯ/i);\n  });\n  if (!isCostTable) continue;\n\n  const tableStartIndex = el.startIndex;\n  const emptyRowIndices = [];\n\n  el.table.tableRows.forEach((row, rowIndex) => {\n    const allEmpty = row.tableCells.every(cell => {\n      const cellText = (cell.content || [])\n        .flatMap(p => (p.paragraph?.elements || []))\n        .map(e => e.textRun?.content || '')\n        .join('')\n        .trim();\n      return cellText === '';\n    });\n    if (allEmpty) emptyRowIndices.push(rowIndex);\n  });\n\n  for (let i = emptyRowIndices.length - 1; i >= 0; i--) {\n    requests.push({\n      deleteTableRow: {\n        tableCellLocation: {\n          tableStartLocation: { index: tableStartIndex },\n          rowIndex: emptyRowIndices[i],\n          columnIndex: 0\n        }\n      }\n    });\n  }\n}\n\nreturn [{ json: { docId, ...prep, requests } }];"
+      },
+      "id": "u11",
+      "name": "UZE: Знайти порожні рядки",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2640,
+        700
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ 'https://docs.googleapis.com/v1/documents/' + $json.docId + ':batchUpdate' }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDocsOAuth2Api",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ { requests: $json.requests } }}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "u12",
+      "name": "UZE: Видалити порожні рядки",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2880,
+        700
+      ],
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "CRED3",
+          "name": "Google OAuth2 account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ 'https://docs.google.com/document/d/' + $('UZE: Підготовка Docs').first().json.docId + '/export?format=pdf&tab=t.0' }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleOAuth2Api",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file",
+              "outputPropertyName": "data"
+            }
+          }
+        }
+      },
+      "id": "u13",
+      "name": "UZE: Експорт PDF",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3120,
+        700
+      ],
+      "credentials": {
+        "googleOAuth2Api": {
+          "id": "CRED3",
+          "name": "Google OAuth2 account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "sendDocument",
+        "chatId": "={{ $('UZE: Підготовка').first().json.chat_id }}",
+        "binaryData": true,
+        "binaryPropertyName": "data",
+        "additionalFields": {
+          "caption": "=КП УЗЕ для {{ $('UZE: Підготовка').first().json.project_name }} — готово! ✅\nМодель: {{ $('UZE: Підготовка').first().json.uze_model }} × {{ $('UZE: Підготовка').first().json.uze_qty }} шт."
+        }
+      },
+      "id": "u14",
+      "name": "UZE: Надіслати PDF",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        3360,
+        580
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "CRED4",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "operation": "upload",
+        "name": "={{ $('UZE: Підготовка Docs').first().json.file_name }}",
+        "driveId": {
+          "__rl": true,
+          "value": "MyDrive",
+          "mode": "list"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "={{ $('UZE: Підготовка Docs').first().json.driveFolderId }}",
+          "mode": "id"
+        },
+        "binaryPropertyName": "data",
+        "options": {}
+      },
+      "id": "u15",
+      "name": "UZE: Зберегти PDF",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        3360,
+        820
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "CRED2",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "cond-del-pages",
+              "leftValue": "={{ $('SES: Calculate').first().json.delete_credit_page || $('SES: Calculate').first().json.delete_viz_page }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "name": "filter.operator.true"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "s17_if",
+      "name": "SES: IF Видалити сторінки",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        4800,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.pdf.co/v1/file/upload",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "zvit@rayton.com.ua_iWDUNucluKRH7ULe6nRKagQva7EfQUmNgM4KwSPGt4D6KHl2CxeoRxel0eDgL10b"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "parameterType": "formBinaryData",
+              "name": "file",
+              "inputDataFieldName": "data"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "s17a",
+      "name": "SES: pdfco Upload",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        5040,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const calc = $('SES: Calculate').first().json;\nconst pages = [];\nif (calc.delete_credit_page) pages.push(calc.credit_page_num || 2);\nif (calc.delete_viz_page)    pages.push(calc.viz_page_num    || 3);\npages.sort((a, b) => a - b);\n\nreturn [{\n  json: {\n    upload_url: $json.url,\n    pages_str:  pages.join(',')\n  }\n}];"
+      },
+      "id": "s17b",
+      "name": "SES: pdfco Сторінки Code",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        5280,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.pdf.co/v1/pdf/edit/delete-pages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "zvit@rayton.com.ua_iWDUNucluKRH7ULe6nRKagQva7EfQUmNgM4KwSPGt4D6KHl2CxeoRxel0eDgL10b"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ { url: $json.upload_url, pages: $json.pages_str } }}",
+        "options": {}
+      },
+      "id": "s17c",
+      "name": "SES: pdfco Delete HTTP",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        5520,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $json.url }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file",
+              "outputPropertyName": "data"
+            }
+          }
+        }
+      },
+      "id": "s17d",
+      "name": "SES: pdfco Download",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        5760,
+        80
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook KP": {
+      "main": [
+        [
+          {
+            "node": "IF: SES чи UZE",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF: SES чи UZE": {
+      "main": [
+        [
+          {
+            "node": "UZE: Підготовка",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "SES: Calculate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SES: Calculate": {
+      "main": [
+        [
+          {
+            "node": "SES: Charts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SES: Charts": {
+      "main": [
+        [
+          {
+            "node": "SES: IF Зображення",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SES: IF Зображення": {
+      "main": [
+        [
+          {
+            "node": "SES: Підготовка зображень",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "SES: Після зображення",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SES: Підготовка зображень": {
+      "main": [
+        [
+          {
+            "node": "SES: Upload Custom Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SES: Upload Custom Image": {
+      "main": [
+        [
+          {
+            "node": "SES: Відкрити доступ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SES: Відкрити доступ": {
+      "main": [
+        [
+          {
+            "node": "SES: Після зображення",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SES: Після зображення": {
+      "main": [
+        [
+          {
+            "node": "SES: Копіювати шаблон",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SES: Копіювати шаблон": {
+      "main": [
+        [
+          {
+            "node": "SES: Отримати Doc",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SES: Отримати Doc": {
+      "main": [
+        [
+          {
+            "node": "SES: Видалити Вкладку 1 Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SES: Видалити Вкладку 1 Code": {
+      "main": [
+        [
+          {
+            "node": "SES: Видалити Вкладку 1 HTTP",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SES: Видалити Вкладку 1 HTTP": {
+      "main": [
+        [
+          {
+            "node": "SES: Підготовка Docs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SES: Підготовка Docs": {
+      "main": [
+        [
+          {
+            "node": "SES: Docs batchUpdate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SES: Docs batchUpdate": {
+      "main": [
+        [
+          {
+            "node": "SES: Отримати Doc після замін",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SES: Отримати Doc після замін": {
+      "main": [
+        [
+          {
+            "node": "SES: Знайти порожні рядки",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SES: Знайти порожні рядки": {
+      "main": [
+        [
+          {
+            "node": "SES: Видалити порожні рядки",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SES: Видалити порожні рядки": {
+      "main": [
+        [
+          {
+            "node": "SES: Експорт PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SES: Експорт PDF": {
+      "main": [
+        [
+          {
+            "node": "SES: IF Видалити сторінки",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "UZE: Підготовка": {
+      "main": [
+        [
+          {
+            "node": "UZE: Копіювати шаблон",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "UZE: Копіювати шаблон": {
+      "main": [
+        [
+          {
+            "node": "UZE: Отримати Doc",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "UZE: Отримати Doc": {
+      "main": [
+        [
+          {
+            "node": "UZE: Видалити Вкладку 1 Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "UZE: Видалити Вкладку 1 Code": {
+      "main": [
+        [
+          {
+            "node": "UZE: Видалити Вкладку 1 HTTP",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "UZE: Видалити Вкладку 1 HTTP": {
+      "main": [
+        [
+          {
+            "node": "UZE: Підготовка Docs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "UZE: Підготовка Docs": {
+      "main": [
+        [
+          {
+            "node": "UZE: Docs batchUpdate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "UZE: Docs batchUpdate": {
+      "main": [
+        [
+          {
+            "node": "UZE: Отримати Doc після замін",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "UZE: Отримати Doc після замін": {
+      "main": [
+        [
+          {
+            "node": "UZE: Знайти порожні рядки",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "UZE: Знайти порожні рядки": {
+      "main": [
+        [
+          {
+            "node": "UZE: Видалити порожні рядки",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "UZE: Видалити порожні рядки": {
+      "main": [
+        [
+          {
+            "node": "UZE: Експорт PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "UZE: Експорт PDF": {
+      "main": [
+        [
+          {
+            "node": "UZE: Надіслати PDF",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "UZE: Зберегти PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SES: IF Видалити сторінки": {
+      "main": [
+        [
+          {
+            "node": "SES: pdfco Upload",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "SES: Надіслати PDF",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "SES: Зберегти PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SES: pdfco Upload": {
+      "main": [
+        [
+          {
+            "node": "SES: pdfco Сторінки Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SES: pdfco Сторінки Code": {
+      "main": [
+        [
+          {
+            "node": "SES: pdfco Delete HTTP",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SES: pdfco Delete HTTP": {
+      "main": [
+        [
+          {
+            "node": "SES: pdfco Download",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SES: pdfco Download": {
+      "main": [
+        [
+          {
+            "node": "SES: Надіслати PDF",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "SES: Зберегти PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "c1d2e3f4-a5b6-7890-cdef-123456789abc",
+  "meta": {
+    "templateCredsSetupCompleted": false,
+    "instanceId": ""
+  },
+  "id": "d4e5f6a7-b8c9-0123-def0-456789abcdef",
+  "pinData": {}
+}

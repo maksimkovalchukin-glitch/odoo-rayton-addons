@@ -1,0 +1,115 @@
+{
+  "name": "SES — Каталог обладнання (GET + POST)",
+  "nodes": [
+
+    {
+      "id": "c01",
+      "name": "Webhook GET Catalog",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "ses-catalog",
+        "responseMode": "responseNode",
+        "options": {}
+      }
+    },
+
+    {
+      "id": "c02",
+      "name": "Code: Read Catalog",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 300],
+      "parameters": {
+        "jsCode": "// Зчитуємо каталог з persistent storage n8n\nconst data = $getWorkflowStaticData('global');\n\n// Дефолтний каталог — використовується при першому запуску\n// ЗАМІНІТЬ ціни на реальні через адмін-панель\nconst DEFAULT_CATALOG = {\n  panels: [\n    { full_name: 'Фотоелектричні модулі Trina 620W',  watt: 620, price_usd: 87.5,  markup: 1.12 },\n    { full_name: 'Фотоелектричні модулі Trina 625W',  watt: 625, price_usd: 89.0,  markup: 1.12 },\n    { full_name: 'Фотоелектричні модулі Trina 710W',  watt: 710, price_usd: 99.0,  markup: 1.12 },\n    { full_name: 'Фотоелектричні модулі Тrina 575W',  watt: 575, price_usd: 80.0,  markup: 1.12 },\n    { full_name: 'Фотоелектричні модулі Тrina 580W',  watt: 580, price_usd: 81.0,  markup: 1.12 },\n    { full_name: 'Фотоелектричні модулі Тrina 610W',  watt: 610, price_usd: 85.0,  markup: 1.12 },\n    { full_name: 'Фотоелектричні модулі JA 625W',     watt: 625, price_usd: 86.0,  markup: 1.12 },\n    { full_name: 'Фотоелектричні модулі Longi 580W',  watt: 580, price_usd: 79.0,  markup: 1.12 },\n    { full_name: 'Фотоелектричні модулі Longi 610W',  watt: 610, price_usd: 83.0,  markup: 1.12 }\n  ],\n  inverters: [\n    { name: 'Huawei SUN2000-150KTL-G0',  power_kw: 150, price_usd: 3850, markup: 1.18 },\n    { name: 'Huawei SUN2000-115KTL-M2',  power_kw: 115, price_usd: 3100, markup: 1.18 },\n    { name: 'Huawei SUN2000-100KTL-M2',  power_kw: 100, price_usd: 2750, markup: 1.18 },\n    { name: 'Huawei SUN2000-50KTL-M3',   power_kw: 50,  price_usd: 1450, markup: 1.18 },\n    { name: 'Huawei SUN2000-30KTL-M3',   power_kw: 30,  price_usd: 950,  markup: 1.18 }\n  ],\n  mounting: [\n    { name: 'блочки',                          price_per_panel_usd: 11.2, markup: 2.0 },\n    { name: 'сітка',                           price_per_panel_usd: 13.5, markup: 2.0 },\n    { name: 'баластна сітка',                  price_per_panel_usd: 15.0, markup: 2.0 },\n    { name: 'баластна сітка з противагою',     price_per_panel_usd: 16.5, markup: 2.0 },\n    { name: 'гвинт-шуруп',                    price_per_panel_usd: 10.5, markup: 2.0 },\n    { name: 'схід-захід',                      price_per_panel_usd: 18.0, markup: 2.0 },\n    { name: 'схід-захід (без баласту) деш.',   price_per_panel_usd: 14.0, markup: 2.0 },\n    { name: 'схід-захід (без баласту) дор.',   price_per_panel_usd: 17.0, markup: 2.0 },\n    { name: 'з підйомом',                      price_per_panel_usd: 20.0, markup: 2.0 },\n    { name: 'з підйомом без баласту',          price_per_panel_usd: 18.5, markup: 2.0 },\n    { name: 'наземка',                         price_per_panel_usd: 22.0, markup: 2.0 },\n    { name: 'наземка схід-захід',              price_per_panel_usd: 25.0, markup: 2.0 }\n  ],\n  materials_dc: [\n    { mount_name: 'блочки',                       price_per_kw_small: 18.5, price_per_kw_large: 16.0, markup: 1.6 },\n    { mount_name: 'сітка',                        price_per_kw_small: 18.5, price_per_kw_large: 16.0, markup: 1.6 },\n    { mount_name: 'баластна сітка',               price_per_kw_small: 18.5, price_per_kw_large: 16.0, markup: 1.6 },\n    { mount_name: 'баластна сітка з противагою',  price_per_kw_small: 18.5, price_per_kw_large: 16.0, markup: 1.6 },\n    { mount_name: 'гвинт-шуруп',                 price_per_kw_small: 18.5, price_per_kw_large: 16.0, markup: 1.6 },\n    { mount_name: 'схід-захід',                   price_per_kw_small: 20.0, price_per_kw_large: 17.5, markup: 1.6 },\n    { mount_name: 'схід-захід (без баласту) деш.',price_per_kw_small: 19.0, price_per_kw_large: 16.5, markup: 1.6 },\n    { mount_name: 'схід-захід (без баласту) дор.',price_per_kw_small: 19.0, price_per_kw_large: 16.5, markup: 1.6 },\n    { mount_name: 'з підйомом',                   price_per_kw_small: 21.0, price_per_kw_large: 18.0, markup: 1.6 },\n    { mount_name: 'з підйомом без баласту',       price_per_kw_small: 21.0, price_per_kw_large: 18.0, markup: 1.6 },\n    { mount_name: 'наземка',                      price_per_kw_small: 17.0, price_per_kw_large: 15.0, markup: 1.6 },\n    { mount_name: 'наземка схід-захід',           price_per_kw_small: 17.0, price_per_kw_large: 15.0, markup: 1.6 }\n  ],\n  materials_ac: [\n    { mount_name: 'блочки',                       price_per_kw_small: 14.0, price_per_kw_large: 12.0, markup: 1.6 },\n    { mount_name: 'сітка',                        price_per_kw_small: 14.0, price_per_kw_large: 12.0, markup: 1.6 },\n    { mount_name: 'баластна сітка',               price_per_kw_small: 14.0, price_per_kw_large: 12.0, markup: 1.6 },\n    { mount_name: 'баластна сітка з противагою',  price_per_kw_small: 14.0, price_per_kw_large: 12.0, markup: 1.6 },\n    { mount_name: 'гвинт-шуруп',                 price_per_kw_small: 14.0, price_per_kw_large: 12.0, markup: 1.6 },\n    { mount_name: 'схід-захід',                   price_per_kw_small: 15.0, price_per_kw_large: 13.0, markup: 1.6 },\n    { mount_name: 'схід-захід (без баласту) деш.',price_per_kw_small: 14.5, price_per_kw_large: 12.5, markup: 1.6 },\n    { mount_name: 'схід-захід (без баласту) дор.',price_per_kw_small: 14.5, price_per_kw_large: 12.5, markup: 1.6 },\n    { mount_name: 'з підйомом',                   price_per_kw_small: 15.5, price_per_kw_large: 13.5, markup: 1.6 },\n    { mount_name: 'з підйомом без баласту',       price_per_kw_small: 15.5, price_per_kw_large: 13.5, markup: 1.6 },\n    { mount_name: 'наземка',                      price_per_kw_small: 13.0, price_per_kw_large: 11.0, markup: 1.6 },\n    { mount_name: 'наземка схід-захід',           price_per_kw_small: 13.0, price_per_kw_large: 11.0, markup: 1.6 }\n  ],\n  extra_materials_usd: 0,\n  montage: [\n    { label: '50-80 кВт',        price_per_kw_usd: 22.0, markup: 1.5 },\n    { label: '80-100 кВт',       price_per_kw_usd: 20.0, markup: 1.5 },\n    { label: '100-250 кВт',      price_per_kw_usd: 18.0, markup: 1.5 },\n    { label: '250-500 кВт',      price_per_kw_usd: 16.0, markup: 1.5 },\n    { label: '500-1000 кВт',     price_per_kw_usd: 14.0, markup: 1.5 },\n    { label: '1000 та більше',   price_per_kw_usd: 12.0, markup: 1.5 }\n  ],\n  tech: [\n    { label: 'дах 50-100 кВт',      price_usd: 850,  qty_type: 'fixed',  markup: 1.5 },\n    { label: 'дах 80-150 кВт',      price_usd: 900,  qty_type: 'fixed',  markup: 1.5 },\n    { label: 'дах 150-300 кВт',     price_usd: 1100, qty_type: 'fixed',  markup: 1.5 },\n    { label: 'дах 300-500 кВт',     price_usd: 1500, qty_type: 'fixed',  markup: 1.5 },\n    { label: 'дах 500-1000 кВт',    price_usd: 2200, qty_type: 'fixed',  markup: 1.5 },\n    { label: 'дах 1000-1500 кВт',   price_usd: 3000, qty_type: 'fixed',  markup: 1.5 },\n    { label: 'дах 1500-2000 кВт',   price_usd: 3800, qty_type: 'fixed',  markup: 1.5 },\n    { label: 'дах більше 2000 кВт', price_usd: 4500, qty_type: 'fixed',  markup: 1.5 },\n    { label: 'наземка за кВт',      price_usd: 5.5,  qty_type: 'per_kw', markup: 1.5 }\n  ],\n  delivery: [\n    { label: '50-100 кВт',     price_usd: 550,  markup: 1.5 },\n    { label: '100-250 кВт',    price_usd: 800,  markup: 1.5 },\n    { label: '250-500 кВт',    price_usd: 1200, markup: 1.5 },\n    { label: '500-1000 кВт',   price_usd: 1800, markup: 1.5 },\n    { label: '1000 та більше', price_usd: 2500, markup: 1.5 }\n  ],\n  monitoring: [\n    { name: 'Huawei Smart Dongle', price_usd: 135, markup: 1.15 }\n  ],\n  power_regulation: [\n    { name: 'Лічильник + Трансформатори струму (3шт)', price_usd: 380, markup: 1.2 }\n  ],\n  rates: { eur_uah: 43.5, usd_uah: 41.2 },\n  markup_limits: {\n    mounting:  [1.0, 7.1875],\n    materials: [1.0, 6.75],\n    montage:   [1.0, 3.0188],\n    tech:      [1.0, 3.0188],\n    delivery:  [1.0, 3.0188]\n  }\n};\n\nconst catalog = data.catalog || DEFAULT_CATALOG;\nreturn [{ json: { catalog } }];"
+      }
+    },
+
+    {
+      "id": "c03",
+      "name": "Respond GET Catalog",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [680, 300],
+      "parameters": {
+        "respondWith": "json",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              { "name": "Access-Control-Allow-Origin", "value": "*" },
+              { "name": "Access-Control-Allow-Methods", "value": "GET, POST, OPTIONS" },
+              { "name": "Access-Control-Allow-Headers", "value": "Content-Type" }
+            ]
+          }
+        }
+      }
+    },
+
+    {
+      "id": "c04",
+      "name": "Webhook POST Catalog",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 600],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ses-catalog",
+        "responseMode": "responseNode",
+        "options": {}
+      }
+    },
+
+    {
+      "id": "c05",
+      "name": "Code: Save Catalog",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 600],
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nconst catalog = input.body?.catalog || input.catalog;\nif (!catalog) return [{ json: { ok: false, error: 'no catalog' } }];\n\nconst data = $getWorkflowStaticData('global');\ndata.catalog = catalog;\nreturn [{ json: { ok: true } }];"
+      }
+    },
+
+    {
+      "id": "c06",
+      "name": "Respond POST Catalog",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [680, 600],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\"ok\":true}",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              { "name": "Access-Control-Allow-Origin", "value": "*" }
+            ]
+          }
+        }
+      }
+    }
+
+  ],
+
+  "connections": {
+    "Webhook GET Catalog": {
+      "main": [[{ "node": "Code: Read Catalog", "type": "main", "index": 0 }]]
+    },
+    "Code: Read Catalog": {
+      "main": [[{ "node": "Respond GET Catalog", "type": "main", "index": 0 }]]
+    },
+    "Webhook POST Catalog": {
+      "main": [[{ "node": "Code: Save Catalog", "type": "main", "index": 0 }]]
+    },
+    "Code: Save Catalog": {
+      "main": [[{ "node": "Respond POST Catalog", "type": "main", "index": 0 }]]
+    }
+  },
+
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataSuccessExecution": "all"
+  }
+}

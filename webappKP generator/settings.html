@@ -7,21 +7,39 @@
 
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <link rel="stylesheet" href="css/telegram.css" />
+  <script src="js/ses-catalog-data.js"></script>
+  <script src="js/uze-catalog-data.js"></script>
+  <script src="js/catalog.js" defer></script>
   <script src="js/settings.js" defer></script>
+
+  <style>
+    .tab-row { display:flex; gap:6px; margin-bottom:12px; overflow-x:auto; padding-bottom:4px; }
+    .tab-row button { flex-shrink:0; padding:9px 12px; border-radius:10px; border:1px solid #e0e0e0;
+      background:#f5f5f5; font-weight:600; font-size:13px; cursor:pointer; white-space:nowrap; }
+    .tab-row button.active { background:#FFC400; }
+    .model-card { border:1px solid #e8e8e8; border-radius:10px; margin-bottom:8px; overflow:hidden; }
+    .model-header { display:flex; justify-content:space-between; align-items:center;
+      padding:10px 12px; cursor:pointer; background:#fafafa; }
+    .model-header:active { background:#f0f0f0; }
+    .model-body { padding:12px; display:none; border-top:1px solid #e8e8e8; background:#fff; }
+    .model-body.open { display:block; }
+    .price-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:8px; }
+    .price-field label { font-size:11px; color:#888; display:block; margin-bottom:3px; }
+    .price-field input { width:100%; padding:6px 8px; border:1px solid #ddd; border-radius:6px;
+      font-size:13px; box-sizing:border-box; }
+    .scenario-title { font-size:12px; font-weight:600; color:#555; margin:10px 0 6px; border-bottom:1px solid #eee; padding-bottom:4px; }
+  </style>
 </head>
 
 <body>
 <div class="app">
 
   <!-- ── ЕКРАН ПАРОЛЯ ─────────────────────────────── -->
-
   <div id="passwordScreen">
-
     <div class="page-header">
       <span class="page-icon">🔒</span>
       <h1 class="page-title">Адмін-панель</h1>
     </div>
-
     <div class="card form-card">
       <div class="field">
         <label for="passwordInput">Пароль</label>
@@ -31,13 +49,10 @@
         Невірний пароль
       </div>
     </div>
-
     <button class="primary-btn" id="loginBtn">Увійти</button>
-
   </div>
 
   <!-- ── АДМІН-ПАНЕЛЬ ─────────────────────────────── -->
-
   <div id="adminPanel" style="display:none">
 
     <div class="page-header">
@@ -45,111 +60,201 @@
       <h1 class="page-title">Налаштування</h1>
     </div>
 
-    <!-- Таби -->
-    <div style="display:flex;gap:8px;margin-bottom:12px">
-      <button id="tabManagers" onclick="switchTab('managers')"
-        style="flex:1;padding:10px;border-radius:10px;border:1px solid #e0e0e0;background:#FFC400;font-weight:600;font-size:14px;cursor:pointer">
-        Менеджери
-      </button>
-      <button id="tabTemplates" onclick="switchTab('templates')"
-        style="flex:1;padding:10px;border-radius:10px;border:1px solid #e0e0e0;background:#f5f5f5;font-weight:600;font-size:14px;cursor:pointer">
-        Шаблони
-      </button>
+    <!-- ── Курси валют (спільні для СЕС і УЗЕ) ── -->
+    <div class="card form-card" style="margin-bottom:12px">
+      <div class="divider">Курси валют (НБУ)</div>
+      <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap">
+        <div class="field" style="flex:1;min-width:100px">
+          <label for="rateUSD">USD → UAH</label>
+          <input id="rateUSD" type="number" step="0.01" placeholder="41.20" />
+        </div>
+        <div class="field" style="flex:1;min-width:100px">
+          <label for="rateEUR">EUR → UAH</label>
+          <input id="rateEUR" type="number" step="0.01" placeholder="43.50" />
+        </div>
+        <button onclick="fetchNBURates()" id="nbuBtn"
+          style="padding:8px 14px;border-radius:10px;border:1px solid #e0e0e0;background:#f5f5f5;cursor:pointer;font-size:13px;font-weight:600;flex-shrink:0;margin-bottom:8px">
+          🔄 Оновити з НБУ
+        </button>
+      </div>
+      <div id="rateStatus" style="font-size:12px;color:#888;padding:2px 0"></div>
     </div>
 
-    <!-- ── ТАБ: МЕНЕДЖЕРИ ── -->
+    <!-- Таби -->
+    <div class="tab-row">
+      <button id="tabManagers"  onclick="switchTab('managers')"  class="active">Менеджери</button>
+      <button id="tabTemplates" onclick="switchTab('templates')">Шаблони СЕС</button>
+      <button id="tabCatalog"   onclick="switchTab('catalog')">Каталог СЕС</button>
+      <button id="tabUZE"       onclick="switchTab('uze')">Каталог УЗЕ</button>
+    </div>
+
+    <!-- ────── ТАБ: МЕНЕДЖЕРИ ────── -->
     <div id="tabContentManagers">
-
-      <!-- Список менеджерів -->
       <div id="managerList"></div>
-
-      <!-- Форма додавання -->
       <div class="card form-card" style="margin-top:10px">
-
         <div class="divider">Додати / редагувати менеджера</div>
-
         <div class="field">
           <label for="addName">Ім'я</label>
           <input id="addName" type="text" placeholder="Петров Дмитро" />
         </div>
-
         <div class="field">
           <label for="addPhone">Телефон</label>
           <input id="addPhone" type="tel" placeholder="+380501234567" />
         </div>
-
         <div class="field">
           <label for="addEmail">Email</label>
           <input id="addEmail" type="email" placeholder="petrov@rayton.com" />
         </div>
-
         <div class="field">
           <label for="addTelegram">Telegram нік (без @)</label>
           <input id="addTelegram" type="text" placeholder="petrov_dm" autocomplete="off" />
         </div>
-
         <div id="addError" style="color:#e53935;font-size:13px;padding:4px 0;display:none">
           Заповніть ім'я та Telegram нік
         </div>
-
         <button class="primary-btn" id="addBtn" style="margin-top:4px">Додати</button>
-
       </div>
-
-      <!-- Зберегти менеджерів -->
       <button class="primary-btn" id="saveBtn" style="margin-top:12px">💾 Зберегти менеджерів</button>
       <div id="saveStatus" style="text-align:center;padding:10px;font-size:14px"></div>
-
-      <div class="hint-box" style="margin-top:4px">
-        Зміни зберігаються в Google Sheet і стають активними для всіх пристроїв одразу.
-      </div>
-
     </div>
 
-    <!-- ── ТАБ: ШАБЛОНИ ── -->
+    <!-- ────── ТАБ: ШАБЛОНИ СЕС ────── -->
     <div id="tabContentTemplates" style="display:none">
-
       <div class="card form-card">
-
-        <div class="divider">Шаблони КП СЕС (Google Doc ID)</div>
+        <div class="divider">Шаблони по галузях (Google Doc ID)</div>
+        <div class="hint-box">Менеджер обирає галузь клієнта → система підставляє відповідний шаблон КП</div>
 
         <div class="field">
-          <label for="tplNoCredit">СЕС без кредиту + фото</label>
-          <input id="tplNoCredit" type="text" placeholder="Google Doc ID" autocomplete="off" />
+          <label for="tplSector1">1. Виробничі підприємства</label>
+          <input id="tplSector1" type="text" placeholder="Google Doc ID" autocomplete="off" />
+        </div>
+        <div class="field">
+          <label for="tplSector2">2. Агропромисловий сектор</label>
+          <input id="tplSector2" type="text" placeholder="Google Doc ID" autocomplete="off" />
+        </div>
+        <div class="field">
+          <label for="tplSector3">3. Будівельна та індустріальна група</label>
+          <input id="tplSector3" type="text" placeholder="Google Doc ID" autocomplete="off" />
+        </div>
+        <div class="field">
+          <label for="tplSector4">4. Метал / машинобудування / обладнання</label>
+          <input id="tplSector4" type="text" placeholder="Google Doc ID" autocomplete="off" />
+        </div>
+        <div class="field">
+          <label for="tplSector5">5. Логістика / склади / торгові центри</label>
+          <input id="tplSector5" type="text" placeholder="Google Doc ID" autocomplete="off" />
+        </div>
+        <div class="field">
+          <label for="tplSector6">6. Великі промислові об'єкти 1+ МВт</label>
+          <input id="tplSector6" type="text" placeholder="Google Doc ID" autocomplete="off" />
         </div>
 
+        <div class="divider">Видалення сторінок (галузеві шаблони)</div>
         <div class="field">
-          <label for="tplNoCreditNoImg">СЕС без кредиту, без фото</label>
-          <input id="tplNoCreditNoImg" type="text" placeholder="Google Doc ID" autocomplete="off" />
+          <label for="sesCreditPageNum">№ сторінки «Кредит» для видалення</label>
+          <input id="sesCreditPageNum" type="number" min="1" placeholder="напр. 2" autocomplete="off" />
         </div>
-
         <div class="field">
-          <label for="tplWithCredit">СЕС з кредитом + фото</label>
-          <input id="tplWithCredit" type="text" placeholder="Google Doc ID" autocomplete="off" />
-        </div>
-
-        <div class="field">
-          <label for="tplWithCreditNoImg">СЕС з кредитом, без фото</label>
-          <input id="tplWithCreditNoImg" type="text" placeholder="Google Doc ID" autocomplete="off" />
+          <label for="sesVizPageNum">№ сторінки «Візуалізація» для видалення</label>
+          <input id="sesVizPageNum" type="number" min="1" placeholder="напр. 3" autocomplete="off" />
         </div>
 
         <div class="divider">Google Drive</div>
-
         <div class="field">
-          <label for="tplDriveFolder">Папка для збереження PDF (Drive ID)</label>
+          <label for="tplDriveFolder">Папка СЕС (Drive ID)</label>
           <input id="tplDriveFolder" type="text" placeholder="Folder ID" autocomplete="off" />
         </div>
-
+        <div class="field">
+          <label for="uzeDriveFolder">Папка УЗЕ (Drive ID)</label>
+          <input id="uzeDriveFolder" type="text" placeholder="Folder ID" autocomplete="off" />
+        </div>
       </div>
 
-      <!-- Зберегти шаблони -->
       <button class="primary-btn" id="saveTplBtn" style="margin-top:12px">💾 Зберегти шаблони</button>
       <div id="saveTplStatus" style="text-align:center;padding:10px;font-size:14px"></div>
-
       <div class="hint-box" style="margin-top:4px">
         ID шаблону: відкрийте Google Doc → скопіюйте частину URL між /d/ та /edit
       </div>
+    </div>
 
+    <!-- ────── ТАБ: КАТАЛОГ СЕС ────── -->
+    <div id="tabContentCatalog" style="display:none">
+      <div class="card form-card" style="margin-top:0">
+        <div class="divider">Фотопанелі — ціна закупівлі ($/шт), стала націнка</div>
+        <div id="panelsList"></div>
+      </div>
+
+      <div class="card form-card" style="margin-top:10px">
+        <div class="divider">Інвертори — ціна закупівлі ($/шт), стала націнка</div>
+        <div id="invertersList"></div>
+      </div>
+
+      <div class="card form-card" style="margin-top:10px">
+        <div class="divider">Пристрій моніторингу — ціна закупівлі ($/шт), стала націнка</div>
+        <div id="monitoringList"></div>
+      </div>
+
+      <div class="card form-card" style="margin-top:10px">
+        <div class="divider">Система регулювання потужності — ціна закупівлі, стала націнка</div>
+        <div id="powerControlList"></div>
+      </div>
+
+      <div class="card form-card" style="margin-top:10px">
+        <div class="divider">Система кріплення — ціна закупівлі ($/шт)</div>
+        <div id="mountingTypesList"></div>
+      </div>
+
+      <div class="card form-card" style="margin-top:10px">
+        <div class="divider">Матеріали DC до 100 кВт — ціна закупівлі ($/кВт)</div>
+        <div id="materialsDcLt100List"></div>
+      </div>
+
+      <div class="card form-card" style="margin-top:10px">
+        <div class="divider">Матеріали DC від 100 кВт — ціна закупівлі ($/кВт)</div>
+        <div id="materialsDcGt100List"></div>
+      </div>
+
+      <div class="card form-card" style="margin-top:10px">
+        <div class="divider">Матеріали AC до 100 кВт — ціна закупівлі ($/кВт)</div>
+        <div id="materialsAcLt100List"></div>
+      </div>
+
+      <div class="card form-card" style="margin-top:10px">
+        <div class="divider">Матеріали AC від 100 кВт — ціна закупівлі ($/кВт)</div>
+        <div id="materialsAcGt100List"></div>
+      </div>
+
+      <div class="card form-card" style="margin-top:10px">
+        <div class="divider">Монтаж — ціна закупівлі ($/кВт)</div>
+        <div id="montageList"></div>
+      </div>
+
+      <div class="card form-card" style="margin-top:10px">
+        <div class="divider">Технічний нагляд — ціна закупівлі</div>
+        <div id="techList"></div>
+      </div>
+
+      <div class="card form-card" style="margin-top:10px">
+        <div class="divider">Доставка — ціна закупівлі</div>
+        <div id="deliveryList"></div>
+      </div>
+
+      <button class="primary-btn" id="saveCatalogBtn" style="margin-top:12px">💾 Зберегти каталог СЕС</button>
+      <div id="saveCatalogStatus" style="text-align:center;padding:10px;font-size:14px"></div>
+    </div>
+
+    <!-- ────── ТАБ: КАТАЛОГ УЗЕ ────── -->
+    <div id="tabContentUZE" style="display:none">
+      <div class="hint-box" style="margin-bottom:10px">
+        Натисніть на модель щоб редагувати Template Doc ID та ціни УЗЕ
+      </div>
+      <div id="uzeModelsList"></div>
+      <button onclick="addUzeModel()"
+        style="width:100%;margin-top:8px;padding:9px;border:1px dashed #aaa;border-radius:10px;background:#fafafa;cursor:pointer;font-size:13px;color:#555;font-weight:600">
+        + Додати модель УЗЕ
+      </button>
+      <button class="primary-btn" id="saveUZEBtn" style="margin-top:12px">💾 Зберегти каталог УЗЕ</button>
+      <div id="saveUZEStatus" style="text-align:center;padding:10px;font-size:14px"></div>
     </div>
 
   </div>

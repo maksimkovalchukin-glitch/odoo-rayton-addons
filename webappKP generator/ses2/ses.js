@@ -4,7 +4,7 @@
           4-Обладнання, 5-Інвертори, 6-Ціна, 7-Preview
 ====================================================== */
 
-const WEBHOOK_URL = "https://n8n.rayton.net/webhook/ses-kp";
+const WEBHOOK_URL = "https://n8n.rayton.net/webhook/kp";
 
 const tg = window.Telegram?.WebApp || null;
 if (tg) { tg.expand(); tg.ready(); }
@@ -38,7 +38,7 @@ const PANELS = [
   { label: "Тrina 710W",  name: `${_CP} Тrina 710W`,  watt: 710 },
   { label: "JA 625W",     name: `${_CP} JA 625W`,     watt: 625 },
   { label: "Longi 580W",  name: `${_CP} Longi 580W`,  watt: 580 },
-  { label: "Longi 610W",  name: `${_CP} Longi 610W`,  watt: 610 },
+  { label: "Longi 620W",  name: `${_CP} Longi 620W`,  watt: 620 },
   { label: "Trina 625W",  name: `${_CP} Trina 625W`,  watt: 625 },
   { label: "Trina 620W",  name: `${_CP} Trina 620W`,  watt: 620 },
 ];
@@ -88,6 +88,8 @@ const state = {
   credit: "no",  // yes | no
   customImageBase64: null,  // base64 рядок або null
   customImageMime: null,    // "image/jpeg" тощо
+  clientLogoBase64: null,
+  clientLogoMime: null,
 };
 
 /* ======================================================
@@ -293,11 +295,12 @@ function showStep(n) {
 
   // Telegram back button
   if (tg) {
+    tg.BackButton.offClick();
+    tg.BackButton.show();
     if (n > 1) {
-      tg.BackButton.show();
       tg.BackButton.onClick(() => goBack());
     } else {
-      tg.BackButton.hide();
+      tg.BackButton.onClick(() => { window.location.href = '../index.html'; });
     }
   }
 
@@ -685,7 +688,7 @@ function updatePriceLabel() {
 }
 
 function updateManualDCHint() {
-  const watt = num("manual_module");
+  const watt = getPanelWatt();
   const box  = document.getElementById("manualDCBox");
   if (!box) return;
 
@@ -733,12 +736,31 @@ function updateEconomyHint() {
   // Орієнтовний курс для preview
   const approxUAHperUSD  = 41;
   const totalUAH         = totalUSD * approxUAHperUSD;
-  const paybackYears     = totalUAH > 0 && yearlySavingsUAH > 0
-    ? (totalUAH / yearlySavingsUAH).toFixed(1) : null;
+  let paybackYears = null;
+  let paybackNote  = '';
+
+  if (totalUAH > 0 && yearlySavingsUAH > 0) {
+    if (state.credit === 'yes') {
+      const rate   = num("credit_rate");
+      const months = num("credit_months");
+      if (rate > 0 && months > 0) {
+        const r          = (rate / 100) / 12;
+        const monthlyPmt = totalUAH * (r * Math.pow(1 + r, months)) / (Math.pow(1 + r, months) - 1);
+        const totalPaid  = monthlyPmt * months;
+        paybackYears = (totalPaid / yearlySavingsUAH).toFixed(1);
+        const overpay   = Math.round((totalPaid - totalUAH) / 1000);
+        paybackNote = ` <span style="color:#888;font-size:12px">(переплата ~${overpay} тис. грн)</span>`;
+      } else {
+        paybackYears = (totalUAH / yearlySavingsUAH).toFixed(1);
+      }
+    } else {
+      paybackYears = (totalUAH / yearlySavingsUAH).toFixed(1);
+    }
+  }
 
   let html = `Орієнтована річна генерація: <strong>${Math.round(yearlyKWh / 1000)} тис. кВт·год</strong><br>`;
   html    += `Річна економія: <strong>${Math.round(yearlySavingsUAH / 1000)} тис. грн</strong>`;
-  if (paybackYears) html += `<br>Приблизна окупність: <strong>${paybackYears} р.</strong>`;
+  if (paybackYears) html += `<br>Приблизна окупність: <strong>${paybackYears} р.</strong>${paybackNote}`;
 
   hint.style.display = "block";
   hint.innerHTML = html;
@@ -753,7 +775,7 @@ function buildSummary() {
   const dc  = getTargetDC();
   const ac  = inv.reduce((s, i) => s + i.power * i.qty, 0);
   const panelWatt = getPanelWatt();
-  const panelQty  = panelWatt ? Math.ceil((ac * CONFIG.dcAcRatio) / (panelWatt / 1000)) : "?";
+  const panelQty  = panelWatt ? Math.ceil(dc / (panelWatt / 1000)) : "?";
 
   const modeLabels = {
     consumption: `${val("monthly_consumption")} МВт·год/міс`,
@@ -783,7 +805,7 @@ function buildSummary() {
     <div class="summary-section">
       <div class="summary-row"><span>Панелі</span><strong>${panelLabel}</strong></div>
       <div class="summary-row"><span>Кількість панелей</span><strong>${panelQty} шт</strong></div>
-      <div class="summary-row"><span>DC потужність</span><strong>${(ac * CONFIG.dcAcRatio).toFixed(1)} кВт</strong></div>
+      <div class="summary-row"><span>DC потужність</span><strong>${dc.toFixed(1)} кВт</strong></div>
       <div class="summary-row"><span>AC потужність</span><strong>${ac.toFixed(0)} кВт</strong></div>
       <div class="summary-row"><span>Інвертори</span><strong>${invLines}</strong></div>
     </div>
@@ -840,6 +862,12 @@ async function submitKP() {
 
   const chatId = tg?.initDataUnsafe?.chat?.id || tg?.initDataUnsafe?.user?.id || null;
 
+  // Налаштування з localStorage (адмін-панель)
+  const settings  = JSON.parse(localStorage.getItem('rayton_settings') || '{}');
+  const rates     = JSON.parse(localStorage.getItem('rayton_rates')    || '{}');
+  const allMgrs   = JSON.parse(localStorage.getItem('rayton_managers') || '[]');
+  const currentMgr = allMgrs.find(m => m.name === val("manager")) || {};
+
   const panelLabel = state.mode === "manual"
     ? PANELS.find(p => p.name === val("manual_module"))?.label || ""
     : PANELS.find(p => p.name === val("module_type"))?.label || "";
@@ -849,6 +877,7 @@ async function submitKP() {
     project_name:       val("project_name"),
     manager:            val("manager"),
     region:             val("region"),
+    client_sector:      val("client_sector"),
 
     // Вхідні дані (залежно від режиму)
     monthly_consumption: state.mode === "consumption" ? num("monthly_consumption") : null,
@@ -891,8 +920,33 @@ async function submitKP() {
     // Візуалізація СЕС (base64, опціонально)
     custom_image_base64: state.customImageBase64 || null,
     custom_image_mime:   state.customImageMime   || null,
+    client_logo_base64:  state.clientLogoBase64  || null,
+    client_logo_mime:    state.clientLogoMime     || null,
 
     chat_id: chatId,
+
+    // Тип запиту (для маршрутизації в n8n)
+    type: "ses",
+
+    // Галузеві шаблони (основні)
+    ses_tpl_sector1: settings.ses_tpl_sector1 || '',
+    ses_tpl_sector2: settings.ses_tpl_sector2 || '',
+    ses_tpl_sector3: settings.ses_tpl_sector3 || '',
+    ses_tpl_sector4: settings.ses_tpl_sector4 || '',
+    ses_tpl_sector5: settings.ses_tpl_sector5 || '',
+    ses_tpl_sector6: settings.ses_tpl_sector6 || '',
+
+    ses_drive_folder:                settings.ses_drive_folder                || '',
+    ses_credit_page_num:             parseInt(settings.ses_credit_page_num)  || 2,
+    ses_viz_page_num:                parseInt(settings.ses_viz_page_num)     || 3,
+
+    // Курси валют
+    rate_usd: rates.usd_rate || 41.2,
+    rate_eur: rates.eur_rate || 44.5,
+
+    // Контакти менеджера
+    manager_phone: currentMgr.phone || '',
+    manager_email: currentMgr.email || '',
   };
 
   try {
@@ -946,8 +1000,41 @@ function showError(msg) {
    ІНІЦІАЛІЗАЦІЯ ПОДІЙ
 ====================================================== */
 
+const SES_MANAGERS_URL     = 'https://n8n.rayton.net/webhook/managers';
+const SES_MANAGERS_STORAGE = 'rayton_managers';
+
+async function loadManagers() {
+  let list = [];
+  try {
+    const res  = await fetch(SES_MANAGERS_URL, { cache: 'no-store' });
+    const data = await res.json();
+    list = data.managers || [];
+    localStorage.setItem(SES_MANAGERS_STORAGE, JSON.stringify(list));
+  } catch {
+    const stored = localStorage.getItem(SES_MANAGERS_STORAGE);
+    if (stored) list = JSON.parse(stored);
+  }
+
+  const active = list.filter(m => m.active !== false);
+  if (!active.length) return; // залишаємо хардкод з HTML
+
+  const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
+  const sel    = document.getElementById('manager');
+  sel.innerHTML = '<option value="">Оберіть менеджера</option>';
+  active.forEach(m => {
+    const opt       = document.createElement('option');
+    opt.value       = m.name;
+    opt.textContent = m.name;
+    if (tgUser?.username && m.telegram && tgUser.username.toLowerCase() === m.telegram.toLowerCase()) {
+      opt.selected = true;
+    }
+    sel.appendChild(opt);
+  });
+}
+
 document.addEventListener("DOMContentLoaded", () => {
 
+  loadManagers();
   fillPanelSelects();
   fillInverterSelects();
 
@@ -1050,6 +1137,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Live підказка в економіці
   document.getElementById("tariff_now")?.addEventListener("input", updateEconomyHint);
   document.getElementById("credit_rate")?.addEventListener("input", updateEconomyHint);
+  document.getElementById("credit_months")?.addEventListener("input", updateEconomyHint);
 
   // Завантаження картинки візуалізації СЕС
   document.getElementById("custom_image")?.addEventListener("change", function() {
@@ -1086,6 +1174,37 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("custom_image").value              = "";
     document.getElementById("imgPreviewWrap").style.display   = "none";
     document.getElementById("imgUploadBtn").style.display     = "flex";
+  });
+
+  // Лого клієнта
+  document.getElementById("client_logo")?.addEventListener("change", function() {
+    const file = this.files[0];
+    if (!file) return;
+    if (file.size > 8 * 1024 * 1024) {
+      showError("Зображення завелике. Максимум 8 МБ");
+      this.value = "";
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const dataUrl = e.target.result;
+      const [, b64] = dataUrl.split(",");
+      state.clientLogoBase64 = b64;
+      state.clientLogoMime   = file.type || "image/png";
+      document.getElementById("logoPreview").src              = dataUrl;
+      document.getElementById("logoPreviewWrap").style.display = "block";
+      document.getElementById("logoUploadBtn").style.display   = "none";
+      document.getElementById("logoUploadLabel").textContent   = file.name;
+    };
+    reader.readAsDataURL(file);
+  });
+
+  document.getElementById("logoRemoveBtn")?.addEventListener("click", () => {
+    state.clientLogoBase64 = null;
+    state.clientLogoMime   = null;
+    document.getElementById("client_logo").value               = "";
+    document.getElementById("logoPreviewWrap").style.display   = "none";
+    document.getElementById("logoUploadBtn").style.display     = "flex";
   });
 
   // Старт

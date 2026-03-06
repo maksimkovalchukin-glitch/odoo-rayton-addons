@@ -151,8 +151,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const moduleSelect = document.getElementById("module_type");
 
-    const payload = {
-
+    const formData = {
       project_name: document.getElementById("project_name").value,
       manager: document.getElementById("manager").value,
       region: document.getElementById("region").value,
@@ -187,6 +186,23 @@ document.addEventListener("DOMContentLoaded", () => {
       calculation_mode: "power",
 
       chat_id: chatId
+    };
+
+    const calcResult = window.CalculateEngine?.calculate(formData, window.CATALOG);
+    if (!calcResult?.ok) {
+      submitBtn.innerText = calcResult?.error || "Помилка розрахунку";
+      submitBtn.disabled = false;
+      return;
+    }
+
+    const payload = {
+      ...formData,
+      template_vars:  calcResult.template_vars,
+      line_items:     calcResult.line_items,
+      file_name:      calcResult.file_name,
+      doc_copy_name:  calcResult.doc_copy_name,
+      final_total:    calcResult.final_total,
+      dc_kw:          calcResult.dc_kw,
     };
 
     try {
